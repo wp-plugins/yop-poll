@@ -1,4 +1,4 @@
-==  ==
+== YOP Poll ==
 Contributors: yourownprogrammer
 Donate Link: http://www.yourownprogrammer.com/thankyou/donation.html
 Tags: poll, polls, vote, survey, polling, yop poll, yop
