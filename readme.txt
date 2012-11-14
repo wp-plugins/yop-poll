@@ -27,12 +27,12 @@ Current poll features:
    - View all polls: lists all your polls that you can sort by number of votes or voters, by question or by date and includes a search option.
    - Poll answers - allows other answers, multiple answers and includes a sorting module by various criteria: in exact order, in alphabetical order, by number of votes, ascending, descending etc.
    - Poll results - offers a great flexibility when displaying the results: before/after vote, after poll's end date, on a custom date or never. The results can also be displayed by vote numbers, percentages or both. You can choose to include a view results link, view number of votes or number of voters.
-   - Add new custom fields - is a complex option that you can use to ask for additional information from your voters, information that you can then download and use for….
+   - Add new custom fields - is a complex option that you can use to ask for additional information from your voters, information that you can then download and use for.
    - Reset stats - proves useful when you wish to restart a poll.
    - Vote permissions: - limits the voting accessibility to guests, registered users or both, or blocks user access by cookie, IP and username.
    - Archive options - allows the users of the website to access former polls statistics. You can choose which polls to display according to their start/end date.
    - Edit/delete/clone templates - allows you to customize the poll using either the html or the visual modes. You can also customize the result bar.
-   - Display Options –displays answers and results tabulated, vertically or horizontally.
+   - Display Options - displays answers and results tabulated, vertically or horizontally.
    - Logs and bans - user logs and bans can be seen in the admin section. You can ban users by email, username and IP and you can set the limitation preferences for all your polls or for just one of them.
 
 == Installation ==
