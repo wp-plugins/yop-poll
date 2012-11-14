@@ -62,26 +62,26 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 1.  How can I create a poll?        
 
-	a. Go to your YOP Poll menu and select the "Add New Yop Poll" option.    
+	*  Go to your YOP Poll menu and select the "Add New Yop Poll" option.    
 
-	b. Fill the required information according to the examples we included: name, question, answers (add additional ones if you need), select the start/end date for your poll, and decide on the advanced settings for results, votes, voters, accessibility etc.   
+	*  Fill the required information according to the examples we included: name, question, answers (add additional ones if you need), select the start/end date for your poll, and decide on the advanced settings for results, votes, voters, accessibility etc.   
 
-	c. Once you decided on all your poll details, click on "Save".   
+	*  Once you decided on all your poll details, click on "Save".   
 
-	d. To view your new poll access "All YOP Polls" from your main menu and choose the corresponding entry from the list.   
+	*  To view your new poll access "All YOP Polls" from your main menu and choose the corresponding entry from the list.   
 
 
 2.  How can I link a poll to my webpage?     
 
-	a.  Find out the ID assigned to poll by accessing "All YOP Polls".   
+	*  Find out the ID assigned to poll by accessing "All YOP Polls".   
 
 	    Locate your poll and notice the ID on the left, before the name section.   
 
-	b.  Copy the following shortcode and paste it in your page: [yop_poll id="ID"]   
+	*  Copy the following shortcode and paste it in your page: [yop_poll id="ID"]   
 
 	    For instance, if the poll you want to display has the ID=15 the code will be: [yop_poll id="15"].   
 
-	c.  This is it. Check your page or post now.   
+	*  This is it. Check your page or post now.   
 
 
 3.  Do you have some predefined shortcodes that I can use?    
@@ -107,22 +107,22 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 6.  How can I create/modify a template?      
 
-	a.  Access the "YOP Poll Templates" menu.     
+	*  Access the "YOP Poll Templates" menu.     
 	
-	b.  If you want to create a new template use the "Add new" option and include the corresponding HTML/visual code.    
+	*  If you want to create a new template use the "Add new" option and include the corresponding HTML/visual code.    
 
-	c.  If you want to modify an existing template, select it from the YOP Poll Templates list and choose "Edit". You will access the HTML/visual code you want to edit.     
+	*  If you want to modify an existing template, select it from the YOP Poll Templates list and choose "Edit". You will access the HTML/visual code you want to edit.     
 
 
 7.  How do I check the results?      
 
-	a.  Locate the poll you want to evaluate by accessing "All YOP Polls".     
+	*  Locate the poll you want to evaluate by accessing "All YOP Polls".     
 	
-	b.  Below the name of the poll you have several options.       
+	*  Below the name of the poll you have several options.       
 
-	c.  Use the "Results" link to track the results of the poll,      
+	*  Use the "Results" link to track the results of the poll,      
 
-	d.  or access the "Logs" for a more detailed evaluation.      
+	*  or access the "Logs" for a more detailed evaluation.      
 
 
 
