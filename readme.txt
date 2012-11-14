@@ -1,4 +1,3 @@
-=== YOP Poll ===
 Contributors: yourownprogrammer
 Donate Link: http://www.yourownprogrammer.com/thankyou/donation.html
 Tags: poll, polls, vote, survey, polling, yop poll, yop
@@ -74,12 +73,10 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 2.  How can I link a poll to my webpage?     
 
 	*  Find out the ID assigned to poll by accessing "All YOP Polls".   
-
-	    Locate your poll and notice the ID on the left, before the name section.   
+	   Locate your poll and notice the ID on the left, before the name section.   
 
 	*  Copy the following shortcode and paste it in your page: [yop_poll id="ID"]   
-
-	    For instance, if the poll you want to display has the ID=15 the code will be: [yop_poll id="15"].   
+           For instance, if the poll you want to display has the ID=15 the code will be: [yop_poll id="15"].   
 
 	*  This is it. Check your page or post now.   
 
