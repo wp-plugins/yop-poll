@@ -7,7 +7,8 @@ Tested up to: 3.4.2
 Stable tag: trunk
 License: GPLv2 or later
 
-Use a full option polling functionality to get the answers you need.                  
+Use a full option polling functionality to get the answers you need.           
+
 YOP Poll is the perfect, easy to use plugin for your WordPress website.
 
 
@@ -22,6 +23,7 @@ Scheduling your polls is no longer a problem. YOP Poll can simultaneously run mu
 Designed to intuitive and easy to use, this plugin allows shortcodes and includes a widget functionality that fits perfectly with your WordPress website. For more details on the included features, please refer to the description below.
 
 Current poll features:     
+
    *  Create/ Edit / Clone/Delete poll - allows you to create or intervene in your survey at any time, if you consider it necessary.   
    
    *  Poll scheduling:  programs each poll to start/end on a certain date. You can simultaneously run multiple polls you can use this option to schedule your polls one after another.    
@@ -133,6 +135,6 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 4. YOP Poll as a widget with a custom field defined
 5. YOP Poll on a page with a custom field defined
 
-= Donations =
+== Donations ==  
 
 We've given a lot of thought to make this application one of the best ones available and we continue to invest our time and effort perfecting it. If you want to support our work, please consider making a donation.
