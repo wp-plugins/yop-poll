@@ -7,7 +7,7 @@ Tested up to: 3.4.2
 Stable tag: trunk
 License: GPLv2 or later
 
-Use a full option polling functionality to get the answers you need.       
+Use a full option polling functionality to get the answers you need.                  
 YOP Poll is the perfect, easy to use plugin for your WordPress website.
 
 
