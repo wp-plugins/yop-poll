@@ -6,6 +6,10 @@
 			$this->add_filter( 'the_content', 'yop_poll_do_shortcode_the_content_filter');
 			$this->add_filter( 'widget_text', 'do_shortcode');
 		}
+		
+		public function do_shortcode() {
+			do_shortcode();
+		}
 
 		public function public_loader() {
 			add_shortcode( 'yop_poll', array( &$this, 'yop_poll_shortcode_function' ) );	

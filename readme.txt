@@ -5,6 +5,7 @@ Tags: poll, polls, vote, survey, polling, yop poll, yop
 Requires at least: 3.2
 Tested up to: 3.4.2
 Stable tag: trunk
+Stable tag: 1.1
 License: GPLv2 or later
 
 Use a full option polling functionality to get the answers you need.           
@@ -132,6 +133,13 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 3. View All YOP Polls
 4. YOP Poll as a widget with a custom field defined
 5. YOP Poll on a page with a custom field defined
+
+
+== Changelog ==
+
+= 1.1 =   
+* FIXED call_user_func_array() bug
+
 
 == Donations ==  
 
