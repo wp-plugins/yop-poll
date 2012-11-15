@@ -4,7 +4,7 @@ Donate Link: http://www.yourownprogrammer.com/thankyou/donation.html
 Tags: poll, polls, vote, survey, polling, yop poll, yop
 Requires at least: 3.2
 Tested up to: 3.4.2
-Stable tag: trunk
+Stable tag: 1.1
 License: GPLv2 or later
 
 Use a full option polling functionality to get the answers you need.           
