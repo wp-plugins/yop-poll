@@ -1,7 +1,7 @@
 <?php
 	/*
 	Plugin Name: Yop Poll
-	Plugin URI: http://www.yourownprogrammer.com/
+	Plugin URI: http://www.yourownprogrammer.com/thankyou/
 	Description: Use a full option polling functionality to get the answers you need. YOP Poll is the perfect, easy to use plugin for your WordPress website.
 	Author: yourownprogrammer
 	Author URL: http://www.yourownprogrammer.com
