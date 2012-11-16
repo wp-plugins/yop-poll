@@ -7,8 +7,8 @@
 			$this->add_filter( 'widget_text', 'do_shortcode');
 		}
 		
-		public function do_shortcode() {
-			do_shortcode();
+		public function do_shortcode( $content ) {
+			do_shortcode( $content );
 		}
 
 		public function public_loader() {

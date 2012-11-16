@@ -137,7 +137,9 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 == Changelog ==
 
 = 1.1 =   
-* FIXED call_user_func_array() bug
+* Fixed call_user_func_array() bug   
+* Fixed do_shortcode() with missing argument
+
 
 
 == Donations ==  
