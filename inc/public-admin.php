@@ -8,7 +8,7 @@
 		}
 		
 		public function do_shortcode( $content ) {
-			do_shortcode( $content );
+			return do_shortcode( $content );
 		}
 
 		public function public_loader() {

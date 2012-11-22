@@ -136,9 +136,16 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+
+
+= 1.3 = 
+* Fixed bug that was causing widgets text not to display
+
+= 1.2 =  
+* Fixed do_shortcode() with missing argument
+
 = 1.1 =   
 * Fixed call_user_func_array() bug   
-* Fixed do_shortcode() with missing argument
 
 
 
