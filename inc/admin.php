@@ -7,10 +7,10 @@
 			register_activation_hook( $this->_config->plugin_file, array( $this, 'activate' ) );
 			register_deactivation_hook( $this->_config->plugin_file, array( $this, 'deactivate' ) );
 			register_uninstall_hook( $this->_config->plugin_file, 'yop_poll_uninstall' );
-			$this->add_action('admin_enqueue_scripts', 'load_editor_functions');
+			$this->add_action('admin_enqueue_scripts', 'load_editor_functions');  
 		}
 
-		public function admin_loader() {
+		public function admin_loader() { 
 			$this->add_action( 'plugins_loaded', 'load_translation_file', 1 );
 			$this->add_action( 'admin_menu', 'admin_menu', 1 );	
 			$this->add_action( 'admin_init', 'yop_poll_options_admin_init', 1 );
@@ -4162,8 +4162,8 @@
 				else {
 					$error 				= __( 'Invalid Request! Try later!', 'yop_poll' ); 
 				}
-			}
-			print json_encode( array( 'error' => $error, 'message' => $message ) );
+			}  
+			print '[ajax-response]'.json_encode( array( 'error' => $error, 'message' => $message ) ).'[/ajax-response]';
 			die();
 		}
 
@@ -4189,7 +4189,8 @@
 					$error 				= __( 'Invalid Request! Try later!', 'yop_poll' ); 
 				}
 			}
-			print json_encode( array( 'error' => $error, 'message' => $message ) );
+			//print json_encode( array( 'error' => $error, 'message' => $message ) );
+			print '[ajax-response]'.json_encode( array( 'error' => $error, 'message' => $message ) ).'[/ajax-response]';
 			die();
 		}
 
@@ -4214,7 +4215,8 @@
 					$error 							= __( 'Invalid Request! Try later!', 'yop_poll' ); 
 				}
 			}
-			print json_encode( array( 'error' => $error, 'message' => $message ) );
+			//print json_encode( array( 'error' => $error, 'message' => $message ) );
+			print '[ajax-response]'.json_encode( array( 'error' => $error, 'message' => $message ) ).'[/ajax-response]';
 			die();
 		}
 

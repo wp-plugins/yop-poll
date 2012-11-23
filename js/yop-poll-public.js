@@ -9,12 +9,13 @@ function yop_poll_do_vote( poll_id ) {
 			}, 
 			success: 
 			function( data ){
-				response = JSON.parse(data);
+				data		= yop_poll_extractResponse( data ); 
+				response	= JSON.parse(data);
 				if ( '' != response.error )
 					jQuery('#yop-poll-container-error-'+ poll_id).html(response.error);
 				else {
 					if ( '' != response.message ) {
-						jQuery('#yop-poll-container-'+ poll_id).html(response.message);
+						jQuery('#yop-poll-container-'+ poll_id).replaceWith(response.message);
 						jQuery('#yop-poll-container-error-'+ poll_id).html('');
 						eval(
 							"if(typeof window.strip_results_"+poll_id+" == 'function')  strip_results_"+poll_id+"();" +
@@ -40,12 +41,13 @@ function yop_poll_view_results( poll_id ) {
 			}, 
 			success: 
 			function( data ){
-				response = JSON.parse(data);
+				data		= yop_poll_extractResponse( data );
+				response	= JSON.parse(data);
 				if ( '' != response.error )
 					jQuery('#yop-poll-container-error-'+ poll_id).html(response.error);
 				else { 
 					if ( '' != response.message ) {
-						jQuery('#yop-poll-container-'+ poll_id).html(response.message);
+						jQuery('#yop-poll-container-'+ poll_id).replaceWith(response.message);
 						jQuery('#yop-poll-container-error-'+ poll_id).html('');
 						eval(
 							"if(typeof window.strip_results_"+poll_id+" == 'function')  strip_results_"+poll_id+"();" +
@@ -54,7 +56,7 @@ function yop_poll_view_results( poll_id ) {
 						);
 					}
 					else
-						jQuery('#yop-poll-container-error-'+ poll_id).html('An Error Has Occured!');
+						jQuery('#yop-poll-container-error-'+ poll_id).replaceWith('An Error Has Occured!');
 				}					
 			}
 	});	
@@ -71,12 +73,13 @@ function yop_poll_back_to_vote( poll_id ) {
 			}, 
 			success: 
 			function( data ){
-				response = JSON.parse(data);
+				data		= yop_poll_extractResponse( data );
+				response	= JSON.parse(data);
 				if ( '' != response.error )
 					jQuery('#yop-poll-container-error-'+ poll_id).html(response.error);
 				else {
 					if ( '' != response.message ) {
-						jQuery('#yop-poll-container-'+ poll_id).html(response.message);
+						jQuery('#yop-poll-container-'+ poll_id).replaceWith(response.message);
 						jQuery('#yop-poll-container-error-'+ poll_id).html('');
 						eval(
 							"if(typeof window.strip_results_"+poll_id+" == 'function')  strip_results_"+poll_id+"();" +
@@ -89,4 +92,10 @@ function yop_poll_back_to_vote( poll_id ) {
 				}					
 			}
 	});	
+}
+
+function yop_poll_extractResponse( str ) {
+	var patt	= /\[ajax-response\](.*)\[\/ajax-response\]/m;
+	resp 		= str.match( patt )
+	return resp[1];
 }

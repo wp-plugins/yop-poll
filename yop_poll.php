@@ -5,10 +5,10 @@
 	Description: Use a full option polling functionality to get the answers you need. YOP Poll is the perfect, easy to use plugin for your WordPress website.
 	Author: yourownprogrammer
 	Author URL: http://www.yourownprogrammer.com
-	Version: 1.3
+	Version: 1.4
 	*/
 	define( 'YOP_POLL_WP_VERSION', '3.4.2' );
-	define( 'YOP_POLL_VERSION', '1.3' );
+	define( 'YOP_POLL_VERSION', '1.4' );
 	define( 'YOP_POLL_PATH', plugin_dir_path( __FILE__ ) );
 	define( 'YOP_POLL_URL', plugins_url( '', __FILE__ ) );
 	define( 'YOP_POLL_PLUGIN_FILE', plugin_basename( __FILE__ ) );
@@ -27,7 +27,7 @@
 
 	#Yop Poll Tables Name
 	global $wpdb;
-	$wpdb->yop_poll_version					= "1.3";	
+	$wpdb->yop_poll_version					= "1.4";	
 	$wpdb->yop_polls						= $wpdb->prefix . 'yop_polls';
 	$wpdb->yop_poll_answers					= $wpdb->prefix . 'yop_poll_answers';
 	$wpdb->yop_poll_templates				= $wpdb->prefix . 'yop_poll_templates';

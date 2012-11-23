@@ -137,6 +137,8 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 == Changelog ==
 
 
+= 1.4 = 
+* Fixed compatibility issues with other plugins
 
 = 1.3 = 
 * Fixed bug that was causing widgets text not to display
