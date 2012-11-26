@@ -136,6 +136,8 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 1.5 = 
+* Fixed sort_answers_by_votes_asc_callback() bug
 
 = 1.4 = 
 * Fixed compatibility issues with other plugins

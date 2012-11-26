@@ -787,8 +787,8 @@
 				}
 			}
 			if ( $is_votes_sort ) {
-				$order_dir	= ( '' == $order_dir ) ? 'asc' : $order_dir;
-				usort($answers, "self::sort_answers_by_votes_".$order_dir."_callback");
+				$order_dir	= ( '' == $order_dir ) ? 'asc' : $order_dir;    
+				usort($answers, array( 'Yop_Poll_Model', "sort_answers_by_votes_".$order_dir."_callback" ) );
 			}
 			return $answers;	
 		}
@@ -2244,7 +2244,7 @@
 					elseif( 'random' == $poll_options['sorting_answers'] ) {
 						$answers	= self::get_poll_answers( $poll_id, array('default'), 'rand()' );
 					}
-					elseif( 'votes' == $poll_options['sorting_results'] ) {
+					elseif( 'votes' == $poll_options['sorting_answers'] ) {
 						$order_dir = 'asc';
 						if( isset( $poll_options['sorting_answers_direction'] ) )
 							$order_dir = ('asc' == $poll_options['sorting_answers_direction']) ? 'asc' : 'desc';
