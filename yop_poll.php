@@ -5,10 +5,10 @@
 	Description: Use a full option polling functionality to get the answers you need. YOP Poll is the perfect, easy to use plugin for your WordPress website.
 	Author: yourownprogrammer
 	Author URL: http://www.yourownprogrammer.com
-	Version: 1.5
+	Version: 1.6
 	*/
-	define( 'YOP_POLL_WP_VERSION', '3.4.2' );
-	define( 'YOP_POLL_VERSION', '1.5' );
+	define( 'YOP_POLL_WP_VERSION', '3.3.0' );
+	define( 'YOP_POLL_VERSION', '1.6' );
 	define( 'YOP_POLL_PATH', plugin_dir_path( __FILE__ ) );
 	define( 'YOP_POLL_URL', plugins_url( '', __FILE__ ) );
 	define( 'YOP_POLL_PLUGIN_FILE', plugin_basename( __FILE__ ) );
@@ -23,11 +23,11 @@
 	require_once( ABSPATH . WPINC . '/pluggable.php' );
 	require_once( YOP_POLL_INC . '/public-admin.php' );
 	require_once( YOP_POLL_INC . '/widget.php' );
-	require_once( YOP_POLL_INC . '/theme-functions.php' );
+	require_once( YOP_POLL_INC . '/theme-functions.php' );    
 
 	#Yop Poll Tables Name
 	global $wpdb;
-	$wpdb->yop_poll_version					= "1.5";	
+	$wpdb->yop_poll_version					= YOP_POLL_VERSION;	
 	$wpdb->yop_polls						= $wpdb->prefix . 'yop_polls';
 	$wpdb->yop_poll_answers					= $wpdb->prefix . 'yop_poll_answers';
 	$wpdb->yop_poll_templates				= $wpdb->prefix . 'yop_poll_templates';
@@ -59,7 +59,7 @@
 	);
 
 	$yop_poll_public_admin	= new Yop_Poll_Public_Admin( new Yop_Poll_Config( $yop_poll_config_data ) );
-	$yop_poll				= new $yop_poll_current_class( new Yop_Poll_Config( $yop_poll_config_data ) );
+	$yop_poll				= new $yop_poll_current_class( new Yop_Poll_Config( $yop_poll_config_data ) );  
 	
 
 	function yop_poll_uninstall() {

@@ -750,8 +750,13 @@
 			return $this->poll;
 		}
 
-		public static function get_poll_answers( $poll_id, $types = array( 'default' ), $order = 'id', $order_dir = '' ) {
+		public static function get_poll_answers( $poll_id, $types = array( 'default' ), $order = 'id', $order_dir = '', $include_others = false, $percentages_decimals = 0 ) {
 			global $wpdb;
+
+			if( $include_others ) {
+				$types	= array_diff( $types, array( 'other' ) );
+			}
+
 			$type_sql = '';
 			if ( count( $types ) > 0 ) {
 				$type_sql .= ' AND type in (';
@@ -777,20 +782,123 @@
 				),
 				ARRAY_A 
 			);
+
+			if ( $include_others ) {
+				$other_answer_details	= $wpdb->get_row(
+					$wpdb -> prepare(
+						"
+						SELECT * 
+						FROM ".$wpdb->yop_poll_answers." 
+						WHERE poll_id = %d AND type = 'other' ",
+						$poll_id
+					),
+					ARRAY_A	
+				);
+
+				$other_answers_values	= self::get_other_answers_votes( $other_answer_details['id'] );
+				if (  count( $other_answers_values ) > 0 ) {
+					if ( 'id' == $order && 'desc' == $order_dir ) 
+						$interval	= range( count( $other_answers_values ) - 1, 0, -1 );
+					else
+						$interval	= range( 0, count( $other_answers_values ) - 1, 1 );
+					for( $i = 0; $i < count( $other_answers_values ); $i++ ) {
+						$answers[] = 
+						array(
+							'id'		=> $other_answer_details['id'],
+							'poll_id'	=> $poll_id,
+							'answer'	=> $other_answers_values[ $interval[ $i ] ]['other_answer_value'],
+							'votes'		=> $other_answers_values[ $interval[ $i ] ]['votes'],
+							'status'	=> 'active',
+							'type'		=> 'other'
+						);
+					}
+				}
+				else {
+					$answers[]	= $other_answer_details;
+				}
+			} 
 			$total_votes	= self::get_sum_poll_votes( $poll_id );
 			if( count( $answers ) > 0 ) {
 				for( $i = 0; $i < count ( $answers ); $i++ ) {
 					if( 0 == intval( $total_votes ) )
 						$answers[$i]['procentes']	= 0;
-					else
-						$answers[$i]['procentes']	= intval( ( intval( $answers[$i]['votes']) / intval( $total_votes ) * 100 )  ) ;
+					else {
+						$answers[$i]['procentes']	= round( ( intval( $answers[$i]['votes']) / intval( $total_votes ) * 100 ), $percentages_decimals ) ;
+						if ( 0 < $answers[$i]['procentes'] )
+							$answers[$i]['procentes']	= number_format( $answers[$i]['procentes'], $percentages_decimals ); 
+					}
 				}
 			}
+
 			if ( $is_votes_sort ) {
 				$order_dir	= ( '' == $order_dir ) ? 'asc' : $order_dir;    
 				usort($answers, array( 'Yop_Poll_Model', "sort_answers_by_votes_".$order_dir."_callback" ) );
 			}
+			if ( $include_others ) {
+				if ( 'answer' == $order ) {
+					$order_dir	= ( '' == $order_dir ) ? 'asc' : $order_dir;    
+					usort($answers, array( 'Yop_Poll_Model', "sort_answers_alphabetical_".$order_dir."_callback" ) );	
+				}
+
+				if ( 'rand()' == $order ) {
+					$interval		= range( 0, count( $answers ) - 1, 1 );
+					shuffle( $interval );
+					$new_answers	= array();
+					foreach ( $interval as $number ) {
+						$new_answers[]	= $answers[ $number ];		
+					}
+					$answers	= $new_answers;
+				}
+			}
 			return $answers;	
+		}
+
+		public static function get_count_poll_answers( $poll_id, $types = array( 'default' ), $include_others = false ) {
+			global $wpdb;
+
+			$answers_no			= 0;
+			$other_answers_no	= 0;
+
+			if( $include_others ) {
+				$types	= array_diff( $types, array( 'other' ) );
+			}
+
+			$type_sql = '';
+			if ( count( $types ) > 0 ) {
+				$type_sql .= ' AND type in (';
+				foreach ( $types as $type ) {
+					$type_sql .= "'".$type."',";		
+				}
+				$type_sql = trim ( $type_sql, ',' );
+				$type_sql .= ' ) ';
+			}
+
+			$answers_no = $wpdb->get_var( 
+				$wpdb -> prepare(
+					"
+					SELECT count(*) 
+					FROM ".$wpdb->yop_poll_answers." 
+					WHERE poll_id = %d ".$type_sql,
+					$poll_id
+				) 
+			);
+
+			if ( $include_others ) {
+				$other_answer_details	= $wpdb->get_row(
+					$wpdb -> prepare(
+						"
+						SELECT * 
+						FROM ".$wpdb->yop_poll_answers." 
+						WHERE poll_id = %d AND type = 'other' ",
+						$poll_id
+					),
+					ARRAY_A	
+				);
+
+				$other_answers_no	= count( self::get_other_answers_votes( $other_answer_details['id'] ) );
+			} 
+
+			return $answers_no  + $other_answers_no;	
 		}
 
 		public static function get_poll_answer_by_id( $answer_id ) {
@@ -1258,8 +1366,7 @@
 			"; 
 			$sql	.= $sql_search;
 			return $wpdb->get_var( $sql ); 
-		}
-
+		} 
 
 		public static function get_bans_filter_search ( $orderby = 'id', $order = 'desc' , $search = array( 'fields' => array(), 'value' => NULL ), $type = NULL, $poll_id = NULL, $offset = 0, $per_page = 99999999 ) {
 			global $wpdb;
@@ -1965,9 +2072,16 @@
 			$poll_id 			= $this->poll['id'];
 			if( ! $poll_id )
 				return '';
-			$poll_details		= $this->poll;
-			$poll_options		= $this->poll_options;
-			$template_id		= $poll_options['template'];
+			$poll_details			= $this->poll;
+			$poll_options			= $this->poll_options;
+			$template_id			= $poll_options['template'];
+			$display_other_answers_values	= false;
+			if ( isset( $poll_options['display_other_answers_values'] ) ) {
+				if ( 'yes' == $poll_options['display_other_answers_values'] )
+					$display_other_answers_values	= true;
+				else
+					$display_other_answers_values	= false;
+			}
 			if ( '' == $template_id ) {
 				$default_template	= self::get_default_template();
 				$template_id	= $default_template['id'] ? $default_template['id'] : 0;
@@ -1975,12 +2089,12 @@
 			$answers_tabulated_cols		= 1;
 			$results_tabulated_cols		= 1;
 			if ( 'orizontal'	== $poll_options['display_answers'] ) { 
-				$ans_no			= count( self::get_poll_answers( $poll_id, array( 'default', 'other' ) ) );
+				$ans_no			= self::get_count_poll_answers( $poll_id, array( 'default', 'other' ) ) ;
 				if( $ans_no > 0 )
 					$answers_tabulated_cols	= $ans_no;	
 			}
 			if ( 'orizontal'	== $poll_options['display_results'] ) { 
-				$ans_no			= count( self::get_poll_answers( $poll_id, array( 'default', 'other' ) ) );
+				$ans_no			= self::get_count_poll_answers( $poll_id, array( 'default', 'other' ), $display_other_answers_values ) ;
 				if( $ans_no > 0 )
 					$results_tabulated_cols	= $ans_no;	
 			}
@@ -2017,7 +2131,7 @@
 						$template		= $template_details['before_vote_template'];
 						if ( 'before' == $poll_options['view_results'] )
 							$template	= str_ireplace( '%POLL-ANSWER-RESULT-LABEL%', $poll_options['answer_result_label'], $template );
-						$template	= str_ireplace( '%POLL-VOTE-BUTTON%', '<button class="yop_poll_vote_button" id="yop_poll_vote-button-'.$poll_id.'" onclick="yop_poll_do_vote(\''.$poll_id.'\'); return false;">Vote</button>', $template );
+						$template	= str_ireplace( '%POLL-VOTE-BUTTON%', '<button class="yop_poll_vote_button" id="yop_poll_vote-button-'.$poll_id.'" onclick="yop_poll_do_vote(\''.$poll_id.'\'); return false;">'.$poll_options['vote_button_label'].'</button>', $template );
 					}
 					else {
 						$template		= $template_details['after_vote_template'];
@@ -2103,31 +2217,50 @@
 					( 'after-poll-end-date' == $poll_options['view_results'] && self::get_mysql_curent_date() >= $this -> poll['end_date'] ) 
 				) && 'never' != $poll_options['view_results']
 			) {
+				$display_other_answers_values	= false;
+				if ( 'yes' == $poll_options['display_other_answers_values'] )
+					$display_other_answers_values	= true;
+				else
+					$display_other_answers_values	= false;
+
+				$percentages_decimals	= 0;
+				if ( isset( $poll_options['percentages_decimals'] ) )
+					$percentages_decimals	= $poll_options['percentages_decimals'];
 				if( isset( $poll_options['sorting_results'] ) ) {
 					if( 'exact' == $poll_options['sorting_results'] ) {
-						$answers	= self::get_poll_answers( $poll_id, array('default', 'other') );
+						$order_dir = 'asc';
+						if( isset( $poll_options['sorting_results_direction'] ) )
+							$order_dir = ('asc' == $poll_options['sorting_results_direction']) ? 'asc' : 'desc';
+						$answers	= self::get_poll_answers( $poll_id, array('default', 'other'), 'id', $order_dir, $display_other_answers_values, $percentages_decimals );
 					}
 					elseif( 'alphabetical' == $poll_options['sorting_results'] ) {
 						$order_dir = 'asc';
 						if( isset( $poll_options['sorting_results_direction'] ) )
 							$order_dir = ('asc' == $poll_options['sorting_results_direction']) ? 'asc' : 'desc';
-						$answers	= self::get_poll_answers( $poll_id, array('default', 'other'), 'answer',  $order_dir );
+						$answers	= self::get_poll_answers( $poll_id, array('default', 'other'), 'answer',  $order_dir, $display_other_answers_values, $percentages_decimals );
 					}
 					elseif( 'random' == $poll_options['sorting_results'] ) {
-						$answers	= self::get_poll_answers( $poll_id, array('default', 'other'), 'rand()' );
+						$answers	= self::get_poll_answers( $poll_id, array('default', 'other'), 'rand()', '', $display_other_answers_values, $percentages_decimals );
 					}
 					elseif( 'votes' == $poll_options['sorting_results'] ) {
 						$order_dir = 'asc';
 						if( isset( $poll_options['sorting_results_direction'] ) )
 							$order_dir = ('asc' == $poll_options['sorting_results_direction']) ? 'asc' : 'desc';
-						$answers		= self::get_poll_answers( $poll_id, array('default', 'other'), 'votes', $order_dir );
+						$answers		= self::get_poll_answers( $poll_id, array('default', 'other'), 'votes', $order_dir, $display_other_answers_values, $percentages_decimals );
 					}
 					else {
-						$answers	= self::get_poll_answers( $poll_id );
+						$order_dir = 'asc';
+						if( isset( $poll_options['sorting_results_direction'] ) )
+							$order_dir = ('asc' == $poll_options['sorting_results_direction']) ? 'asc' : 'desc';
+						$answers	= self::get_poll_answers( $poll_id, array('default', 'other'), 'id', $order_dir, $display_other_answers_values, $percentages_decimals );
 					}
 				}
-				else
-					$answers	= self::get_poll_answers( $poll_id );
+				else {
+					$order_dir = 'asc';
+					if( isset( $poll_options['sorting_results_direction'] ) )
+						$order_dir = ('asc' == $poll_options['sorting_results_direction']) ? 'asc' : 'desc';
+					$answers	= self::get_poll_answers( $poll_id, array('default', 'other'), 'id', $order_dir, $display_other_answers_values, $percentages_decimals );
+				}
 				if( count( $answers ) > 0 ) {
 					foreach( $answers as $answer ) {
 						$poll_options = $this->poll_options;
@@ -2178,6 +2311,9 @@
 			$poll_options		= $this->poll_options;
 			$return_string		= '';
 			$is_voted			= $this->is_voted();
+			$percentages_decimals	= 0;
+			if ( isset( $poll_options['percentages_decimals'] ) )
+				$percentages_decimals	= $poll_options['percentages_decimals'];
 			if( ! $is_voted ) {
 				$multiple_answers = false;
 				if( isset( $poll_options['allow_multiple_answers'] ) )
@@ -2198,7 +2334,7 @@
 							);
 							$other_answer_id	= self::insert_answer_to_database( $answer );	
 						}
-						$other_answer = self::get_poll_answers( $poll_id, array( 'other') );
+						$other_answer = self::get_poll_answers( $poll_id, array( 'other'), 'id', '', false, $percentages_decimals );
 						if( $multiple_answers )
 							$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-CHECK-INPUT%', '<input type="checkbox" value="'.$other_answer[0]['id'].'" name="yop_poll_answer['.$other_answer[0]['id'].']" id="yop-poll-answer-'.$other_answer[0]['id'].'" />', $m[5] );			
 						else 
@@ -2230,32 +2366,45 @@
 			$poll_options		= $this->poll_options;
 			$return_string		= '';
 			$is_voted			= $this->is_voted();
+			$percentages_decimals	= 0;
+			if ( isset( $poll_options['percentages_decimals'] ) )
+				$percentages_decimals	= $poll_options['percentages_decimals'];
 			if( ! $is_voted ) {
 				if( isset( $poll_options['sorting_answers'] ) ) {
 					if( 'exact' == $poll_options['sorting_answers'] ) {
-						$answers	= self::get_poll_answers( $poll_id );
+						$order_dir = 'asc';
+						if( isset( $poll_options['sorting_answers_direction'] ) )
+							$order_dir = ('asc' == $poll_options['sorting_answers_direction']) ? 'asc' : 'desc';
+						$answers	= self::get_poll_answers( $poll_id, array( 'default'), 'id', $order_dir, false, $percentages_decimals );
 					}
 					elseif( 'alphabetical' == $poll_options['sorting_answers'] ) {
 						$order_dir = 'asc';
 						if( isset( $poll_options['sorting_answers_direction'] ) )
 							$order_dir = ('asc' == $poll_options['sorting_answers_direction']) ? 'asc' : 'desc';
-						$answers	= self::get_poll_answers( $poll_id, array('default'), 'answer',  $order_dir );
+						$answers	= self::get_poll_answers( $poll_id, array('default'), 'answer',  $order_dir, false, $percentages_decimals );
 					}
 					elseif( 'random' == $poll_options['sorting_answers'] ) {
-						$answers	= self::get_poll_answers( $poll_id, array('default'), 'rand()' );
+						$answers	= self::get_poll_answers( $poll_id, array('default'), 'rand()', '', false, $percentages_decimals );
 					}
 					elseif( 'votes' == $poll_options['sorting_answers'] ) {
 						$order_dir = 'asc';
 						if( isset( $poll_options['sorting_answers_direction'] ) )
 							$order_dir = ('asc' == $poll_options['sorting_answers_direction']) ? 'asc' : 'desc';
-						$answers		= self::get_poll_answers( $poll_id, array('default'), 'votes', $order_dir );
+						$answers		= self::get_poll_answers( $poll_id, array('default'), 'votes', $order_dir, '', $percentages_decimals );
 					}
 					else {
-						$answers	= self::get_poll_answers( $poll_id );
+						$order_dir = 'asc';
+						if( isset( $poll_options['sorting_answers_direction'] ) )
+							$order_dir = ('asc' == $poll_options['sorting_answers_direction']) ? 'asc' : 'desc';
+						$answers	= self::get_poll_answers( $poll_id, array( 'default'), 'id', $order_dir, false, $percentages_decimals );
 					}
 				}
-				else
-					$answers	= self::get_poll_answers( $poll_id );
+				else {
+					$order_dir = 'asc';
+					if( isset( $poll_options['sorting_answers_direction'] ) )
+						$order_dir = ('asc' == $poll_options['sorting_answers_direction']) ? 'asc' : 'desc';
+					$answers	= self::get_poll_answers( $poll_id, array( 'default'), 'id', $order_dir, false, $percentages_decimals );
+				}
 				$multiple_answers = false;
 				if( isset( $poll_options['allow_multiple_answers'] ) )
 					if ( 'yes' == $poll_options['allow_multiple_answers'] )
@@ -2318,6 +2467,7 @@
 				FROM ".$wpdb->yop_poll_logs."
 				WHERE answer_id = %d
 				GROUP BY other_answer_value
+				ORDER BY id
 				LIMIT %d, %d
 				",
 				$answer_id, 
@@ -2382,6 +2532,20 @@
 			return $wpdb->get_var( $sql );
 		}
 
+		public static function sort_answers_alphabetical_asc_callback( $a, $b ) {
+			$cmp	= strcmp( $a['answer'], $b['answer'] );
+			if (  $cmp == 0 )
+				return 0;
+			return ( $cmp < 0 ) ? -1 : 1;
+		}
+
+		public static function sort_answers_alphabetical_desc_callback( $a, $b ) {
+			$cmp	= strcmp( $a['answer'], $b['answer'] );
+			if (  $cmp == 0 )
+				return 0;
+			return ( $cmp < 0 ) ? 1 : -1;
+		}
+
 		public static function sort_answers_by_votes_asc_callback( $a, $b ) {
 			if ( intval( $a['votes'] ) == intval( $b['votes'] ) )
 				return 0;
@@ -2416,9 +2580,9 @@
 		private static function display_poll_result_votes ( $answer = array(), $poll_options = array() ) {
 			if ( 'votes-number' == $poll_options['view_results_type'] || 'votes-number-and-percentages' == $poll_options['view_results_type'] )	
 				if ( '1' == $answer['votes'] )		
-					return $answer['votes'].' '.__( 'vote', 'yop_poll' );
+					return $answer['votes'].' '.$poll_options['singular_answer_result_votes_number_label'];
 				else
-					return $answer['votes'].' '.__( 'votes', 'yop_poll' );
+					return $answer['votes'].' '.$poll_options['plural_answer_result_votes_number_label'];
 		}
 
 		private static function display_poll_result_percentages ( $answer = array(), $poll_options = array() ) {

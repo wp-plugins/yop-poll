@@ -7,7 +7,42 @@
 			register_activation_hook( $this->_config->plugin_file, array( $this, 'activate' ) );
 			register_deactivation_hook( $this->_config->plugin_file, array( $this, 'deactivate' ) );
 			register_uninstall_hook( $this->_config->plugin_file, 'yop_poll_uninstall' );
-			$this->add_action('admin_enqueue_scripts', 'load_editor_functions');  
+			$this->add_action('admin_enqueue_scripts', 'load_editor_functions');
+			$this->add_action('plugins_loaded', 'db_update');  
+		}
+
+		public function db_update() {
+			global $wpdb;
+			$installed_version	= get_option( "yop_poll_version" );
+
+			//update for version 1.5
+			if( version_compare ( $installed_version, '1.5', '<=' ) ) {
+				$default_options						= get_option( 'yop_poll_options' );
+				if ( ! isset( $default_options['vote_button_label'] ) ) {
+					$default_options['vote_button_label']	= 'Vote';
+				}
+				update_option( "yop_poll_version", $wpdb->yop_poll_version );
+				update_option( 'yop_poll_options', $default_options );
+			}
+
+			//update for version 1.6
+			if( version_compare ( $installed_version, '1.6', '<=' ) ) {
+				$default_options									= get_option( 'yop_poll_options' );
+				if ( ! isset( $default_options['display_other_answers_values'] ) ) {
+					$default_options['display_other_answers_values']	= 'no';
+				}
+				if ( ! isset( $default_options['percentages_decimals'] ) ) {
+					$default_options['percentages_decimals']	= '0';
+				}
+				if ( ! isset( $default_options['plural_answer_result_votes_number_label'] ) ) {
+					$default_options['singular_answer_result_votes_number_label']	= 'vote';
+				}
+				if ( ! isset( $default_options['plural_answer_result_votes_number_label'] ) ) {
+					$default_options['plural_answer_result_votes_number_label']	= 'votes';
+				}
+				update_option( "yop_poll_version", $wpdb->yop_poll_version );
+				update_option( 'yop_poll_options', $default_options );
+			}
 		}
 
 		public function admin_loader() { 
@@ -51,7 +86,7 @@
 			}
 			else {
 				if ( ! extension_loaded('json') ) {
-					$error = new WP_Error( 'Wordpress_json_error', sprintf( __( 'You need the  json php extension for this plugin', 'yop_poll' ), YOP_POLL_WP_VERSION ), __( 'Error: Wordpress Extension Problem', 'yop_poll' ) );
+					$error = new WP_Error( 'Wordpress_json_error', __( 'You need the  json php extension for this plugin', 'yop_poll' ), __( 'Error: Wordpress Extension Problem', 'yop_poll' ) );
 
 					// die & print error message & code - for admins only!
 					if ( isset( $error ) && is_wp_error( $error ) && current_user_can( 'manage_options' ) ) 
@@ -237,7 +272,7 @@
 					wp_enqueue_style( 'yop-poll-admin-add-new', "{$this->_config->plugin_url}/css/yop-poll-admin-add-new.css", array(), $this->_config->version );
 					wp_enqueue_style( 'yop-poll-timepicker', "{$this->_config->plugin_url}/css/timepicker.css", array(), $this->_config->version );
 					wp_enqueue_style( 'yop-poll-jquery-ui', "{$this->_config->plugin_url}/css/jquery-ui.css", array(), $this->_config->version );
-					
+
 					wp_enqueue_script( 'yop-poll-admin-add-new', "{$this->_config->plugin_url}/js/yop-poll-admin-add-new.js", array( 'jquery', 'yop-poll-jquery-ui-timepicker' ), $this->_config->version );
 					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
 					wp_localize_script( 'yop-poll-admin-add-new', 'yop_poll_add_new_config', $yop_poll_add_new_config );
@@ -2109,6 +2144,21 @@
 						$newinput['other_answers_label']		= $default_options['other_answers_label'] ;
 						$errors									.= __( 'Option "Allow Other Answer Label" Not Updated! The field must not be empty!', 'yop_poll' ).$message_delimiter;
 					}
+
+					if( isset( $input['display_other_answers_values'] ) ) {
+						if( in_array( $input['display_other_answers_values'], array('yes', 'no') ) ) { 
+							$newinput['display_other_answers_values']	= trim( $input['display_other_answers_values'] ) ;
+							$updated							.= __( 'Option "Display Other Answers Values" Updated!', 'yop_poll' ).$message_delimiter;
+						}
+						else {
+							$newinput['display_other_answers_values']	= $default_options['display_other_answers_values'] ;
+							$errors								.= __( 'Option "Display Other Answers Values" Not Updated! Choose "yes" or "no"!', 'yop_poll' ).$message_delimiter;	
+						}
+					}
+					else {
+						$newinput['display_other_answers_values']		= $default_options['display_other_answers_values'] ;
+						$errors									.= __( 'Option "Display Other Answers Values" Not Updated! Choose "yes" or "no"!', 'yop_poll' ).$message_delimiter;
+					}
 				}
 			}
 			else {
@@ -2514,6 +2564,55 @@
 				$newinput['answer_result_label']			= $default_options['answer_result_label'];
 				$errors										.= __( 'Option "Poll Answer Result Label" Not Updated!', 'yop_poll' ).$message_delimiter;	
 			}
+			
+			//singular_answer_result_votes_number_label
+			if ( isset( $input['singular_answer_result_votes_number_label'] ) ) {
+				if ( '' !=  $input['singular_answer_result_votes_number_label'] ) {
+					$newinput['singular_answer_result_votes_number_label']			= trim( $input['singular_answer_result_votes_number_label'] );
+					$updated								.= __( 'Option "Poll Answer Result Votes Number Singular Label" Updated!', 'yop_poll' ).$message_delimiter;
+				}
+				else {
+					$newinput['singular_answer_result_votes_number_label']			= $default_options['singular_answer_result_votes_number_label'];
+					$errors									.= __( 'Option "Poll Answer Result Votes Number Singular Label" Not Updated! The field is empty!', 'yop_poll' ).$message_delimiter;
+				}
+			}
+			else {
+				$newinput['singular_answer_result_votes_number_label']				=  $default_options['singular_answer_result_votes_number_label'];
+				$errors										.= __( 'Option "Poll Answer Result Votes Number Singular Label" Not Updated!', 'yop_poll' ).$message_delimiter;	
+			}
+			
+			//plural_answer_result_votes_number_label
+			if ( isset( $input['plural_answer_result_votes_number_label'] ) ) {
+				if ( '' !=  $input['singular_answer_result_votes_number_label'] ) {
+					$newinput['plural_answer_result_votes_number_label']			= trim( $input['plural_answer_result_votes_number_label'] );
+					$updated								.= __( 'Option "Poll Answer Result Votes Number Plural Label" Updated!', 'yop_poll' ).$message_delimiter;
+				}
+				else {
+					$newinput['plural_answer_result_votes_number_label']			= $default_options['plural_answer_result_votes_number_label'];
+					$errors									.= __( 'Option "Poll Answer Result Votes Number Plural Label" Not Updated! The field is empty!', 'yop_poll' ).$message_delimiter;
+				}
+			}
+			else {
+				$newinput['plural_answer_result_votes_number_label']				=  $default_options['plural_answer_result_votes_number_label'];
+				$errors										.= __( 'Option "Poll Answer Result Votes Number Plural Label" Not Updated!', 'yop_poll' ).$message_delimiter;	
+			}
+
+			//vote_button_label
+			if ( isset( $input['vote_button_label'] ) ) {
+				if ( '' !=  $input['vote_button_label'] ) {
+					$newinput['vote_button_label']			= trim( $input['vote_button_label'] );
+					$updated								.= __( 'Option "Vote Button Label" Updated!', 'yop_poll' ).$message_delimiter;
+				}
+				else {
+					$newinput['vote_button_label']			= $default_options['vote_button_label'];
+					$errors									.= __( 'Option "Vote Button Label" Not Updated! The field is empty!', 'yop_poll' ).$message_delimiter;
+				}
+			}
+			else {
+				$newinput['vote_button_label']				=  $default_options['vote_button_label'];
+				$errors										.= __( 'Option "Vote Button Label" Not Updated!', 'yop_poll' ).$message_delimiter;	
+			}
+
 
 			//view_results_link
 			if ( isset( $input['view_results_link'] ) ) {
@@ -2716,6 +2815,22 @@
 				$newinput['blocking_voters']								= $default_options['blocking_voters'];
 				$errors														.= __( 'Option "Blocking Voters" Not Updated!', 'yop_poll' ).$message_delimiter;
 			}
+			
+			//percentages_decimals
+			if ( isset( $input['percentages_decimals'] ) ) {
+				if ( ctype_digit( $input['percentages_decimals'] ) ) {
+					$newinput['percentages_decimals']						=  trim( $input['percentages_decimals'] );
+					$updated											.= __( 'Option "Percentages Decimals" Updated!', 'yop_poll' ).$message_delimiter;
+				} 
+				else {
+					$newinput['percentages_decimals']						=  $default_options['percentages_decimals'];
+					$errors												.= __( 'Option "Percentages Decimals" Not Updated! Please fill in a number!', 'yop_poll' ).$message_delimiter;
+				}
+			}
+			else {
+				$newinput['percentages_decimals']							= $default_options['percentages_decimals'];
+				$errors													.= __( 'Option "Percentages Decimals" Not Updated!', 'yop_poll' ).$message_delimiter;
+			}
 
 			//view_poll_archive_link
 			if ( isset( $input['view_poll_archive_link'] ) ) {
@@ -2861,8 +2976,17 @@
 											<?php _e( 'Other Answer Label', 'yop_poll' ); ?>:
 										</th>
 										<td>
-											<input id="yop-poll-other-answers-label" type="text" name="yop_poll_options[other_answers_label]" value="<?php echo isset( $other_answer[0]['answer'] ) ? $other_answer[0]['answer'] : $default_options['other_answers_label'] ?>" />	
+											<input id="yop-poll-other-answers-label" type="text" name="yop_poll_options[other_answers_label]" value="<?php echo isset( $other_answer[0]['answer'] ) ? esc_html( stripslashes(  $other_answer[0]['answer'] ) ) : $default_options['other_answers_label'] ?>" />	
 											<input type="hidden" name="yop_poll_options[other_answers_id]" value="<?php echo isset( $other_answer[0]['id'] ) ? $other_answer[0]['id'] : '' ?>" />															
+										</td>
+									</tr>
+									<tr id="yop-poll-display-other-answers-values-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
+										<th>
+											<?php _e( 'Display Other Answers Values', 'yop_poll' ); ?>:
+										</th>
+										<td>
+											<label for="yop-poll-display-other-answers-values-no"><input id="yop-poll-display-other-answers-values-no" <?php echo 'no' == $default_options['display_other_answers_values'] ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[display_other_answers_values]" value="no" /> <?php _e( 'No', 'yop_poll' ); ?></label>
+											<label for="yop-poll-display-other-answers-values-yes"><input id="yop-poll-display-other-answers-values-yes" <?php echo 'yes' == $default_options['display_other_answers_values']  ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[display_other_answers_values]" value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label>															
 										</td>
 									</tr>
 									<tr>
@@ -3029,7 +3153,7 @@
 											</td>
 										</tr>
 										<tr>
-											<th><?php _e( 'Sorting Results in', 'yop_poll' ); ?>:</th>
+											<th><?php _e( 'Sorting Results', 'yop_poll' ); ?>:</th>
 											<td valign="top">
 												<label for="yop_poll_sorting_results_exact"><input id="yop_poll_sorting_results_exact" <?php echo $default_options['sorting_results'] == 'exact' ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[sorting_results]" value="exact" > <?php _e( 'Exact Order', 'yop_poll' ); ?></label>
 												<label for="yop_poll_sorting_results_alphabetical"><input id="yop_poll_sorting_results_alphabetical" <?php echo $default_options['sorting_results'] == 'alphabetical' ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[sorting_results]" value="alphabetical" > <?php _e( 'Alphabetical Order', 'yop_poll' ); ?></label>
@@ -3113,8 +3237,28 @@
 												<?php _e( 'Poll Answer Result Label', 'yop_poll'); ?>:
 											</th>
 											<td>
-												<input id="yop-poll-answer-result-label" type="text" name="yop_poll_options[answer_result_label]" value="<?php echo $default_options['answer_result_label']; ?>" /> <small><i>Use %POLL-ANSWER-RESULT-PERCENTAGES% for showing answer percentages and  %POLL-ANSWER-RESULT-VOTES% for showing answer number of votes</i></small>
+												<input id="yop-poll-answer-result-label" type="text" name="yop_poll_options[answer_result_label]" value="<?php echo esc_html( stripslashes( $default_options['answer_result_label'] ) ); ?>" /> <small><i>Use %POLL-ANSWER-RESULT-PERCENTAGES% for showing answer percentages and  %POLL-ANSWER-RESULT-VOTES% for showing answer number of votes</i></small>
 											</td>	
+										</tr>
+										<tr>
+											<th>
+												<?php _e( 'Poll Answer Result Votes Number Label', 'yop_poll' ); ?>:
+											</th>
+											<td>
+												<?php _e( 'Singular', 'yop_poll' ); ?>
+												<input id="yop-poll-singular-answer-result-votes-number-label" type="text" name="yop_poll_options[singular_answer_result_votes_number_label]" value="<?php echo esc_html( stripslashes( $default_options['singular_answer_result_votes_number_label'] ) ); ?>" />
+												<?php _e( 'Plural', 'yop_poll' ); ?>
+												<input id="yop-poll-plural-answer-result-votes-number-label" type="text" name="yop_poll_options[plural_answer_result_votes_number_label]" value="<?php echo esc_html( stripslashes( $default_options['plural_answer_result_votes_number_label'] ) ); ?>" />
+												
+											</td>
+										</tr>
+										<tr>
+											<th>
+												<?php _e( 'Vote Button Label', 'yop_poll' ); ?>:
+											</th>
+											<td>
+												<input id="yop-poll-vote-button-label" type="text" name="yop_poll_options[vote_button_label]" value="<?php echo esc_html( stripslashes( $default_options['vote_button_label'] ) ); ?>" />
+											</td>
 										</tr>
 										<tr>
 											<th>
@@ -3130,7 +3274,7 @@
 												<?php _e( 'View Results Link Label', 'yop_poll' ); ?>:
 											</th>
 											<td>
-												<input id="yop-poll-view-results-link-label" type="text" name="yop_poll_options[view_results_link_label]" value="<?php echo $default_options['view_results_link_label']; ?>" />
+												<input id="yop-poll-view-results-link-label" type="text" name="yop_poll_options[view_results_link_label]" value="<?php echo esc_html( stripslashes( $default_options['view_results_link_label'] ) ); ?>" />
 											</td>
 										</tr>
 										<tr>
@@ -3147,7 +3291,7 @@
 												<?php _e( 'View Back To Vote Link Label', 'yop_poll' ); ?>:
 											</th>
 											<td>
-												<input id="yop-poll-view-back-to-vote-link-label" type="text" name="yop_poll_options[view_back_to_vote_link_label]" value="<?php echo $default_options['view_back_to_vote_link_label']; ?>" />
+												<input id="yop-poll-view-back-to-vote-link-label" type="text" name="yop_poll_options[view_back_to_vote_link_label]" value="<?php echo esc_html( stripslashes( $default_options['view_back_to_vote_link_label'] ) ); ?>" />
 											</td>
 										</tr>
 										<tr>
@@ -3164,7 +3308,7 @@
 												<?php _e( 'View Total Votes Label', 'yop_poll' ); ?>:
 											</th>
 											<td>
-												<input id="yop-poll-view-total-votes-label" type="text" name="yop_poll_options[view_total_votes_label]" value="<?php echo $default_options['view_total_votes_label']; ?>" />
+												<input id="yop-poll-view-total-votes-label" type="text" name="yop_poll_options[view_total_votes_label]" value="<?php echo esc_html( stripslashes( $default_options['view_total_votes_label'] ) ); ?>" />
 											</td>
 										</tr>
 										<tr>
@@ -3181,7 +3325,7 @@
 												<?php _e( 'View Total Voters Label', 'yop_poll' ); ?>:
 											</th>
 											<td>
-												<input id="yop-poll-view-total-voters-label" type="text" name="yop_poll_options[view_total_voters_label]" value="<?php echo $default_options['view_total_voters_label']; ?>" />
+												<input id="yop-poll-view-total-voters-label" type="text" name="yop_poll_options[view_total_voters_label]" value="<?php echo esc_html( stripslashes( $default_options['view_total_voters_label'] ) ); ?>" />
 											</td>
 										</tr>
 										<tr>
@@ -3189,7 +3333,7 @@
 												<label for="yop-poll-page-url"><?php _e( 'Poll Page Url ', 'yop_poll' ); ?>:</label>
 											</th>
 											<td>
-												<input id="yop-poll-page-url" type="text" name="yop_poll_options[poll_page_url]" value="<?php echo $default_options['poll_page_url']; ?>" />
+												<input id="yop-poll-page-url" type="text" name="yop_poll_options[poll_page_url]" value="<?php echo esc_html( stripslashes( $default_options['poll_page_url'] ) ); ?>" />
 											</td>
 										</tr>
 									</tbody>
@@ -3238,6 +3382,14 @@
 												</select> 
 											</td>
 										</tr>
+										<tr>
+											<th>
+												<?php _e( 'Percentages Decimals', 'yop_poll' ); ?>:
+											</th>
+											<td>
+												<input id="yop-poll-percentages-decimals" type="text" name="yop_poll_options[percentages_decimals]" value="<?php echo esc_html( stripslashes( $default_options['percentages_decimals'] ) ); ?>" />
+											</td>
+										</tr>
 									</tbody>
 								</table>
 							</div>
@@ -3262,7 +3414,7 @@
 											<?php _e( 'View Poll Archive Link Label', 'yop_poll' ); ?>:
 										</th>
 										<td>
-											<input id="yop-poll-view-poll-archive-link-label" type="text" name="yop_poll_options[view_poll_archive_link_label]" value="<?php echo $default_options['view_poll_archive_link_label']; ?>" />
+											<input id="yop-poll-view-poll-archive-link-label" type="text" name="yop_poll_options[view_poll_archive_link_label]" value="<?php echo esc_html( stripslashes( $default_options['view_poll_archive_link_label'] ) ); ?>" />
 										</td>
 									</tr>
 									<tr id="yop-poll-view-poll-archive-link-div" style="<?php echo 'yes' != $default_options['view_poll_archive_link'] ? 'display: none;' : '';  ?>">
@@ -3270,7 +3422,7 @@
 											<?php _e( 'Poll Archive Url', 'yop_poll' ); ?>:
 										</th>
 										<td>
-											<input id="yop-poll-poll-archive-url" type="text" name="yop_poll_options[poll_archive_url]" value="<?php echo $default_options['poll_archive_url']; ?>" />
+											<input id="yop-poll-poll-archive-url" type="text" name="yop_poll_options[poll_archive_url]" value="<?php echo esc_html( stripslashes( $default_options['poll_archive_url'] ) ); ?>" />
 										</td>
 									</tr>
 									<tr>
@@ -3288,6 +3440,14 @@
 										</th>
 										<td>
 											<input id="yop-poll-show-in-archive-order" type="text" name="yop_poll_options[archive_order]" value="<?php echo $default_options['archive_order']; ?>" />
+										</td>
+									</tr>
+									<tr>
+										<th>
+											<?php _e( 'Archive Polls Per Page', 'yop_poll' ); ?>:
+										</th>
+										<td>
+											<input id="yop-poll-archive-polls-per-page" type="text" name="yop_poll_options[archive_polls_per_page]" value="<?php echo $default_options['archive_polls_per_page']; ?>" />
 										</td>
 									</tr>
 								</table>	
@@ -3395,7 +3555,7 @@
 												<th scope="row"><label class="yop_poll_answer_label" for="yop-poll-answer<?php echo $answer_id ?>"><?php echo $yop_poll_add_new_config['text_answer']; ?> <?php echo $answer_id ?></label></th>
 												<td>
 													<input type="hidden" value="<?php echo isset( $answers[ $answer_id - 1 ]['id'] )? $answers[ $answer_id - 1 ]['id'] : ''; ?>" name="yop_poll_answer_ids[answer<?php echo $answer_id ?>]" />
-													<input type="text" value="<?php echo isset( $answers[ $answer_id - 1 ]['answer'] )? $answers[ $answer_id - 1 ]['answer'] : ''; ?>" id="yop-poll-answer<?php echo $answer_id ?>" name="yop_poll_answer[answer<?php echo $answer_id ?>]" /></td>
+													<input type="text" value="<?php echo isset( $answers[ $answer_id - 1 ]['answer'] )? esc_html( stripslashes( $answers[ $answer_id - 1 ]['answer'] ) ) : ''; ?>" id="yop-poll-answer<?php echo $answer_id ?>" name="yop_poll_answer[answer<?php echo $answer_id ?>]" /></td>
 												<td align="right"><input type="button" value="<?php echo $yop_poll_add_new_config['text_customize_answer']; ?>" onclick="yop_poll_toogle_customize_answer('#yop-poll-answer-table', <?php echo $answer_id ?>); return false;" class="button" /> <input onclick="yop_poll_remove_answer('#yop-poll-answer-table', <?php echo $answer_id ?>); return false;" type="button" value="<?php echo $yop_poll_add_new_config['text_remove_answer'];?>" class="button" /></td>
 											</tr>
 											<tr class="yop_poll_tr_customize_answer" id="yop_poll_tr_customize_answer<?php echo $answer_id ?>" style="display:none;"> 
@@ -3503,8 +3663,17 @@
 										<?php _e( 'Other Answer Label', 'yop_poll' ); ?>:
 									</th>
 									<td>
-										<input id="yop-poll-other-answers-label" type="text" name="yop_poll_options[other_answers_label]" value="<?php echo isset( $other_answer[0]['answer'] ) ? $other_answer[0]['answer'] : $default_options['other_answers_label'] ?>" />	
+										<input id="yop-poll-other-answers-label" type="text" name="yop_poll_options[other_answers_label]" value="<?php echo isset( $other_answer[0]['answer'] ) ? esc_html( stripslashes( $other_answer[0]['answer'] ) ) : $default_options['other_answers_label'] ?>" />	
 										<input type="hidden" name="yop_poll_options[other_answers_id]" value="<?php echo isset( $other_answer[0]['id'] ) ? $other_answer[0]['id'] : '' ?>" />															
+									</td>
+								</tr>
+								<tr id="yop-poll-display-other-answers-values-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
+									<th>
+										<?php _e( 'Display Other Answers Values', 'yop_poll' ); ?>:
+									</th>
+									<td>
+										<label for="yop-poll-display-other-answers-values-no"><input id="yop-poll-display-other-answers-values-no" <?php echo 'no' == $default_options['display_other_answers_values'] ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[display_other_answers_values]" value="no" /> <?php _e( 'No', 'yop_poll' ); ?></label>
+										<label for="yop-poll-display-other-answers-values-yes"><input id="yop-poll-display-other-answers-values-yes" <?php echo 'yes' == $default_options['display_other_answers_values']  ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[display_other_answers_values]" value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label>															
 									</td>
 								</tr>
 								<tr>
@@ -3757,8 +3926,28 @@
 												<?php _e( 'Poll Answer Result Label', 'yop_poll'); ?>:
 											</th>
 											<td>
-												<input id="yop-poll-answer-result-label" type="text" name="yop_poll_options[answer_result_label]" value="<?php echo $default_options['answer_result_label']; ?>" /> <small><i>Use %POLL-ANSWER-RESULT-PERCENTAGES% for showing answer percentages and  %POLL-ANSWER-RESULT-VOTES% for showing answer number of votes</i></small>
+												<input id="yop-poll-answer-result-label" type="text" name="yop_poll_options[answer_result_label]" value="<?php echo esc_html( stripslashes( $default_options['answer_result_label'] ) ); ?>" /> <small><i>Use %POLL-ANSWER-RESULT-PERCENTAGES% for showing answer percentages and  %POLL-ANSWER-RESULT-VOTES% for showing answer number of votes</i></small>
 											</td>	
+										</tr>
+										<tr>
+											<th>
+												<?php _e( 'Poll Answer Result Votes Number Label', 'yop_poll' ); ?>:
+											</th>
+											<td>
+												<?php _e( 'Singular', 'yop_poll' ); ?>
+												<input id="yop-poll-singular-answer-result-votes-number-label" type="text" name="yop_poll_options[singular_answer_result_votes_number_label]" value="<?php echo esc_html( stripslashes( $default_options['singular_answer_result_votes_number_label'] ) ); ?>" />
+												<?php _e( 'Plural', 'yop_poll' ); ?>
+												<input id="yop-poll-plural-answer-result-votes-number-label" type="text" name="yop_poll_options[plural_answer_result_votes_number_label]" value="<?php echo esc_html( stripslashes( $default_options['plural_answer_result_votes_number_label'] ) ); ?>" />
+												
+											</td>
+										</tr>
+										<tr>
+											<th>
+												<?php _e( 'Vote Button Label', 'yop_poll' ); ?>:
+											</th>
+											<td>
+												<input id="yop-poll-vote-button-label" type="text" name="yop_poll_options[vote_button_label]" value="<?php echo esc_html( stripslashes( $default_options['vote_button_label'] ) ); ?>" />
+											</td>
 										</tr>
 										<tr>
 											<th>
@@ -3774,7 +3963,7 @@
 												<?php _e( 'View Results Link Label', 'yop_poll' ); ?>:
 											</th>
 											<td>
-												<input id="yop-poll-view-results-link-label" type="text" name="yop_poll_options[view_results_link_label]" value="<?php echo $default_options['view_results_link_label']; ?>" />
+												<input id="yop-poll-view-results-link-label" type="text" name="yop_poll_options[view_results_link_label]" value="<?php echo esc_html( stripslashes( $default_options['view_results_link_label'] ) ); ?>" />
 											</td>
 										</tr>
 										<tr>
@@ -3791,7 +3980,7 @@
 												<?php _e( 'View Back To Vote Link Label', 'yop_poll' ); ?>:
 											</th>
 											<td>
-												<input id="yop-poll-view-back-to-vote-link-label" type="text" name="yop_poll_options[view_back_to_vote_link_label]" value="<?php echo $default_options['view_back_to_vote_link_label']; ?>" />
+												<input id="yop-poll-view-back-to-vote-link-label" type="text" name="yop_poll_options[view_back_to_vote_link_label]" value="<?php echo esc_html( stripslashes( $default_options['view_back_to_vote_link_label'] ) ); ?>" />
 											</td>
 										</tr>
 										<tr>
@@ -3808,7 +3997,7 @@
 												<?php _e( 'View Total Votes Label', 'yop_poll' ); ?>:
 											</th>
 											<td>
-												<input id="yop-poll-view-total-votes-label" type="text" name="yop_poll_options[view_total_votes_label]" value="<?php echo $default_options['view_total_votes_label']; ?>" />
+												<input id="yop-poll-view-total-votes-label" type="text" name="yop_poll_options[view_total_votes_label]" value="<?php echo esc_html( stripslashes( $default_options['view_total_votes_label'] ) ); ?>" />
 											</td>
 										</tr>
 										<tr>
@@ -3825,7 +4014,7 @@
 												<?php _e( 'View Total Voters Label', 'yop_poll' ); ?>:
 											</th>
 											<td>
-												<input id="yop-poll-view-total-voters-label" type="text" name="yop_poll_options[view_total_voters_label]" value="<?php echo $default_options['view_total_voters_label']; ?>" />
+												<input id="yop-poll-view-total-voters-label" type="text" name="yop_poll_options[view_total_voters_label]" value="<?php echo esc_html( stripslashes( $default_options['view_total_voters_label'] ) ); ?>" />
 											</td>
 										</tr>
 										<tr>
@@ -3833,7 +4022,7 @@
 												<label for="yop-poll-page-url"><?php _e( 'Poll Page Url ', 'yop_poll' ); ?>:</label>
 											</th>
 											<td>
-												<input id="yop-poll-page-url" type="text" name="yop_poll_options[poll_page_url]" value="<?php echo $default_options['poll_page_url']; ?>" />
+												<input id="yop-poll-page-url" type="text" name="yop_poll_options[poll_page_url]" value="<?php echo esc_html( stripslashes( $default_options['poll_page_url'] ) ); ?>" />
 											</td>
 										</tr>
 									</tbody>
@@ -3902,6 +4091,14 @@
 												</select>
 											</td>
 										</tr>
+										<tr>
+											<th>
+												<?php _e( 'Percentages Decimals', 'yop_poll' ); ?>:
+											</th>
+											<td>
+												<input id="yop-poll-percentages-decimals" type="text" name="yop_poll_options[percentages_decimals]" value="<?php echo esc_html( stripslashes( $default_options['percentages_decimals'] ) ); ?>" />
+											</td>
+										</tr>
 									</tbody>
 								</table>
 							</div>
@@ -3926,7 +4123,7 @@
 											<?php _e( 'View Poll Archive Link Label', 'yop_poll' ); ?>:
 										</th>
 										<td>
-											<input id="yop-poll-view-poll-archive-link-label" type="text" name="yop_poll_options[view_poll_archive_link_label]" value="<?php echo $default_options['view_poll_archive_link_label']; ?>" />
+											<input id="yop-poll-view-poll-archive-link-label" type="text" name="yop_poll_options[view_poll_archive_link_label]" value="<?php echo esc_html( stripslashes( $default_options['view_poll_archive_link_label'] ) ); ?>" />
 										</td>
 									</tr>
 									<tr id="yop-poll-view-poll-archive-link-div" style="<?php echo 'yes' != $default_options['view_poll_archive_link'] ? 'display: none;' : '';  ?>">
@@ -3934,7 +4131,7 @@
 											<?php _e( 'Poll Archive Url', 'yop_poll' ); ?>:
 										</th>
 										<td>
-											<input id="yop-poll-poll-archive-url" type="text" name="yop_poll_options[poll_archive_url]" value="<?php echo $default_options['poll_archive_url']; ?>" />
+											<input id="yop-poll-poll-archive-url" type="text" name="yop_poll_options[poll_archive_url]" value="<?php echo esc_html( stripslashes( $default_options['poll_archive_url'] ) ); ?>" />
 										</td>
 									</tr>
 									<tr>
@@ -3951,7 +4148,7 @@
 											<?php _e( 'Archive Order', 'yop_poll' ); ?>:
 										</th>
 										<td>
-											<input id="yop-poll-show-in-archive-order" type="text" name="yop_poll_options[archive_order]" value="<?php echo $default_options['archive_order']; ?>" />
+											<input id="yop-poll-show-in-archive-order" type="text" name="yop_poll_options[archive_order]" value="<?php echo esc_html( stripslashes( $default_options['archive_order'] ) ); ?>" />
 										</td>
 									</tr>
 								</table>	

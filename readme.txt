@@ -136,6 +136,10 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 1.6 = 
+* Added ability to change the text for Vote button   
+* Added ability to display the answers for Others field
+
 = 1.5 = 
 * Fixed sort_answers_by_votes_asc_callback() bug
 

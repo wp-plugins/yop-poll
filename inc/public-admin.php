@@ -7,7 +7,7 @@
 			$this->add_filter( 'widget_text', 'do_shortcode');
 		}
 		
-		public function do_shortcode( $content ) {
+		public function do_shortcode( $content ) { 
 			return do_shortcode( $content );
 		}
 
