@@ -583,7 +583,7 @@
 						$poll_options['never_expire']	= 'no';
 					}
 
-					if ( count( $poll_options ) > 0 )
+					//if ( count( $poll_options ) > 0 )
 						update_yop_poll_meta( $this->poll['id'], 'options', $poll_options );
 
 					//inserting answers to db
@@ -606,7 +606,7 @@
 											$poll_answer_options[ $option_name ] = $option_value;
 										}		
 									}
-									if ( count( $poll_answer_options ) > 0 )
+									//if ( count( $poll_answer_options ) > 0 )
 										update_yop_poll_answer_meta( $answer_id, 'options', $poll_answer_options, true );
 								}	
 							}
@@ -663,7 +663,7 @@
 					if( ! isset( $request['yop_poll_options']['never_expire'] ) ) {
 						$poll_options['never_expire']	= 'no';
 					}
-					if ( count( $poll_options ) > 0 )
+					//if ( count( $poll_options ) > 0 )
 						update_yop_poll_meta( $this->poll['id'], 'options', $poll_options );
 
 					//add update answers in db
@@ -697,7 +697,7 @@
 											$poll_answer_options[ $option_name ] = $option_value;
 										}		
 									}
-									if ( count( $poll_answer_options ) > 0 ) 
+									//if ( count( $poll_answer_options ) > 0 ) 
 										update_yop_poll_answer_meta( $answer_id, 'options', $poll_answer_options, true );
 								}	
 							}

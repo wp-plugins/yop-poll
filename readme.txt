@@ -136,6 +136,9 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 1.7 = 
+* Fixed bug that was causing poll not to update it's settings
+
 = 1.6 = 
 * Added ability to change the text for Vote button   
 * Added ability to display the answers for Others field
