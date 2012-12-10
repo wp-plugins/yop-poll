@@ -136,6 +136,9 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 1.8 = 
+* Fixed bug with wordpress editor
+
 = 1.7 = 
 * Fixed bug that was causing poll not to update it's settings
 

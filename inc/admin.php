@@ -53,6 +53,7 @@
 			$this->add_action( 'wp_ajax_yop_poll_html_editor', 'ajax_get_polls_for_html_editor', 1 );
 			$this->add_action( 'wp_ajax_yop_poll_edit_add_new_poll', 'ajax_edit_add_new_poll', 1 );
 			$this->add_action( 'wp_ajax_yop_poll_edit_add_new_poll_template', 'ajax_edit_add_new_poll_template', 1 );
+			$this->add_action( 'wp_ajax_yop_poll_reset_poll_template', 'ajax_reset_poll_template', 1 );
 
 			$this->add_action( 'wp_ajax_nopriv_yop_poll_do_vote', 'yop_poll_do_vote', 1 );
 			$this->add_action( 'wp_ajax_yop_poll_do_vote', 'yop_poll_do_vote', 1 );
@@ -296,6 +297,7 @@
 					wp_enqueue_script('xfn');
 					break;
 				case 'yop-polls-templates' :
+					add_filter( 'user_can_richedit' , create_function ( '$a' , 'return false;' ) , 1 );
 					wp_enqueue_script(array('editor', 'thickbox'));
 					wp_enqueue_style('thickbox');
 					wp_enqueue_style( 'yop-poll-admin-templates', "{$this->_config->plugin_url}/css/yop-poll-admin-templates.css", array(), $this->_config->version );
@@ -304,6 +306,7 @@
 						'ajax' => array(
 							'url' => admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')),
 							'action' => 'yop_poll_edit_add_new_poll_template',
+							'reset_action' => 'yop_poll_reset_poll_template',
 							'beforeSendMessage' => __( 'Please wait a moment while we process your request...', 'yop_poll' ),
 							'errorMessage' => __( 'An error has occured...', 'yop_poll' )
 						)
@@ -4259,7 +4262,8 @@
 
 							<input type="hidden" value="<?php echo $current_template['id']; ?>" name="template_id" id="yop-poll-edit-add-new-template-form-template-id" />
 							<input type="hidden" value="<?php echo $action_type ?>" name="action_type" id="yop-poll-edit-add-new-template-form-action-type" />
-							<input type="button" class="button-primary" value="<?php _e('Save', 'yop_poll' ) ?>" id="yop-poll-edit-add-new-template-form-submit" />
+							<input type="button" class="button-primary" value="<?php _e('Save', 'yop_poll' ) ?>" id="yop-poll-edit-add-new-template-form-save" />
+							<input type="button" class="button-primary" value="<?php _e('Reset to default template', 'yop_poll' ) ?>" id="yop-poll-edit-add-new-template-form-reset" />
 						</div>
 					</div>
 					<br class="clear">
@@ -4333,6 +4337,30 @@
 					}
 					else
 						_e( 'We\'re unable to update your poll template!', 'yop_poll' );	
+				}
+				unset( $yop_poll_model );
+			}
+			die();
+		}
+		
+		function ajax_reset_poll_template() {
+			if ( is_admin() ) {
+				global $wpdb;
+				check_ajax_referer('yop-poll-edit-add-new-template');
+				require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+				$yop_poll_model = new Yop_Poll_Model();
+				if ( 'edit' == $_REQUEST['action_type'] ) {
+					if( ctype_digit( $_REQUEST['template_id'] )) {
+						$yop_poll_template_id = $yop_poll_model->reset_poll_template( $_REQUEST, $this->_config );
+						if( $yop_poll_template_id ) {
+							_e( 'Poll Template Successfully Reseted!', 'yop_poll' );
+						}
+						else {
+							echo $yop_poll_model->error;
+						}
+					}
+					else
+						_e( 'We\'re unable to reset your poll template!', 'yop_poll' );	
 				}
 				unset( $yop_poll_model );
 			}
