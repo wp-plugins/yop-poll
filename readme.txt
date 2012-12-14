@@ -136,6 +136,9 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 1.9 = 
+* Fixed various bugs with templates
+
 = 1.8 = 
 * Fixed bug with wordpress editor
 
