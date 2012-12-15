@@ -2567,7 +2567,7 @@
 				$newinput['answer_result_label']			= $default_options['answer_result_label'];
 				$errors										.= __( 'Option "Poll Answer Result Label" Not Updated!', 'yop_poll' ).$message_delimiter;	
 			}
-			
+
 			//singular_answer_result_votes_number_label
 			if ( isset( $input['singular_answer_result_votes_number_label'] ) ) {
 				if ( '' !=  $input['singular_answer_result_votes_number_label'] ) {
@@ -2583,7 +2583,7 @@
 				$newinput['singular_answer_result_votes_number_label']				=  $default_options['singular_answer_result_votes_number_label'];
 				$errors										.= __( 'Option "Poll Answer Result Votes Number Singular Label" Not Updated!', 'yop_poll' ).$message_delimiter;	
 			}
-			
+
 			//plural_answer_result_votes_number_label
 			if ( isset( $input['plural_answer_result_votes_number_label'] ) ) {
 				if ( '' !=  $input['singular_answer_result_votes_number_label'] ) {
@@ -2818,7 +2818,7 @@
 				$newinput['blocking_voters']								= $default_options['blocking_voters'];
 				$errors														.= __( 'Option "Blocking Voters" Not Updated!', 'yop_poll' ).$message_delimiter;
 			}
-			
+
 			//percentages_decimals
 			if ( isset( $input['percentages_decimals'] ) ) {
 				if ( ctype_digit( $input['percentages_decimals'] ) ) {
@@ -3252,7 +3252,7 @@
 												<input id="yop-poll-singular-answer-result-votes-number-label" type="text" name="yop_poll_options[singular_answer_result_votes_number_label]" value="<?php echo esc_html( stripslashes( $default_options['singular_answer_result_votes_number_label'] ) ); ?>" />
 												<?php _e( 'Plural', 'yop_poll' ); ?>
 												<input id="yop-poll-plural-answer-result-votes-number-label" type="text" name="yop_poll_options[plural_answer_result_votes_number_label]" value="<?php echo esc_html( stripslashes( $default_options['plural_answer_result_votes_number_label'] ) ); ?>" />
-												
+
 											</td>
 										</tr>
 										<tr>
@@ -3941,7 +3941,7 @@
 												<input id="yop-poll-singular-answer-result-votes-number-label" type="text" name="yop_poll_options[singular_answer_result_votes_number_label]" value="<?php echo esc_html( stripslashes( $default_options['singular_answer_result_votes_number_label'] ) ); ?>" />
 												<?php _e( 'Plural', 'yop_poll' ); ?>
 												<input id="yop-poll-plural-answer-result-votes-number-label" type="text" name="yop_poll_options[plural_answer_result_votes_number_label]" value="<?php echo esc_html( stripslashes( $default_options['plural_answer_result_votes_number_label'] ) ); ?>" />
-												
+
 											</td>
 										</tr>
 										<tr>
@@ -4262,8 +4262,70 @@
 
 							<input type="hidden" value="<?php echo $current_template['id']; ?>" name="template_id" id="yop-poll-edit-add-new-template-form-template-id" />
 							<input type="hidden" value="<?php echo $action_type ?>" name="action_type" id="yop-poll-edit-add-new-template-form-action-type" />
-							<input type="button" class="button-primary" value="<?php _e('Save', 'yop_poll' ) ?>" id="yop-poll-edit-add-new-template-form-save" />
-							<input type="button" class="button-primary" value="<?php _e('Reset to default template', 'yop_poll' ) ?>" id="yop-poll-edit-add-new-template-form-reset" />
+							<input type="button" class="button-primary" value="<?php _e('Save Poll Template', 'yop_poll' ) ?>" id="yop-poll-edit-add-new-template-form-save" />
+						</div>
+						<div class="postbox-container" id="postbox-container-1">
+							<div class="meta-box-sortables ui-sortable" id="side-sortables">
+								<div class="postbox " id="linksubmitdiv">
+									<div title="Click to toggle" class="handlediv">
+										<br />
+									</div>
+									<h3 class="hndle"><span><?php _e( 'Save', 'yop_poll' ); ?></span></h3>
+									<div class="inside">
+										<div id="submitlink" class="submitbox">
+											<div id="major-publishing-actions">
+												<div id="publishing-action">
+													<input type="button" accesskey="p" class="button-primary" value="<?php _e( 'Save Poll Template', 'yop_poll' ); ?>" id="yop-poll-edit-add-new-template-form-save1" />
+												</div>
+												<div class="clear"></div>
+											</div>
+											<div class="clear"></div>
+										</div>
+									</div>
+								</div>
+								<?php
+									if ( 'edit' == $action ) {
+									?>
+									<div class="postbox " id="linksubmitdiv">
+										<div title="Click to toggle" class="handlediv">
+											<br />
+										</div>
+										<h3 class="hndle"><span><?php _e( 'Reset', 'yop_poll' ); ?></span></h3>
+										<div class="inside">
+											<p><?php _e( 'Select Template For Reset', 'yop_poll') ?>:</p>
+											<label class="screen-reader-text" for="yop-poll-reset-template-id"><?php _e( 'Template to reset', 'yop_poll') ?></label>
+											<select name="yop_poll_reset_template_id" id="yop-poll-reset-template-id">
+												<option value="1"><?php _e( 'White', 'yop_poll') ?></option>
+												<option value="2"><?php _e( 'Grey', 'yop_poll') ?></option>
+												<option value="3"><?php _e( 'Dark', 'yop_poll') ?></option>
+												<option value="4"><?php _e( 'Blue v1', 'yop_poll') ?></option>
+												<option value="5"><?php _e( 'Blue v2', 'yop_poll') ?></option>
+												<option value="6"><?php _e( 'Blue v3', 'yop_poll') ?></option>
+												<option value="7"><?php _e( 'Red v1', 'yop_poll') ?></option>
+												<option value="8"><?php _e( 'Red v2', 'yop_poll') ?></option>
+												<option value="9"><?php _e( 'Red v3', 'yop_poll') ?></option>
+												<option value="10"><?php _e( 'Green v1', 'yop_poll') ?></option>
+												<option value="11"><?php _e( 'Green v2', 'yop_poll') ?></option>
+												<option value="12"><?php _e( 'Green v3', 'yop_poll') ?></option>
+												<option value="13"><?php _e( 'Orange v1', 'yop_poll') ?></option>
+												<option value="14"><?php _e( 'Orange v2', 'yop_poll') ?></option>
+												<option value="15"><?php _e( 'Orange v3', 'yop_poll') ?></option>
+											</select>
+											<div id="submitlink" class="submitbox">
+												<div id="major-publishing-actions">
+													<div id="publishing-action">
+														<input type="button" accesskey="r" class="button-primary" value="<?php _e( 'Reset Poll Template', 'yop_poll' ); ?>" id="yop-poll-edit-add-new-template-form-reset" />
+													</div>
+													<div class="clear"></div>
+												</div>
+												<div class="clear"></div>
+											</div>
+										</div>
+									</div>
+									<?php
+									}
+								?>
+							</div>
 						</div>
 					</div>
 					<br class="clear">
@@ -4342,7 +4404,7 @@
 			}
 			die();
 		}
-		
+
 		function ajax_reset_poll_template() {
 			if ( is_admin() ) {
 				global $wpdb;

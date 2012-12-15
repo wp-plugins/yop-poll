@@ -1,5 +1,5 @@
 jQuery(document).ready(function(jQuery) {
-		jQuery('#yop-poll-edit-add-new-template-form-save').click( function() {
+		jQuery('#yop-poll-edit-add-new-template-form-save, #yop-poll-edit-add-new-template-form-save1').click( function() {
 				jQuery.ajax({
 						type: 'POST', 
 						url: yop_poll_add_new_template_config.ajax.url,
