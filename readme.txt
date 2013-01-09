@@ -3,7 +3,7 @@ Contributors: yourownprogrammer
 Donate Link: http://www.yourownprogrammer.com/thankyou/donation.html
 Tags: poll, polls, vote, survey, polling, yop poll, yop
 Requires at least: 3.2
-Tested up to: 3.4.2
+Tested up to: 3.5
 Stable tag: trunk
 License: GPLv2 or later
 
@@ -135,6 +135,12 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 
 == Changelog ==
+
+= 3.0 = 
+* Added export ability for logs
+* Added date filter option for logs
+* Added option to view logs grouped by vote or by answer
+* Various bugs fixed
 
 = 2.0 = 
 * Fixed various bugs with templates

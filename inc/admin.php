@@ -17,7 +17,7 @@
 
 			//update for version 1.5
 			if( version_compare ( $installed_version, '1.5', '<=' ) ) {
-				$default_options						= get_option( 'yop_poll_options' );
+				$default_options	= get_option( 'yop_poll_options' );
 				if ( ! isset( $default_options['vote_button_label'] ) ) {
 					$default_options['vote_button_label']	= 'Vote';
 				}
@@ -27,7 +27,7 @@
 
 			//update for version 1.6
 			if( version_compare ( $installed_version, '1.6', '<=' ) ) {
-				$default_options									= get_option( 'yop_poll_options' );
+				$default_options	= get_option( 'yop_poll_options' );
 				if ( ! isset( $default_options['display_other_answers_values'] ) ) {
 					$default_options['display_other_answers_values']	= 'no';
 				}
@@ -43,6 +43,31 @@
 				update_option( "yop_poll_version", $wpdb->yop_poll_version );
 				update_option( 'yop_poll_options', $default_options );
 			}
+
+			//update for version 2.0
+			if( version_compare ( $installed_version, '2.0', '<=' ) ) {
+				$wpdb->query('ALTER TABLE `'.$wpdb->yop_polls.'` CHANGE `total_votes` `total_answers` INT( 11 ) NOT NULL ');
+				$wpdb->query('ALTER TABLE `'.$wpdb->yop_polls.'` CHANGE `total_voters` `total_votes` INT( 11 ) NOT NULL ');
+				$wpdb->query("
+					UPDATE ".$wpdb->yop_poll_templates."
+					SET 
+					before_vote_template = REPLACE( before_vote_template, 'POLL-TOTAL-VOTERS', 'POLL-TOTAL-ANSWERS'),
+					after_vote_template = REPLACE( after_vote_template, 'POLL-TOTAL-VOTERS', 'POLL-TOTAL-ANSWERS'),
+					before_start_date_template = REPLACE( before_start_date_template, 'POLL-TOTAL-VOTERS', 'POLL-TOTAL-ANSWERS'),
+					after_end_date_template = REPLACE( after_end_date_template, 'POLL-TOTAL-VOTERS', 'POLL-TOTAL-ANSWERS'),
+					css = REPLACE( css, 'POLL-TOTAL-VOTERS', 'POLL-TOTAL-ANSWERS'),
+					js = REPLACE( js, 'POLL-TOTAL-VOTERS', 'POLL-TOTAL-ANSWERS')
+				");
+				$default_options	= get_option( 'yop_poll_options' );
+				if ( ! isset( $default_options['view_total_answers'] ) ) {
+					$default_options['view_total_answers']	= $default_options['view_total_voters'];
+				}
+				if ( ! isset( $default_options['view_total_answers_label'] ) ) {
+					$default_options['view_total_answers_label']	= 'Total Answers %POLL-TOTAL-ANSWERS%';
+				}
+				update_option( "yop_poll_version", $wpdb->yop_poll_version );
+				update_option( 'yop_poll_options', $default_options );
+			} 
 		}
 
 		public function admin_loader() { 
@@ -281,6 +306,10 @@
 					wp_enqueue_script('xfn');
 					break;
 				case 'yop-polls-logs' :
+					wp_enqueue_style( 'yop-poll-timepicker', "{$this->_config->plugin_url}/css/timepicker.css", array(), $this->_config->version );
+					wp_enqueue_style( 'yop-poll-jquery-ui', "{$this->_config->plugin_url}/css/jquery-ui.css", array(), $this->_config->version );
+					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
+					wp_enqueue_script( 'yop-poll-admin-logs', "{$this->_config->plugin_url}/js/yop-poll-admin-logs.js", array('jquery', 'yop-poll-jquery-ui-timepicker'), $this->_config->version );
 					$this->view_yop_poll_logs_operations();
 					break;
 				case 'yop-polls-bans' :
@@ -325,7 +354,7 @@
 		*/	
 
 		public function view_yop_poll_logs_operations() {
-			global $page, $action;
+			global $page, $action, $order, $orderby;
 			if ( '-1' != $action && isset( $_REQUEST['yoppolllogscheck'] ) ) {
 				if ( 'delete' == $action ) {
 					check_admin_referer( 'yop-poll-logs' );
@@ -335,7 +364,18 @@
 						$log_id = (int) $log_id;
 						Yop_Poll_Model::delete_poll_log_from_db( $log_id );
 					}
-					wp_redirect( add_query_arg('deleted', count( $bulklogs ), remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'yoppolllogscheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
+					wp_redirect( add_query_arg('deleted', count( $bulklogs ), remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'action', 'yoppolllogscheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
+					exit;		
+				}
+				
+				if ( 'delete_group' == $action ) {
+					check_admin_referer( 'yop-poll-logs' );
+					$bulklogs	= (array) $_REQUEST['yoppolllogscheck'];
+					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+					foreach ( $bulklogs as $vote_id ) {
+						Yop_Poll_Model::delete_group_poll_log_from_db( $vote_id );
+					}
+					wp_redirect( add_query_arg('deleted', count( $bulklogs ), remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'action', 'yoppolllogscheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;		
 				}
 			}
@@ -348,6 +388,94 @@
 					wp_redirect( add_query_arg('deleted', 1, remove_query_arg( array( '_wpnonce', 'id', 'action' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
+				if ( 'delete_group' == $action ) {
+					check_admin_referer( 'yop-poll-logs-delete' );
+					$vote_id = $_REQUEST['id'];
+					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+					Yop_Poll_Model::delete_group_poll_log_from_db( $vote_id );
+					wp_redirect( add_query_arg('deleted', 1, remove_query_arg( array( '_wpnonce', 'id', 'action' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
+					exit;
+				}
+			}
+			elseif ( isset( $_REQUEST['export'] ) ) {
+				global $wpdb;
+				if( __( 'Export', 'yop_poll' ) == $_REQUEST['a'] ) {
+					check_admin_referer( 'yop-poll-logs' );
+					$per_page	= ( isset( $_GET['per_page'] ) ? intval( $_GET['per_page'] ) : 100 );
+					$page_no	= isset( $_REQUEST['page_no'] ) ? (int) $_REQUEST['page_no'] : 1;
+					$orderby	= ( empty( $orderby ) ) ? 'name' : $orderby;					
+					$poll_id	= isset( $_REQUEST['poll_id'] ) ? (int) $_REQUEST['poll_id'] : NULL;
+					$log_sdate						= ( isset( $_GET['log_sdate'] ) ?  $_GET['log_sdate'] : '' );
+					$log_edate						= ( isset( $_GET['log_edate'] ) ? $_GET['log_edate'] : '' );
+					$group_by						= ( isset( $_GET['group_by'] ) ? $_GET['group_by'] : 'vote' );
+
+					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+					$yop_polls 	= Yop_Poll_Model::get_yop_polls_filter_search( 'id', 'asc' );
+					if ( $group_by == 'vote')
+						$search = array( 'fields' => array('name', 'ip', 'user_nicename', 'user_email'), 'value' => isset( $_REQUEST['s'] ) ? trim( $_REQUEST['s'] ) : '' );
+					else
+						$search = array( 'fields' => array($wpdb->yop_polls . '.name', $wpdb->yop_poll_answers . '.answer', $wpdb->yop_poll_logs . '.ip', $wpdb->yop_poll_logs . '.other_answer_value', $wpdb->users . '.user_nicename', $wpdb->users . '.user_email'), 'value' => isset( $_REQUEST['s'] ) ? trim( $_REQUEST['s'] ) : '' );
+					$filter = array( 'field' => NULL, 'value' => NULL, 'operator' => '=' );
+					if ( 'all' == $_REQUEST['export'] )
+						if ( $group_by == 'vote')
+							$logs				= Yop_Poll_Model::get_group_logs_filter_search( $orderby, $order, $search,  $poll_id, 0, 99999999, $log_sdate, $log_edate );
+						else
+							$logs				= Yop_Poll_Model::get_logs_filter_search( $orderby, $order, $search,  $poll_id, 0, 99999999, $log_sdate, $log_edate );
+					if ( 'page' == $_REQUEST['export'] )
+						if ( $group_by == 'vote')
+							$logs				= Yop_Poll_Model::get_group_logs_filter_search( $orderby, $order, $search,  $poll_id, ($page_no - 1 ) * $per_page, $per_page, $log_sdate, $log_edate );
+						else
+							$logs				= Yop_Poll_Model::get_logs_filter_search( $orderby, $order, $search,  $poll_id, ($page_no - 1 ) * $per_page, $per_page, $log_sdate, $log_edate );
+
+					$csv_file_name					= 'logs_export.'.date('YmdHis').'.csv';
+					$csv_header_array				= array(
+						__('#', 'yop_poll' ),
+						__('Vote ID', 'yop_poll' ),
+						__('POLL Name', 'yop_poll' ),
+						__('Answer', 'yop_poll' ),
+						__('User', 'yop_poll' ),
+						__('User Email', 'yop_poll' ),
+						__('IP', 'yop_poll' ),
+						__('Vote Date', 'yop_poll' )
+					);
+
+					header('Content-type: application/csv');
+					header('Content-Disposition: attachment; filename="' . $csv_file_name . '"');
+					ob_start();
+					$f = fopen('php://output', 'w') or show_error( __( "Can't open php://output!", 'yop_poll' ) );
+
+					if ( ! fputcsv( $f, $csv_header_array ) )
+						_e("Can't write header!", 'yop_poll');
+
+					if ( count ($logs) > 0 ) {
+						$index	= 1;
+						foreach( $logs as $log ) {
+							$logs_data	= array(
+								$index,
+								$log['vote_id'],
+								stripslashes( $log['name'] ),
+								( 'Other' == $log['answer'] )? 'Other - '.stripslashes( $log['other_answer_value'] ) : stripslashes( $log['answer'] ),
+								stripslashes( $log['user_nicename'] ),
+								stripslashes( $log['user_email'] ),
+								stripslashes( $log['ip'] ),
+								stripslashes( $log['vote_date'] )									
+							);
+							if ( ! fputcsv( $f, $logs_data ) )
+								_e("Can't write header!", 'yop_poll');
+							$index++;
+						}
+					}
+
+					fclose($f) or show_error( __( "Can't close php://output!", 'yop_poll' ) );
+					$csvStr = ob_get_contents();
+					ob_end_clean();
+
+					echo $csvStr;
+					exit;
+				}
+
+				wp_safe_redirect( remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'export', 'a' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) );
+				exit;
 			}
 			elseif ( ! empty( $_GET['_wp_http_referer'] ) ) {
 				wp_safe_redirect( remove_query_arg( array( '_wp_http_referer', '_wpnonce' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) );
@@ -716,7 +844,7 @@
 				'start_date'	=> 'asc', 
 				'end_date'		=> 'asc', 
 				'total_votes'	=> 'asc', 
-				'total_voters'	=> 'asc', 
+				'total_answers'	=> 'asc', 
 			);
 			$order_direction[ $orderby ] = ( 'desc' == $order ) ? 'asc' : 'desc';
 
@@ -727,7 +855,7 @@
 				'start_date'	=> 'desc', 
 				'end_date'		=> 'desc', 
 				'total_votes'	=> 'desc', 
-				'total_voters'	=> 'desc', 
+				'total_answers'	=> 'desc', 
 			);
 			$order_direction_reverse[ $orderby ]	= ( 'desc' == $order ) ? 'desc' : 'asc';
 
@@ -738,7 +866,7 @@
 				'start_date'	=> 'sortable', 
 				'end_date'		=> 'sortable', 
 				'total_votes'	=> 'sortable', 
-				'total_voters'	=> 'sortable', 
+				'total_answers'	=> 'sortable', 
 			);
 			$order_sortable[ $orderby ]	= 'sorted';
 			require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
@@ -859,9 +987,9 @@
 									<span class="sorting-indicator"></span>
 								</a>
 							</th>
-							<th id="total_voters" class="manage-column <?php echo $order_sortable[ 'total_voters' ] ?> <?php echo $order_direction_reverse[ 'total_voters' ] ?>" style="width:7%" scope="col">
-								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'total_voters', 'order' => $order_direction[ 'total_voters' ] ) ) ); ?>">
-									<span><?php _e( 'Total Voters', 'yop_poll' ); ?></span>
+							<th id="total_answers" class="manage-column <?php echo $order_sortable[ 'total_answers' ] ?> <?php echo $order_direction_reverse[ 'total_answers' ] ?>" style="width:7%" scope="col">
+								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'total_answers', 'order' => $order_direction[ 'total_answers' ] ) ) ); ?>">
+									<span><?php _e( 'Total Answers', 'yop_poll' ); ?></span>
 									<span class="sorting-indicator"></span>
 								</a>
 							</th>
@@ -914,7 +1042,7 @@
 										<?php echo esc_html( stripslashes( $yop_poll['total_votes'] ) ); ?>
 									</td>
 									<td>
-										<?php echo esc_html( stripslashes( $yop_poll['total_voters'] ) ); ?>
+										<?php echo esc_html( stripslashes( $yop_poll['total_answers'] ) ); ?>
 									</td>
 									<td>
 										<?php echo esc_html( stripslashes( $yop_poll['question'] ) ); ?>
@@ -972,9 +1100,9 @@
 									<span class="sorting-indicator"></span>
 								</a>
 							</th>
-							<th id="total_voters" class="manage-column <?php echo $order_sortable[ 'total_voters' ] ?> <?php echo $order_direction_reverse[ 'total_voters' ] ?>" style="" scope="col">
-								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'total_voters', 'order' => $order_direction[ 'total_voters' ] ) ) ); ?>">
-									<span><?php _e( 'Total Voters', 'yop_poll' ); ?></span>
+							<th id="total_answers" class="manage-column <?php echo $order_sortable[ 'total_answers' ] ?> <?php echo $order_direction_reverse[ 'total_answers' ] ?>" style="" scope="col">
+								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'total_answers', 'order' => $order_direction[ 'total_answers' ] ) ) ); ?>">
+									<span><?php _e( 'Total Answers', 'yop_poll' ); ?></span>
 									<span class="sorting-indicator"></span>
 								</a>
 							</th>
@@ -1574,7 +1702,7 @@
 			$page_no	= isset( $_REQUEST['page_no'] ) ? (int) $_REQUEST['page_no'] : 1;
 			$orderby	= ( empty( $orderby ) ) ? 'name' : $orderby;
 			$order_direction	= array(
-				'id'			=> 'asc', 
+				'vote_id'		=> 'asc', 
 				'name'			=> 'asc', 
 				'answer'		=> 'asc', 
 				'user_nicename'	=> 'asc', 
@@ -1585,7 +1713,7 @@
 			$order_direction[ $orderby ] = ( 'desc' == $order ) ? 'asc' : 'desc';
 
 			$order_direction_reverse	= array(
-				'id'			=> 'desc', 
+				'vote_id'		=> 'desc', 
 				'name'			=> 'desc', 
 				'answer'		=> 'desc', 
 				'user_nicename'	=> 'desc', 
@@ -1596,7 +1724,7 @@
 			$order_direction_reverse[ $orderby ]	= ( 'desc' == $order ) ? 'desc' : 'asc';
 
 			$order_sortable	= array(
-				'id'			=> 'sortable', 
+				'vote_id'		=> 'sortable', 
 				'name'			=> 'sortable', 
 				'answer'		=> 'sortable', 
 				'user_nicename'	=> 'sortable', 
@@ -1606,15 +1734,29 @@
 			);
 			$order_sortable[ $orderby ]	= 'sorted';
 			$poll_id	= isset( $_REQUEST['poll_id'] ) ? (int) $_REQUEST['poll_id'] : NULL;
+
+			$log_sdate						= ( isset( $_GET['log_sdate'] ) ?  $_GET['log_sdate'] : '' );	
+			$log_edate						= ( isset( $_GET['log_edate'] ) ? $_GET['log_edate'] : '' );
+			$group_by						= ( isset( $_GET['group_by'] ) ? $_GET['group_by'] : 'vote' );
+
 			require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
 			$yop_polls 	= Yop_Poll_Model::get_yop_polls_filter_search( 'id', 'asc' );
-			$search = array( 'fields' => array($wpdb->yop_polls . '.name', $wpdb->yop_poll_answers . '.answer', $wpdb->yop_poll_logs . '.ip', $wpdb->users . '.user_nicename', $wpdb->users . '.user_email'), 'value' => isset( $_REQUEST['s'] ) ? trim( $_REQUEST['s'] ) : '' );
+			if ( $group_by == 'vote')
+				$search = array( 'fields' => array('name', 'ip', 'user_nicename', 'user_email'), 'value' => isset( $_REQUEST['s'] ) ? trim( $_REQUEST['s'] ) : '' );
+			else
+				$search = array( 'fields' => array($wpdb->yop_polls . '.name', $wpdb->yop_poll_answers . '.answer', $wpdb->yop_poll_logs . '.ip', $wpdb->yop_poll_logs . '.other_answer_value', $wpdb->users . '.user_nicename', $wpdb->users . '.user_email'), 'value' => isset( $_REQUEST['s'] ) ? trim( $_REQUEST['s'] ) : '' );
 			$filter = array( 'field' => NULL, 'value' => NULL, 'operator' => '=' );
-			$total_logs			= Yop_Poll_Model::get_total_logs_filter_search( $search,  $poll_id );
+			if ( $group_by == 'vote')
+				$total_logs			= Yop_Poll_Model::get_total_group_logs_filter_search( $search,  $poll_id, $log_sdate, $log_edate );
+			else
+				$total_logs			= Yop_Poll_Model::get_total_logs_filter_search( $search,  $poll_id, $log_sdate, $log_edate );				
 			$total_logs_pages	= ceil(  $total_logs / $per_page );
 			if ( intval( $page_no) > intval( $total_logs_pages ) )
 				$page_no = 1;
-			$logs				= Yop_Poll_Model::get_logs_filter_search( $orderby, $order, $search,  $poll_id, ($page_no - 1 ) * $per_page, $per_page );
+			if ( $group_by == 'vote')
+				$logs				= Yop_Poll_Model::get_group_logs_filter_search( $orderby, $order, $search,  $poll_id, ($page_no - 1 ) * $per_page, $per_page, $log_sdate, $log_edate );
+			else
+				$logs				= Yop_Poll_Model::get_logs_filter_search( $orderby, $order, $search,  $poll_id, ($page_no - 1 ) * $per_page, $per_page, $log_sdate, $log_edate );	
 
 			$args = array(
 				'base'         => remove_query_arg( 'page_no', $_SERVER['REQUEST_URI'] ).'%_%',
@@ -1651,11 +1793,25 @@
 				</p>
 				<div class="tablenav top">
 					<div class="alignleft actions">
+						<select name="group_by">
+							<option <?php echo selected( $group_by, 'answer' ); ?> value="answer"><?php _e( 'Group Logs By Answer', 'yop_poll' ); ?></option>
+							<option <?php echo selected( $group_by, 'vote' ); ?> value="vote"><?php _e( 'Group Logs By Vote', 'yop_poll' ); ?></option>
+						</select>
+						<input type="submit" value="<?php _e( 'Group', 'yop_poll' ); ?>" class="button-secondary action" id="doaction" name="" />
+					</div>
+				</div>
+				<div class="tablenav top">
+					<div class="alignleft actions">
 						<select name="action">
 							<option selected="selected" value="-1"><?php _e( 'Bulk Actions', 'yop_poll' ); ?></option>
-							<option value="delete"><?php _e( 'Delete', 'yop_poll' ); ?></option>
+							<?php if ( $group_by == 'vote') { ?>
+								<option value="delete_group"><?php _e( 'Delete', 'yop_poll' ); ?></option>
+								<?php }
+								else { ?>
+								<option value="delete"><?php _e( 'Delete', 'yop_poll' ); ?></option>
+								<?php } ?>
 						</select>
-						<input type="submit" value="<?php _e( 'Apply', 'yop_poll' ); ?>" class="button-secondary action" id="doaction" name="">
+						<input type="submit" value="<?php _e( 'Apply', 'yop_poll' ); ?>" class="button-secondary action" id="doaction" name="">&nbsp;|&nbsp;
 					</div>
 					<div class="alignleft actions">
 						<select name="poll_id">
@@ -1670,7 +1826,18 @@
 								}
 							?>
 						</select>
-						<input type="submit" value="<?php _e( 'Filter', 'yop_poll' ); ?>" class="button-secondary" id="post-query-submit" name="">
+						<label for="yop-poll-logs-start-date-input"><?php _e( 'Start Date', 'yop_poll' ); ?>:</label>
+						<input id="yop-poll-logs-start-date-input" type="text" name="log_sdate" value="<?php echo $log_sdate; ?>" />&nbsp;&nbsp;
+						<label for="yop-poll-logs-end-date-input"><?php _e( 'End Date', 'yop_poll' ); ?>:</label>
+						<input id="yop-poll-logs-end-date-input" type="text" name="log_edate" value="<?php echo $log_edate; ?>" />&nbsp;&nbsp;
+						<input type="submit" value="<?php _e( 'Filter', 'yop_poll' ); ?>" class="button-secondary" id="post-query-submit" name="">&nbsp;|&nbsp;
+					</div>
+					<div class="alignleft actions">
+						<select name="export">
+							<option value="page"><?php _e( 'This Page', 'yop_poll' ); ?></option>
+							<option value="all"><?php _e( 'All Pages', 'yop_poll' ); ?></option>
+						</select>
+						<input type="submit" value="<?php _e( 'Export', 'yop_poll' ); ?>" class="button-secondary action" id="doaction" name="a"> &nbsp;&nbsp;&nbsp;
 					</div>
 					<div class="tablenav-pages one-page">
 						<label for="yop-poll-items-per-page" class="displaying-num"><?php _e( 'Items Per Page', 'yop_poll' ); ?>:</label>
@@ -1687,9 +1854,9 @@
 							<th id="cb" class="manage-column column-cb check-column" style="width: 2%;" scope="col">
 								<input type="checkbox">
 							</th>
-							<th id="id" class="manage-column <?php echo $order_sortable[ 'id' ] ?> <?php echo $order_direction_reverse[ 'id' ] ?>" style="width:5%" scope="col">
-								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'id', 'order' => $order_direction[ 'id' ] ) ) ); ?>">
-									<span><?php _e( 'ID', 'yop_poll' ); ?></span>
+							<th id="id" class="manage-column <?php echo $order_sortable[ 'vote_id' ] ?> <?php echo $order_direction_reverse[ 'vote_id' ] ?>" style="width:10%" scope="col">
+								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'vote_id', 'order' => $order_direction[ 'vote_id' ] ) ) ); ?>">
+									<span><?php _e( 'Vote ID', 'yop_poll' ); ?></span>
 									<span class="sorting-indicator"></span>
 								</a>
 							</th>
@@ -1699,13 +1866,13 @@
 									<span class="sorting-indicator"></span>
 								</a>
 							</th>
-							<th id="total_votes" class="manage-column <?php echo $order_sortable[ 'answer' ] ?> <?php echo $order_direction_reverse[ 'answer' ] ?>" style="width:25%" scope="col">
+							<th id="total_votes" class="manage-column <?php echo $order_sortable[ 'answer' ] ?> <?php echo $order_direction_reverse[ 'answer' ] ?>" style="width:20%" scope="col">
 								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'answer', 'order' => $order_direction[ 'answer' ] ) ) ); ?>">
 									<span><?php _e( 'Answer', 'yop_poll' ); ?></span>
 									<span class="sorting-indicator"></span>
 								</a>
 							</th>
-							<th id="total_voters" class="manage-column <?php echo $order_sortable[ 'user_nicename' ] ?> <?php echo $order_direction_reverse[ 'user_nicename' ] ?>" style="width:15%" scope="col">
+							<th id="total_answers" class="manage-column <?php echo $order_sortable[ 'user_nicename' ] ?> <?php echo $order_direction_reverse[ 'user_nicename' ] ?>" style="width:15%" scope="col">
 								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'user_nicename', 'order' => $order_direction[ 'user_nicename' ] ) ) ); ?>">
 									<span><?php _e( 'User', 'yop_poll' ); ?></span>
 									<span class="sorting-indicator"></span>
@@ -1736,9 +1903,9 @@
 							<th id="cb" class="manage-column column-cb check-column" style="width: 2%;" scope="col">
 								<input type="checkbox">
 							</th>
-							<th id="id" class="manage-column <?php echo $order_sortable[ 'id' ] ?> <?php echo $order_direction_reverse[ 'id' ] ?>" style="width:5%" scope="col">
-								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'id', 'order' => $order_direction[ 'id' ] ) ) ); ?>">
-									<span><?php _e( 'ID', 'yop_poll' ); ?></span>
+							<th id="id" class="manage-column <?php echo $order_sortable[ 'vote_id' ] ?> <?php echo $order_direction_reverse[ 'vote_id' ] ?>" style="width:5%" scope="col">
+								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'vote_id', 'order' => $order_direction[ 'vote_id' ] ) ) ); ?>">
+									<span><?php _e( 'Vote ID', 'yop_poll' ); ?></span>
 									<span class="sorting-indicator"></span>
 								</a>
 							</th>
@@ -1754,7 +1921,7 @@
 									<span class="sorting-indicator"></span>
 								</a>
 							</th>
-							<th id="total_voters" class="manage-column <?php echo $order_sortable[ 'user_nicename' ] ?> <?php echo $order_direction_reverse[ 'user_nicename' ] ?>" style="width:15%" scope="col">
+							<th id="total_answers" class="manage-column <?php echo $order_sortable[ 'user_nicename' ] ?> <?php echo $order_direction_reverse[ 'user_nicename' ] ?>" style="width:15%" scope="col">
 								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'user_nicename', 'order' => $order_direction[ 'user_nicename' ] ) ) ); ?>">
 									<span><?php _e( 'User', 'yop_poll' ); ?></span>
 									<span class="sorting-indicator"></span>
@@ -1787,19 +1954,29 @@
 							<tbody id="the-list">
 								<tr valign="middle" class="alternate" id="yop-poll-log<?php echo $log['id']; ?>">
 									<th class="check-column" scope="row">
-										<input type="checkbox" value="<?php echo $log['id']; ?>" name="yoppolllogscheck[]">
+										<?php if ( $group_by == 'vote') { ?>
+											<input type="checkbox" value="<?php echo $log['vote_id']; ?>" name="yoppolllogscheck[]">
+											<?php }
+											else { ?>
+											<input type="checkbox" value="<?php echo $log['id']; ?>" name="yoppolllogscheck[]">
+											<?php } ?>
 									</th>
 									<td>
-										<strong><?php echo $log['id']; ?></strong><br>
+										<strong><?php echo $log['vote_id']; ?></strong><br>
 									</td>
 									<td>
 										<strong><?php echo esc_html( stripslashes( $log['name'] ) ); ?></strong><br>
 										<div class="row-actions">
+											<?php if ( $group_by == 'vote') { ?>
+											<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to delete this vote log",'yop_poll')." \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to delete', 'yop_poll'); ?>'  ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'delete_group', 'id' => $log['vote_id'] ) ), 'yop-poll-logs-delete' ); ?>" class="submitdelete"><?php _e( 'Delete', 'yop_poll' ) ?></a></span>
+											<?php }
+											else { ?>
 											<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to delete this poll log",'yop_poll').": \'".esc_html( $log['id'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to delete', 'yop_poll'); ?>'  ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'delete', 'id' => $log['id'] ) ), 'yop-poll-logs-delete' ); ?>" class="submitdelete"><?php _e( 'Delete', 'yop_poll' ) ?></a></span>
+											<?php } ?>
 										</div>
 									</td>
 									<td>
-										<?php echo esc_html( stripslashes( $log['answer'] ) ); ?>
+										<?php echo ( 'Other' == $log['answer'] )? 'Other - '.esc_html( stripslashes( $log['other_answer_value'] ) ) : esc_html( stripslashes( $log['answer'] ) ) ; ?>
 									</td>
 									<td>
 										<?php echo esc_html( stripslashes( $log['user_nicename'] ) ); ?>
@@ -2719,38 +2896,38 @@
 				$errors												.= __( 'Option "View Total Votes" Not Updated!', 'yop_poll' ).$message_delimiter;	
 			}
 
-			//view_total_voters
-			if ( isset( $input['view_total_voters'] ) ) {
-				if ( in_array( $input['view_total_voters'], array('yes', 'no' ) ) ) {
-					$newinput['view_total_voters']					= trim( $input['view_total_voters'] );
-					$updated										.= __( 'Option "View Total Voters" Updated!', 'yop_poll' ).$message_delimiter;
+			//view_total_answers
+			if ( isset( $input['view_total_answers'] ) ) {
+				if ( in_array( $input['view_total_answers'], array('yes', 'no' ) ) ) {
+					$newinput['view_total_answers']					= trim( $input['view_total_answers'] );
+					$updated										.= __( 'Option "View Total Answers" Updated!', 'yop_poll' ).$message_delimiter;
 
-					//view_total_voters
-					if( 'yes' == $input['view_total_voters'] ) {
-						if ( isset( $input['view_total_voters_label'] ) ) {
-							if ( stripos( $input['view_total_voters_label'], '%POLL-TOTAL-VOTERS%' ) === false ) {
-								$newinput['view_total_voters_label']	= $default_options['view_total_voters_label'];
-								$errors 							.= __('You must use %POLL-TOTAL-VOTERS% to define your Total Voters label!', 'yop_poll' ).$message_delimiter;
+					//view_total_answers
+					if( 'yes' == $input['view_total_answers'] ) {
+						if ( isset( $input['view_total_answers_label'] ) ) {
+							if ( stripos( $input['view_total_answers_label'], '%POLL-TOTAL-ANSWERS%' ) === false ) {
+								$newinput['view_total_answers_label']	= $default_options['view_total_answers_label'];
+								$errors 							.= __('You must use %POLL-TOTAL-ANSWERS% to define your Total Answers label!', 'yop_poll' ).$message_delimiter;
 							}
 							else {
-								$newinput['view_total_voters_label']	= trim( $input['view_total_voters_label'] );
-								$updated							.= __( 'Option "View Total Voters Label" Updated!', 'yop_poll' ).$message_delimiter;	
+								$newinput['view_total_answers_label']	= trim( $input['view_total_answers_label'] );
+								$updated							.= __( 'Option "View Total Answers Label" Updated!', 'yop_poll' ).$message_delimiter;	
 							}
 						}
 						else {
-							$newinput['view_total_voters_label']	= $default_options['view_total_voters_label'];
-							$errors 								.= __('Option "Total Voters Label" Not Updated!', 'yop_poll' ).$message_delimiter;
+							$newinput['view_total_answers_label']	= $default_options['view_total_answers_label'];
+							$errors 								.= __('Option "Total Answers Label" Not Updated!', 'yop_poll' ).$message_delimiter;
 						}
 					}
 				}
 				else {
-					$newinput['view_total_voters']					= $default_options['view_total_voters'];
-					$errors											.= __( 'Option "View Total Voters" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ).$message_delimiter;
+					$newinput['view_total_answers']					= $default_options['view_total_answers'];
+					$errors											.= __( 'Option "View Total Answers" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ).$message_delimiter;
 				}
 			}
 			else {
-				$newinput['view_total_voters']						= $default_options['view_total_voters'];
-				$errors												.= __( 'Option "View Total Voters" Not Updated!', 'yop_poll' ).$message_delimiter;	
+				$newinput['view_total_answers']						= $default_options['view_total_answers'];
+				$errors												.= __( 'Option "View Total Answers" Not Updated!', 'yop_poll' ).$message_delimiter;	
 			}
 
 			//vote_permisions
@@ -3316,19 +3493,19 @@
 										</tr>
 										<tr>
 											<th>
-												<?php _e( 'View Total Voters ', 'yop_poll' ); ?>:
+												<?php _e( 'View Total Answers ', 'yop_poll' ); ?>:
 											</th>
 											<td>
-												<label for="yop-poll-view-total-voters-yes"><input <?php echo 'yes' == $default_options['view_total_voters'] ? 'checked="checked"' : '';  ?> id="yop-poll-view-total-voters-yes" type="radio" value="yes" name="yop_poll_options[view_total_voters]" /> <?php _e( 'Yes' , 'yop_poll'); ?></label>
-												<label for="yop-poll-view-total-voters-no"><input <?php echo 'no' == $default_options['view_total_voters'] ? 'checked="checked"' : '';  ?> id="yop-poll-view-total-voters-no" type="radio" value="no" name="yop_poll_options[view_total_voters]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
+												<label for="yop-poll-view-total-answers-yes"><input <?php echo 'yes' == $default_options['view_total_answers'] ? 'checked="checked"' : '';  ?> id="yop-poll-view-total-answers-yes" type="radio" value="yes" name="yop_poll_options[view_total_answers]" /> <?php _e( 'Yes' , 'yop_poll'); ?></label>
+												<label for="yop-poll-view-total-answers-no"><input <?php echo 'no' == $default_options['view_total_answers'] ? 'checked="checked"' : '';  ?> id="yop-poll-view-total-answers-no" type="radio" value="no" name="yop_poll_options[view_total_answers]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 											</td>
 										</tr>
-										<tr id="yop-poll-view-total-voters-div" style="<?php echo 'yes' != $default_options['view_total_voters'] ? 'display: none;' : '';  ?>">
+										<tr id="yop-poll-view-total-answers-div" style="<?php echo 'yes' != $default_options['view_total_answers'] ? 'display: none;' : '';  ?>">
 											<th>
-												<?php _e( 'View Total Voters Label', 'yop_poll' ); ?>:
+												<?php _e( 'View Total answers Label', 'yop_poll' ); ?>:
 											</th>
 											<td>
-												<input id="yop-poll-view-total-voters-label" type="text" name="yop_poll_options[view_total_voters_label]" value="<?php echo esc_html( stripslashes( $default_options['view_total_voters_label'] ) ); ?>" />
+												<input id="yop-poll-view-total-answers-label" type="text" name="yop_poll_options[view_total_answers_label]" value="<?php echo esc_html( stripslashes( $default_options['view_total_answers_label'] ) ); ?>" />
 											</td>
 										</tr>
 										<tr>
@@ -4005,19 +4182,19 @@
 										</tr>
 										<tr>
 											<th>
-												<?php _e( 'View Total Voters ', 'yop_poll' ); ?>:
+												<?php _e( 'View Total Answers ', 'yop_poll' ); ?>:
 											</th>
 											<td>
-												<label for="yop-poll-view-total-voters-yes"><input <?php echo 'yes' == $default_options['view_total_voters'] ? 'checked="checked"' : '';  ?> id="yop-poll-view-total-voters-yes" type="radio" value="yes" name="yop_poll_options[view_total_voters]" /> <?php _e( 'Yes' , 'yop_poll'); ?></label>
-												<label for="yop-poll-view-total-voters-no"><input <?php echo 'no' == $default_options['view_total_voters'] ? 'checked="checked"' : '';  ?> id="yop-poll-view-total-voters-no" type="radio" value="no" name="yop_poll_options[view_total_voters]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
+												<label for="yop-poll-view-total-answers-yes"><input <?php echo 'yes' == $default_options['view_total_answers'] ? 'checked="checked"' : '';  ?> id="yop-poll-view-total-answers-yes" type="radio" value="yes" name="yop_poll_options[view_total_answers]" /> <?php _e( 'Yes' , 'yop_poll'); ?></label>
+												<label for="yop-poll-view-total-answers-no"><input <?php echo 'no' == $default_options['view_total_answers'] ? 'checked="checked"' : '';  ?> id="yop-poll-view-total-answers-no" type="radio" value="no" name="yop_poll_options[view_total_answers]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 											</td>
 										</tr>
-										<tr id="yop-poll-view-total-voters-div" style="<?php echo 'yes' != $default_options['view_total_voters'] ? 'display: none;' : '';  ?>">
+										<tr id="yop-poll-view-total-answers-div" style="<?php echo 'yes' != $default_options['view_total_answers'] ? 'display: none;' : '';  ?>">
 											<th>
-												<?php _e( 'View Total Voters Label', 'yop_poll' ); ?>:
+												<?php _e( 'View Total Answers Label', 'yop_poll' ); ?>:
 											</th>
 											<td>
-												<input id="yop-poll-view-total-voters-label" type="text" name="yop_poll_options[view_total_voters_label]" value="<?php echo esc_html( stripslashes( $default_options['view_total_voters_label'] ) ); ?>" />
+												<input id="yop-poll-view-total-answers-label" type="text" name="yop_poll_options[view_total_answers_label]" value="<?php echo esc_html( stripslashes( $default_options['view_total_answers_label'] ) ); ?>" />
 											</td>
 										</tr>
 										<tr>
