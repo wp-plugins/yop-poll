@@ -136,6 +136,9 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 3.1 = 
+* Various bugs fixed
+
 = 3.0 = 
 * Added export ability for logs
 * Added date filter option for logs

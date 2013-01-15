@@ -218,7 +218,6 @@
 			wp_enqueue_script('jquery'); 
 
 			wp_enqueue_style( 'yop-poll-admin', "{$this->_config->plugin_url}/css/yop-poll-admin.css", array(), $this->_config->version );
-			wp_enqueue_script( 'yop-poll-admin', "{$this->_config->plugin_url}/js/yop-poll-admin.js", array(), $this->_config->version );
 			$answers_number			= $this->_config->min_number_of_answers + 1; //total +1
 			$customfields_number	= $this->_config->min_number_of_customfields + 1; //total +1
 
