@@ -328,7 +328,6 @@
 					add_filter( 'user_can_richedit' , create_function ( '$a' , 'return false;' ) , 1 );
 					wp_enqueue_script(array('editor', 'thickbox'));
 					wp_enqueue_style('thickbox');
-					wp_enqueue_style( 'yop-poll-admin-templates', "{$this->_config->plugin_url}/css/yop-poll-admin-templates.css", array(), $this->_config->version );
 					wp_enqueue_script( 'yop-poll-admin-templates', "{$this->_config->plugin_url}/js/yop-poll-admin-templates.js", array( 'jquery' ), $this->_config->version );
 					$yop_poll_add_new_template_config = array(
 						'ajax' => array(
