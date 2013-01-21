@@ -3,7 +3,7 @@
 
 		protected function init() {
 			$this->add_action( 'init', 'admin_loader' );
-			$this->add_action( 'init', 'my_yop_poll_button' );
+			$this->add_action( 'admin_enqueue_scripts', 'my_yop_poll_button' );
 			register_activation_hook( $this->_config->plugin_file, array( $this, 'activate' ) );
 			register_deactivation_hook( $this->_config->plugin_file, array( $this, 'deactivate' ) );
 			register_uninstall_hook( $this->_config->plugin_file, 'yop_poll_uninstall' );
@@ -4845,15 +4845,17 @@
 			return $plugin_array;
 		}
 
-		function my_yop_poll_button() { 
-			if ( ! current_user_can('edit_posts') && ! current_user_can('edit_pages') ) {
-				return;
-			}
+		function my_yop_poll_button( $hook ) {
+			if ( $hook == 'post-new.php' || $hook == 'post.php' || $hook == 'page-new.php' || $hook == 'page.php' ) {
+				if ( ! current_user_can('edit_posts') && ! current_user_can('edit_pages') ) {
+					return;
+				}
 
-			if ( get_user_option('rich_editing') == 'true' ) {
-				add_filter( 'mce_external_plugins', array( &$this, 'add_plugin' ) );
-				add_filter( 'mce_buttons', array( &$this, 'register_button' ) );
-			}   
+				if ( get_user_option('rich_editing') == 'true' ) {
+					add_filter( 'mce_external_plugins', array( &$this, 'add_plugin' ) );
+					add_filter( 'mce_buttons', array( &$this, 'register_button' ) );
+				} 
+			}  
 		}
 		/* end tinymce */
 }

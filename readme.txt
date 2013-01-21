@@ -136,6 +136,9 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 3.2 = 
+* Fixed bug that was causing issues with TinyMCE Editor
+
 = 3.1 = 
 * Various bugs fixed
 
