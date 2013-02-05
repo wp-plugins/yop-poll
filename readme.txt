@@ -2,7 +2,7 @@
 Contributors: yourownprogrammer
 Donate Link: http://www.yourownprogrammer.com/thankyou/donation.html
 Tags: poll, polls, vote, survey, polling, yop poll, yop
-Requires at least: 3.2
+Requires at least: 3.3
 Tested up to: 3.5
 Stable tag: trunk
 License: GPLv2 or later
@@ -136,6 +136,12 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 3.3 = 
+
+* Added option to auto generate a page when a poll is created
+* Fixed compatibility issues with IE
+* Fixed issues with custom fields
+
 = 3.2 = 
 * Fixed bug that was causing issues with TinyMCE Editor
 
@@ -174,7 +180,7 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 * Fixed bug that was causing widgets text not to display
 
 = 1.2 =  
-* Fixed do_shortcode() with missing argument
+* Fixed do_shortcode() with missing argument bug
 
 = 1.1 =   
 * Fixed call_user_func_array() bug   
