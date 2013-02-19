@@ -20,6 +20,9 @@
 			Yop_Poll_DbSchema::create_poll_votes_custom_fields_table();
 
 			update_option( "yop_poll_version", $wpdb->yop_poll_version );
+			update_option( "yop_poll_first_install_date", Yop_Poll_Model::get_mysql_curent_date() );
+			update_option( "yop_poll_admin_notices_donate", 'yes' );
+
 			$default_options = array(
 				'create_poll_page'							=> 'yes',
 				'auto_generate_poll_page'                   => 'no',
@@ -44,7 +47,7 @@
 				'sorting_answers_direction'					=> 'asc',
 				'sorting_results'							=> 'exact',
 				'sorting_results_direction'					=> 'asc',
-				'start_date'								=> date('Y-m-d H:i:s'),
+				'start_date'								=> Yop_Poll_Model::get_mysql_curent_date(),
 				'end_date'									=> '9999-12-31 23:59:59',
 				'never_expire'								=> 'yes',
 				'view_results'								=> 'after',

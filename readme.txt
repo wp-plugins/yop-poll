@@ -136,6 +136,11 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 3.4 = 
+
+* Fixed issue with menu items in admin area
+* Fixed issue with language packs
+
 = 3.3 = 
 
 * Added option to auto generate a page when a poll is created
