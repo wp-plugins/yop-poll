@@ -136,6 +136,10 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 3.6 = 
+
+* Fixed issue with missing files
+
 = 3.5 = 
 
 * Added french language pack
