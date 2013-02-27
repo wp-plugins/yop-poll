@@ -8,7 +8,7 @@
 	Version: 3.4
 	*/
 	define( 'YOP_POLL_WP_VERSION', '3.3' );
-	define( 'YOP_POLL_VERSION', '3.4' );
+	define( 'YOP_POLL_VERSION', '3.5' );
 	define( 'YOP_POLL_PATH', plugin_dir_path( __FILE__ ) );
 	define( 'YOP_POLL_URL', plugins_url( '', __FILE__ ) );
 	define( 'YOP_POLL_PLUGIN_FILE', plugin_basename( __FILE__ ) );

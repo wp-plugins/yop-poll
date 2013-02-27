@@ -4918,8 +4918,7 @@
 					</div>
 					<h3 class="hndle"><span><?php _e( 'Support This Plugin', 'yop_poll' ); ?></span></h3>
 					<div class="inside">
-						<b><?php _e( 'Have you found this plugin useful? Please help support it\'s continued development with a
-									donation', 'yop_poll' ); ?>!</b><br />
+						<b><?php _e( 'Have you found this plugin useful? Please help support it\'s continued development with a donation', 'yop_poll' ); ?>!</b><br />
 						<p align="center">
 							<a href="http://www.yourownprogrammer.com/thankyou/donation.html" target="_blank">
 								<img id="previewImage" border="0" alt="<?php _e( 'Donate', 'yop_poll' ); ?>" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif">

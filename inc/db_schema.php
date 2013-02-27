@@ -323,7 +323,7 @@
 			date_added datetime NOT NULL,
 			show_in_archive ENUM( 'yes', 'no' ) NOT NULL DEFAULT 'yes',
 			archive_order INT NOT NULL DEFAULT '1',
-			PRIMARY KEY  (id));";
+			PRIMARY KEY  (id)) CHARSET=".self::getCharset()." ;";
 
 			dbDelta( $create_poll_table_sql );
 		}
@@ -342,7 +342,7 @@
 			status varchar(255) NOT NULL,
 			last_modified datetime NOT NULL,
 			date_added datetime NOT NULL,
-			PRIMARY KEY  (id));";
+			PRIMARY KEY  (id)) CHARSET=".self::getCharset()." ;";
 
 			dbDelta( $create_poll_table_sql );
 		}
@@ -362,7 +362,7 @@
 			votes int(11) NOT NULL,
 			status varchar(255) NOT NULL,
 			PRIMARY KEY  (id),
-			KEY poll_id (poll_id));";
+			KEY poll_id (poll_id)) CHARSET=".self::getCharset()." ;";
 
 			dbDelta( $create_poll_answers_table_sql );
 		}
@@ -381,7 +381,7 @@
 			required ENUM( 'yes', 'no' ) NOT NULL DEFAULT 'no',
 			status varchar(255) NOT NULL,
 			PRIMARY KEY  (id),
-			KEY poll_id (poll_id));";
+			KEY poll_id (poll_id)) CHARSET=".self::getCharset()." ;";
 
 			dbDelta( $create_poll_answers_table_sql );
 		}
@@ -399,7 +399,7 @@
 			meta_key varchar(255) NOT NULL,
 			meta_value longtext NOT NULL,
 			PRIMARY KEY  (meta_id),
-			KEY yop_poll_id (yop_poll_id));";
+			KEY yop_poll_id (yop_poll_id)) CHARSET=".self::getCharset()." ;";
 
 			dbDelta( $create_poll_meta_table_sql );
 		}
@@ -417,7 +417,7 @@
 			meta_key varchar(255) NOT NULL,
 			meta_value longtext NOT NULL,
 			PRIMARY KEY  (meta_id),
-			KEY yop_poll_answer_id (yop_poll_answer_id));";
+			KEY yop_poll_answer_id (yop_poll_answer_id)) CHARSET=".self::getCharset()." ;";
 
 			dbDelta( $create_poll_answer_meta_table_sql );
 		}
@@ -441,7 +441,7 @@
 			host varchar(200) NOT NULL,
 			vote_date datetime NOT NULL,
 			PRIMARY KEY  (id),
-			KEY poll_id (poll_id));";
+			KEY poll_id (poll_id)) CHARSET=".self::getCharset()." ;";
 
 			dbDelta( $create_poll_logs_table_sql );
 		}
@@ -459,7 +459,7 @@
 			type varchar(255) NOT NULL,
 			value varchar(255) NOT NULL,
 			PRIMARY KEY  (id),
-			KEY poll_id (poll_id));";
+			KEY poll_id (poll_id)) CHARSET=".self::getCharset()." ;";
 
 			dbDelta( $create_poll_bans_table_sql );
 		}
@@ -480,8 +480,15 @@
 			custom_field_value varchar(255) NOT NULL,
 			vote_date datetime NOT NULL,
 			PRIMARY KEY  (id),
-			KEY poll_id (poll_id));";
+			KEY poll_id (poll_id)) CHARSET=".self::getCharset()." ;";
 
 			dbDelta( $create_poll_votes_custom_fields_table_sql );
+		}
+
+		public static function getCharset() {
+			if ( defined( 'DB_CHARSET' ) )
+				return DB_CHARSET;
+			else
+				return 'utf8';
 		}
 }

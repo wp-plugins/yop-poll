@@ -2630,7 +2630,7 @@
 			$pattern			= '\[(\[?)(ANSWER_RESULT_CONTAINER)\b([^\]\/]*(?:\/(?!\])[^\]\/]*)*?)(?:(\/)\]|\](?:([^\[]*+(?:\[(?!\/\2\])[^\[]*+)*+)\[\/\2\])?)(\]?)';
 			$template			= preg_replace_callback( "/$pattern/s", array(&$this,'answer_result_replace_callback'), $template );
 			$template			= self::strip_all_tags( $template );
-			$template			= '<div id="yop-poll-container-'.$poll_id.'" class="yop-poll-container"><div id="yop-poll-container-error-'.$poll_id.'" class="yop-poll-container-error"></div><form id="yop-poll-form-'.$poll_id.'" class="yop-poll-forms">'.$template.'</form></div>';
+			$template			= '<div id="yop-poll-container-'.$poll_id.'" class="yop-poll-container"><div class="yop_poll_loading" id="yop-poll-loading-'.$poll_id.'">'.__('Loading...', 'yop_poll' ).'</div><div id="yop-poll-container-error-'.$poll_id.'" class="yop-poll-container-error"></div><form id="yop-poll-form-'.$poll_id.'" class="yop-poll-forms">'.$template.'</form></div>';
 			return $template;
 		}
 

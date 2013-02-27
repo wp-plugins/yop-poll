@@ -136,6 +136,12 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 3.5 = 
+
+* Added french language pack
+* Added loading animation when vote button is clicked
+* Fixed issue with characters encoding
+
 = 3.4 = 
 
 * Fixed issue with menu items in admin area
