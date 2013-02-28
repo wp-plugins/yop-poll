@@ -136,6 +136,11 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 3.67 = 
+
+* Fixed issue with Loading text displayed above the polls
+* Fixed issue with deleting answers from polls
+
 = 3.6 = 
 
 * Fixed issue with missing files

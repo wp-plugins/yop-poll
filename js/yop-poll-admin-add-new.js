@@ -1,6 +1,6 @@
 jQuery(document).ready(function(jQuery) {
 		jQuery( "#yop-poll-add-answer-button" ).click( function () {
-				yop_poll_add_table_answer( jQuery( "#yop-poll-answer-table" ), yop_poll_count_number_of_answer ( "#yop-poll-answer-table" ) + 1 );
+				yop_poll_add_table_answer( jQuery( "#yop-poll-answer-table" ), yop_poll_count_number_of_answer_without_other ( "#yop-poll-answer-table" ) + 1 );
 				return false;
 		});
 		jQuery( "#yop-poll-add-customfield-button" ).click( function () {
@@ -14,10 +14,10 @@ jQuery(document).ready(function(jQuery) {
 		jQuery( "#yop-poll-allow-other-answers-no" ).click( function () {
 				jQuery( '#yop-poll-other-answers-label-div' ).hide();
 				jQuery( '#yop-poll-display-other-answers-values-div' ).hide();
-		});		
+		});
 		jQuery( "#yop-poll-display-answers-vertical" ).click( function () {
 				jQuery( '#yop-poll-display-answers-tabulated-div' ).hide();
-		}); 		
+		});
 		jQuery( "#yop-poll-display-answers-orizontal" ).click( function () {
 				jQuery( '#yop-poll-display-answers-tabulated-div' ).hide();
 		});
@@ -125,7 +125,7 @@ jQuery(document).ready(function(jQuery) {
 				dateFormat: 'yy-mm-dd'}
 		);
 
-		yopPollStartDateTextBox.datetimepicker({ 			
+		yopPollStartDateTextBox.datetimepicker({
 				onClose: function(dateText, inst) {
 					if (yopPollEndDateTextBox.val() != '') {
 						var testStartDate = yopPollStartDateTextBox.datetimepicker('getDate');
@@ -139,12 +139,12 @@ jQuery(document).ready(function(jQuery) {
 				},
 				onSelect: function (selectedDateTime){
 					yopPollEndDateTextBox.datetimepicker('option', 'minDate', yopPollStartDateTextBox.datetimepicker('getDate') );
-				}, 
+				},
 				showSecond: true,
 				timeFormat: 'hh:mm:ss',
 				dateFormat: 'yy-mm-dd'
 		});
-		yopPollEndDateTextBox.datetimepicker({ 
+		yopPollEndDateTextBox.datetimepicker({
 				onClose: function(dateText, inst) {
 					if (yopPollStartDateTextBox.val() != '') {
 						var testStartDate = yopPollStartDateTextBox.datetimepicker('getDate');
@@ -162,28 +162,28 @@ jQuery(document).ready(function(jQuery) {
 				showSecond: true,
 				timeFormat: 'hh:mm:ss',
 				dateFormat: 'yy-mm-dd'
-		}); 
+		});
 
 		jQuery('#yop-poll-edit-add-new-form-submit').click( function () {
 				savePoll();
 		});
 
 		jQuery('#yop-poll-edit-add-new-form-submit1').click( function () {
-				savePoll();		
+				savePoll();
 		});
 
 		function savePoll() {
 			jQuery.ajax({
-					type: 'POST', 
-					url: yop_poll_add_new_config.ajax.url, 
-					data: 'action='+yop_poll_add_new_config.ajax.action+'&'+jQuery( "#yop-poll-edit-add-new-form" ).serialize(), 
+					type: 'POST',
+					url: yop_poll_add_new_config.ajax.url,
+					data: 'action='+yop_poll_add_new_config.ajax.action+'&'+jQuery( "#yop-poll-edit-add-new-form" ).serialize(),
 					cache: false,
 					beforeSend: function() {
 						jQuery('html, body').animate({scrollTop: '0px'}, 800);
 						jQuery('#message').html('<p>' + yop_poll_add_new_config.ajax.beforeSendMessage + '</p>');
 						jQuery("#message").removeClass();
 						jQuery('#message').addClass('updated');
-						jQuery('#message').show();  								
+						jQuery('#message').show();
 					},
 					error: function() {
 						jQuery('html, body').animate({scrollTop: '0px'}, 800);
@@ -191,8 +191,8 @@ jQuery(document).ready(function(jQuery) {
 						jQuery("#message").removeClass();
 						jQuery('#message').addClass('error');
 						jQuery('#message').show();
-					}, 
-					success: 
+					},
+					success:
 					function( data ){
 						jQuery('html, body').animate({scrollTop: '0px'}, 800);
 						jQuery('#message').html('<p>' + data + '</p>');
@@ -201,7 +201,7 @@ jQuery(document).ready(function(jQuery) {
 						jQuery('#message').show();
 					}
 			});
-		} 
+		}
 
 });
 function yop_poll_add_table_answer( table, ans_no ) {
@@ -219,16 +219,16 @@ function yop_poll_add_table_answer( table, ans_no ) {
 		bar_border_style_dotted_checked	= 'selected="selected"';
 
 	var jQuerytr = '<tr class="yop_poll_tr_answer" id="yop_poll_tr_answer' + answer_id + '"><th scope="row"><label class="yop_poll_answer_label" for="yop-poll-answer' + answer_id + '">' + yop_poll_add_new_config.text_answer + ' ' + ans_no + '</label></th><td><input type="text" value="" id="yop-poll-answer'+ answer_id +'" name="yop_poll_answer[answer'+ answer_id +']" /></td><td align="right"><input type="button" value="' + yop_poll_add_new_config.text_customize_answer + '" onclick="yop_poll_toogle_customize_answer(\'#yop-poll-answer-table\', ' + answer_id + ' ); return false;" class="button" /> <input onclick="yop_poll_remove_answer( \'#yop-poll-answer-table\', ' + answer_id + ' ); return false;" type="button" value="' + yop_poll_add_new_config.text_remove_answer + '" class="button" /></td></tr>';
-	jQuerytr += '<tr class="yop_poll_tr_customize_answer" id="yop_poll_tr_customize_answer' + answer_id +'" style="display:none;">' + 
+	jQuerytr += '<tr class="yop_poll_tr_customize_answer" id="yop_poll_tr_customize_answer' + answer_id +'" style="display:none;">' +
 	'<td colspan="3">' +
 	'<table cellspacing="0" width="100%"><tbody>' +
 	'<tr>' +
-	'<th>' + yop_poll_add_new_config.text_poll_bar_style.use_template_bar_label + 
+	'<th>' + yop_poll_add_new_config.text_poll_bar_style.use_template_bar_label +
 	'</th>' +
 	'<td>' +
 	'<input onclick="jQuery(\'#yop-poll-answer-use-template-bar-table-' + answer_id + '\').show();" id="yop-poll-answer-use-template-bar-no-' + answer_id + '" ';
 	if ( 'no' == yop_poll_add_new_config.poll_bar_default_options.use_template_bar )
-		jQuerytr += 'checked="checked"';	
+		jQuerytr += 'checked="checked"';
 	jQuerytr += ' type="radio" name="yop_poll_answer_options[answer' + answer_id + '][use_template_bar]" value="no" /> <label for="yop-poll-answer-use-template-bar-no-' + answer_id + '">' + yop_poll_add_new_config.text_poll_bar_style.use_template_bar_no_label + '</label>&nbsp;|&nbsp;' +
 	'<input onclick="jQuery(\'#yop-poll-answer-use-template-bar-table-' + answer_id + '\').hide();" id="yop-poll-answer-use-template-bar-yes-' + answer_id + '" ';
 	if ( 'yes' == yop_poll_add_new_config.poll_bar_default_options.use_template_bar )
@@ -242,11 +242,11 @@ function yop_poll_add_table_answer( table, ans_no ) {
 	if ( 'yes' == yop_poll_add_new_config.poll_bar_default_options.use_template_bar )
 		jQuerytr += 'display:none';
 	jQuerytr += '">' +
-	'<tbody>' + 
-	'<tr>' + 
+	'<tbody>' +
+	'<tr>' +
 	'<th>' +
-	'<label>' + yop_poll_add_new_config.text_poll_bar_style.poll_bar_style_label + '</label>' +  
-	'</th>' + 
+	'<label>' + yop_poll_add_new_config.text_poll_bar_style.poll_bar_style_label + '</label>' +
+	'</th>' +
 	'<td>' +
 	'<table cellspacing="0" style="margin-left:0px;" style="width:100%"><tbody>' +
 	'<tr>' +
@@ -295,17 +295,17 @@ function yop_poll_add_table_answer( table, ans_no ) {
 	'</tr>' +
 	'</tbody></table>' +
 	'</td>' +
-	'</tr>' + 
-	'<tr>' + 
+	'</tr>' +
+	'<tr>' +
 	'<th>' +
-	'<label>' + yop_poll_add_new_config.text_poll_bar_style.poll_bar_preview_label + '</label>' +  
+	'<label>' + yop_poll_add_new_config.text_poll_bar_style.poll_bar_preview_label + '</label>' +
 	'</th>' +
 	'<td>' +
 	'<div id="yop-poll-bar-preview' + answer_id + '" style="width: 100px; height: ' + yop_poll_add_new_config.poll_bar_default_options.height + 'px; background-color: #' + yop_poll_add_new_config.poll_bar_default_options.background_color +'; border-style: '+ yop_poll_add_new_config.poll_bar_default_options.border + '; border-width: ' + yop_poll_add_new_config.poll_bar_default_options.border_width + 'px; border-color: #' + yop_poll_add_new_config.poll_bar_default_options.border_color + ';"></div>' +
 	'</td>' +
-	'</tr>' + 
-	'</tbody>' + 
-	'</table>' + 
+	'</tr>' +
+	'</tbody>' +
+	'</table>' +
 	'</td>' +
 	'</tr>';
 	if ( 1 == ans_no ) {
@@ -333,7 +333,16 @@ function yop_poll_add_table_customfield( table, custfield_no ) {
 };
 
 function yop_poll_count_number_of_answer ( table ) {
-	var jQuerycount = jQuery( table ).find( "tbody .yop_poll_tr_answer" ).length;
+	var jQuerycount = 0;
+	jQuerycount = jQuery( table ).find( "tbody .yop_poll_tr_answer" ).length;
+	if ( jQuery( '#yop-poll-allow-other-answers-yes' ).attr('checked') == 'checked' )
+		jQuerycount = jQuerycount + 1;
+	return jQuerycount;
+}
+
+function yop_poll_count_number_of_answer_without_other ( table ) {
+	var jQuerycount = 0;
+	jQuerycount = jQuery( table ).find( "tbody .yop_poll_tr_answer" ).length;
 	return jQuerycount;
 }
 
@@ -359,18 +368,18 @@ function yop_poll_reorder_customfields( table ) {
 }
 
 function yop_poll_remove_answer( table, answer_id ) {
-	if ( yop_poll_count_number_of_answer ( table ) >= 3 ) {
+	if ( yop_poll_count_number_of_answer ( table ) >= 2 ) {
 		jQuery( '#yop_poll_tr_answer' + answer_id ).fadeOut( 'medium', function () {
 				jQuery( this ).remove();
 				yop_poll_reorder_answer( table );
 				return false;
-		});	
+		});
 		jQuery( '#yop_poll_tr_customize_answer' + answer_id ).fadeOut( 'medium', function () {
 				jQuery( this ).remove();
 				return false;
 		});
 	}
-	return false;		
+	return false;
 }
 
 function yop_poll_remove_customfield( table, customfield_id ) {
@@ -378,26 +387,26 @@ function yop_poll_remove_customfield( table, customfield_id ) {
 			jQuery( this ).remove();
 			yop_poll_reorder_customfields( table );
 			return false;
-	});	
-	return false;		
+	});
+	return false;
 }
 
 function yop_poll_update_bar_style( obj, property, value ) {
-	if( 
-		'background-color' == property || 
-		'height' == property || 
-		'border-color' == property || 
-		'border-width' == property || 
+	if(
+		'background-color' == property ||
+		'height' == property ||
+		'border-color' == property ||
+		'border-width' == property ||
 		'border-style' == property ) {
 		if( jQuery( obj ).length > 0 )
 			{
 			if( '' != value )
 				jQuery( obj ).css( property , value );
-		}	
+		}
 	}
 }
 
 function yop_poll_toogle_customize_answer( table, answer_id ) {
 	jQuery( '#yop_poll_tr_customize_answer' + answer_id ).toggle( 'medium' );
-	return false;		
+	return false;
 }

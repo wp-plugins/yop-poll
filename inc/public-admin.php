@@ -51,8 +51,8 @@
 				'total'        => $total_archive,
 				'current'      => max( 1, $yop_poll_page ),
 				'prev_next'    => True,
-				'prev_text'    => __('&laquo; Previous'),
-				'next_text'    => __('Next &raquo;')
+				'prev_text'    => __('&laquo; Previous', 'yop_poll'),
+				'next_text'    => __('Next &raquo;', 'yop_poll')
 			);
 			return $template.paginate_links( $args );
 		}
@@ -76,7 +76,9 @@
 					'vote_action' 			=> 'yop_poll_do_vote',
 					'view_results_action'	=> 'yop_poll_view_results',
 					'back_to_vote_action'	=> 'yop_poll_back_to_vote'
-				)
+				),
+				'loading_image_src'	=> 	$this->_config->plugin_url.'/images/loading36x36.gif',
+				'loading_image_alt'	=> __( 'Loading', 'yop_poll')
 			);
 			wp_localize_script( 'yop-poll-public_'.$id, 'yop_poll_public_config', $yop_poll_public_config );
 
