@@ -106,6 +106,25 @@
 				}
 				update_option( "yop_poll_version", $wpdb->yop_poll_version );
 			}
+
+			//update for version 3.7
+			if( version_compare ( $installed_version, '3.7', '<=' ) ) {
+				$default_options	= get_option( 'yop_poll_options' );
+				if ( ! isset( $default_options['poll_name_html_tags'] ) ) {
+					$default_options['poll_name_html_tags']	= 'no';
+				}
+				if ( ! isset( $default_options['poll_question_html_tags'] ) ) {
+					$default_options['poll_question_html_tags']	= 'no';
+				}
+				if ( ! isset( $default_options['poll_answer_html_tags'] ) ) {
+					$default_options['poll_answer_html_tags']	= 'no';
+				}
+				if ( ! isset( $default_options['poll_custom_field_html_tags'] ) ) {
+					$default_options['poll_custom_field_html_tags']	= 'no';
+				}
+				update_option( "yop_poll_version", $wpdb->yop_poll_version );
+				update_option( 'yop_poll_options', $default_options );
+			}
 		}
 
 		public function admin_loader() {
@@ -244,8 +263,6 @@
 			global $page, $action, $orderby, $order, $yop_poll_add_new_config;
 			$default_options = get_option( 'yop_poll_options', array() );
 
-			wp_enqueue_script('jquery');
-
 			wp_enqueue_style( 'yop-poll-admin', "{$this->_config->plugin_url}/css/yop-poll-admin.css", array(), $this->_config->version );
 			$answers_number			= $this->_config->min_number_of_answers + 1; //total +1
 			$customfields_number	= $this->_config->min_number_of_customfields + 1; //total +1
@@ -256,7 +273,7 @@
 						wp_enqueue_style( 'yop-poll-admin-results', "{$this->_config->plugin_url}/css/yop-poll-admin-results.css", array(), $this->_config->version );
 						wp_enqueue_style( 'yop-poll-timepicker', "{$this->_config->plugin_url}/css/timepicker.css", array(), $this->_config->version );
 						wp_enqueue_style( 'yop-poll-jquery-ui', "{$this->_config->plugin_url}/css/jquery-ui.css", array(), $this->_config->version );
-						wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
+						wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
 						wp_enqueue_style( 'yop-poll-admin-custom-fields', "{$this->_config->plugin_url}/css/yop-poll-admin-custom-fields.css", array(), $this->_config->version );
 						wp_enqueue_script( 'yop-poll-admin-custom-fields', "{$this->_config->plugin_url}/js/yop-poll-admin-custom-fields.js", array('jquery', 'yop-poll-jquery-ui-timepicker'), $this->_config->version );
 						$this->yop_poll_custom_fields_results_operations();
@@ -265,7 +282,7 @@
 					if ( 'custom-fields' == $action ) {
 						wp_enqueue_style( 'yop-poll-timepicker', "{$this->_config->plugin_url}/css/timepicker.css", array(), $this->_config->version );
 						wp_enqueue_style( 'yop-poll-jquery-ui', "{$this->_config->plugin_url}/css/jquery-ui.css", array(), $this->_config->version );
-						wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
+						wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
 						wp_enqueue_style( 'yop-poll-admin-custom-fields', "{$this->_config->plugin_url}/css/yop-poll-admin-custom-fields.css", array(), $this->_config->version );
 						wp_enqueue_script( 'yop-poll-admin-custom-fields', "{$this->_config->plugin_url}/js/yop-poll-admin-custom-fields.js", array( 'jquery', 'yop-poll-jquery-ui-timepicker' ), $this->_config->version );
 						$this->yop_poll_custom_fields_operations();
@@ -330,7 +347,7 @@
 					wp_enqueue_style( 'yop-poll-jquery-ui', "{$this->_config->plugin_url}/css/jquery-ui.css", array(), $this->_config->version );
 
 					wp_enqueue_script( 'yop-poll-admin-add-new', "{$this->_config->plugin_url}/js/yop-poll-admin-add-new.js", array( 'jquery', 'yop-poll-jquery-ui-timepicker' ), $this->_config->version );
-					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
+					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
 					wp_localize_script( 'yop-poll-admin-add-new', 'yop_poll_add_new_config', $yop_poll_add_new_config );
 					wp_enqueue_script('link');
 					wp_enqueue_script('xfn');
@@ -338,7 +355,7 @@
 				case 'yop-polls-logs' :
 					wp_enqueue_style( 'yop-poll-timepicker', "{$this->_config->plugin_url}/css/timepicker.css", array(), $this->_config->version );
 					wp_enqueue_style( 'yop-poll-jquery-ui', "{$this->_config->plugin_url}/css/jquery-ui.css", array(), $this->_config->version );
-					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
+					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
 					wp_enqueue_script( 'yop-poll-admin-logs', "{$this->_config->plugin_url}/js/yop-poll-admin-logs.js", array('jquery', 'yop-poll-jquery-ui-timepicker'), $this->_config->version );
 					$this->view_yop_poll_logs_operations();
 					break;
@@ -351,7 +368,7 @@
 					wp_enqueue_style( 'yop-poll-timepicker', "{$this->_config->plugin_url}/css/timepicker.css", array(), $this->_config->version );
 					wp_enqueue_style( 'yop-poll-jquery-ui', "{$this->_config->plugin_url}/css/jquery-ui.css", array(), $this->_config->version );
 					wp_enqueue_script( 'yop-poll-admin-options', "{$this->_config->plugin_url}/js/yop-poll-admin-options.js", array( 'jquery', 'yop-poll-jquery-ui-timepicker' ), $this->_config->version );
-					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
+					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
 					wp_enqueue_script('link');
 					wp_enqueue_script('xfn');
 					break;
@@ -2417,6 +2434,66 @@
 				$errors											.= __( 'Option "Allow Multiple Answers" Not Updated! Choose "yes" or "no"!', 'yop_poll' ).$message_delimiter;
 			}
 
+			if ( isset( $input['poll_name_html_tags'] ) ) {
+				if( in_array( $input['poll_name_html_tags'], array('yes', 'no') ) ) {
+					$newinput['poll_name_html_tags']			=  trim( $input['poll_name_html_tags'] );
+					$updated									.= __( 'Option "Use HTML tags in poll name" Updated!', 'yop_poll' ).$message_delimiter;
+				}
+				else {
+					$newinput['poll_name_html_tags']			=  $default_options['poll_name_html_tags'];
+					$errors										.= __( 'Option "Use HTML tags in poll name" Not Updated! Choose "yes" or "no"!', 'yop_poll' ).$message_delimiter;
+				}
+			}
+			else {
+				$newinput['poll_name_html_tags']				=  $default_options['poll_name_html_tags'];
+				$errors											.= __( 'Option "Use HTML tags in poll name" Not Updated! Choose "yes" or "no"!', 'yop_poll' ).$message_delimiter;
+			}
+
+			if ( isset( $input['poll_question_html_tags'] ) ) {
+				if( in_array( $input['poll_question_html_tags'], array('yes', 'no') ) ) {
+					$newinput['poll_question_html_tags']			=  trim( $input['poll_question_html_tags'] );
+					$updated									.= __( 'Option "Use HTML tags in poll question" Updated!', 'yop_poll' ).$message_delimiter;
+				}
+				else {
+					$newinput['poll_question_html_tags']			=  $default_options['poll_question_html_tags'];
+					$errors										.= __( 'Option "Use HTML tags in poll question" Not Updated! Choose "yes" or "no"!', 'yop_poll' ).$message_delimiter;
+				}
+			}
+			else {
+				$newinput['poll_question_html_tags']				=  $default_options['poll_question_html_tags'];
+				$errors											.= __( 'Option "Use HTML tags in poll question" Not Updated! Choose "yes" or "no"!', 'yop_poll' ).$message_delimiter;
+			}
+
+			if ( isset( $input['poll_answer_html_tags'] ) ) {
+				if( in_array( $input['poll_answer_html_tags'], array('yes', 'no') ) ) {
+					$newinput['poll_answer_html_tags']			=  trim( $input['poll_answer_html_tags'] );
+					$updated									.= __( 'Option "Use HTML tags in poll answers" Updated!', 'yop_poll' ).$message_delimiter;
+				}
+				else {
+					$newinput['poll_answer_html_tags']			=  $default_options['poll_answer_html_tags'];
+					$errors										.= __( 'Option "Use HTML tags in poll answers" Not Updated! Choose "yes" or "no"!', 'yop_poll' ).$message_delimiter;
+				}
+			}
+			else {
+				$newinput['poll_answer_html_tags']				=  $default_options['poll_answer_html_tags'];
+				$errors											.= __( 'Option "Use HTML tags in poll answers" Not Updated! Choose "yes" or "no"!', 'yop_poll' ).$message_delimiter;
+			}
+
+			if ( isset( $input['poll_custom_field_html_tags'] ) ) {
+				if( in_array( $input['poll_custom_field_html_tags'], array('yes', 'no') ) ) {
+					$newinput['poll_custom_field_html_tags']			=  trim( $input['poll_custom_field_html_tags'] );
+					$updated									.= __( 'Option "Use HTML tags in poll custom fields" Updated!', 'yop_poll' ).$message_delimiter;
+				}
+				else {
+					$newinput['poll_custom_field_html_tags']			=  $default_options['poll_custom_field_html_tags'];
+					$errors										.= __( 'Option "Use HTML tags in poll custom fields" Not Updated! Choose "yes" or "no"!', 'yop_poll' ).$message_delimiter;
+				}
+			}
+			else {
+				$newinput['poll_custom_field_html_tags']				=  $default_options['poll_custom_field_html_tags'];
+				$errors											.= __( 'Option "Use HTML tags in poll custom fields" Not Updated! Choose "yes" or "no"!', 'yop_poll' ).$message_delimiter;
+			}
+
 			//display_answers
 			if ( isset( $input['display_answers'] ) ) {
 				if ( in_array( $input['display_answers'], array('vertical', 'orizontal', 'tabulated') ) ) {
@@ -3236,6 +3313,42 @@
 										<tbody>
 											<tr>
 												<th>
+													<?php _e( 'Use HTML tags in poll name ', 'yop_poll' ); ?>:
+												</th>
+												<td>
+													<label for="yop-poll-use-html-tags-in-poll-name-no"><input id="yop-poll-use-html-tags-in-poll-name-no" <?php echo 'no' == $default_options['poll_name_html_tags'] ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_name_html_tags]" value="no" /> <?php _e( 'No', 'yop_poll' ); ?></label>
+													<label for="yop-poll-use-html-tags-in-poll-name-yes"><input id="yop-poll-use-html-tags-in-poll-name-yes" <?php echo 'yes' == $default_options['poll_name_html_tags']  ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_name_html_tags]" value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label>
+												</td>
+											</tr>
+											<tr>
+												<th>
+													<?php _e( 'Use HTML tags in poll question ', 'yop_poll' ); ?>:
+												</th>
+												<td>
+													<label for="yop-poll-use-html-tags-in-poll-question-no"><input id="yop-poll-use-html-tags-in-poll-question-no" <?php echo 'no' == $default_options['poll_question_html_tags'] ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_question_html_tags]" value="no" /> <?php _e( 'No', 'yop_poll' ); ?></label>
+													<label for="yop-poll-use-html-tags-in-poll-question-yes"><input id="yop-poll-use-html-tags-in-poll-question-yes" <?php echo 'yes' == $default_options['poll_question_html_tags']  ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_question_html_tags]" value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label>
+												</td>
+											</tr>
+											<tr>
+												<th>
+													<?php _e( 'Use HTML tags in poll answers ', 'yop_poll' ); ?>:
+												</th>
+												<td>
+													<label for="yop-poll-use-html-tags-in-poll-answer-no"><input id="yop-poll-use-html-tags-in-poll-answer-no" <?php echo 'no' == $default_options['poll_answer_html_tags'] ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_answer_html_tags]" value="no" /> <?php _e( 'No', 'yop_poll' ); ?></label>
+													<label for="yop-poll-use-html-tags-in-poll-answer-yes"><input id="yop-poll-use-html-tags-in-poll-answer-yes" <?php echo 'yes' == $default_options['poll_answer_html_tags']  ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_answer_html_tags]" value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label>
+												</td>
+											</tr>
+											<tr>
+												<th>
+													<?php _e( 'Use HTML tags in poll custom fields ', 'yop_poll' ); ?>:
+												</th>
+												<td>
+													<label for="yop-poll-use-html-tags-in-poll-custom-field-no"><input id="yop-poll-use-html-tags-in-poll-custom-field-no" <?php echo 'no' == $default_options['poll_custom_field_html_tags'] ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_custom_field_html_tags]" value="no" /> <?php _e( 'No', 'yop_poll' ); ?></label>
+													<label for="yop-poll-use-html-tags-in-poll-custom-field-yes"><input id="yop-poll-use-html-tags-in-poll-custom-field-yes" <?php echo 'yes' == $default_options['poll_custom_field_html_tags']  ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_custom_field_html_tags]" value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label>
+												</td>
+											</tr>
+											<tr>
+												<th>
 													<?php _e( 'Display Answers ', 'yop_poll' ); ?>:
 												</th>
 												<td>
@@ -3748,6 +3861,19 @@
 								<div class="inside">
 									<input type="text" id="yop-poll-name" value="<?php echo esc_html( stripslashes( $current_poll['name'] ) ); ?>" tabindex="1" name="yop_poll_name" size="30" />
 									<p><?php _e( 'Example: Test Poll', 'yop_poll' ); ?></p>
+									<table cellspacing="0" id="yop-poll-name-advanced-options-div" class="links-table">
+										<tbody>
+											<tr>
+												<th>
+													<?php _e( 'Use HTML tags in poll name ', 'yop_poll' ); ?>:
+												</th>
+												<td>
+													<label for="yop-poll-use-html-tags-in-poll-name-no"><input id="yop-poll-use-html-tags-in-poll-name-no" <?php echo 'no' == $default_options['poll_name_html_tags'] ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_name_html_tags]" value="no" /> <?php _e( 'No', 'yop_poll' ); ?></label>
+													<label for="yop-poll-use-html-tags-in-poll-name-yes"><input id="yop-poll-use-html-tags-in-poll-name-yes" <?php echo 'yes' == $default_options['poll_name_html_tags']  ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_name_html_tags]" value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label>
+												</td>
+											</tr>
+										</tbody>
+									</table>
 								</div>
 							</div>
 							<div class="stuffbox" id="yop-poll-questiondiv">
@@ -3755,6 +3881,19 @@
 								<div class="inside">
 									<input type="text" id="yop-poll-question" value="<?php echo esc_html( stripslashes( $current_poll['question'] ) ); ?>" tabindex="1" name="yop_poll_question" size="30" />
 									<p><?php _e( 'Example: How is my plugin?', 'yop_poll' ); ?></p>
+									<table cellspacing="0" id="yop-poll-question-advanced-options-div" class="links-table">
+										<tbody>
+											<tr>
+												<th>
+													<?php _e( 'Use HTML tags in poll question ', 'yop_poll' ); ?>:
+												</th>
+												<td>
+													<label for="yop-poll-use-html-tags-in-poll-question-no"><input id="yop-poll-use-html-tags-in-poll-question-no" <?php echo 'no' == $default_options['poll_question_html_tags'] ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_question_html_tags]" value="no" /> <?php _e( 'No', 'yop_poll' ); ?></label>
+													<label for="yop-poll-use-html-tags-in-poll-question-yes"><input id="yop-poll-use-html-tags-in-poll-question-yes" <?php echo 'yes' == $default_options['poll_question_html_tags']  ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_question_html_tags]" value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label>
+												</td>
+											</tr>
+										</tbody>
+									</table>
 								</div>
 							</div>
 							<div class="stuffbox" id="yop-poll-answersdiv">
@@ -3882,6 +4021,15 @@
 												<td>
 													<input id="yop-poll-other-answers-label" type="text" name="yop_poll_options[other_answers_label]" value="<?php echo isset( $other_answer[0]['answer'] ) ? esc_html( stripslashes( $other_answer[0]['answer'] ) ) : $default_options['other_answers_label'] ?>" />
 													<input type="hidden" name="yop_poll_options[other_answers_id]" value="<?php echo isset( $other_answer[0]['id'] ) ? $other_answer[0]['id'] : '' ?>" />
+												</td>
+											</tr>
+											<tr>
+												<th>
+													<?php _e( 'Use HTML tags in poll answers ', 'yop_poll' ); ?>:
+												</th>
+												<td>
+													<label for="yop-poll-use-html-tags-in-poll-answer-no"><input id="yop-poll-use-html-tags-in-poll-answer-no" <?php echo 'no' == $default_options['poll_answer_html_tags'] ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_answer_html_tags]" value="no" /> <?php _e( 'No', 'yop_poll' ); ?></label>
+													<label for="yop-poll-use-html-tags-in-poll-answer-yes"><input id="yop-poll-use-html-tags-in-poll-answer-yes" <?php echo 'yes' == $default_options['poll_answer_html_tags']  ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_answer_html_tags]" value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label>
 												</td>
 											</tr>
 											<tr id="yop-poll-display-other-answers-values-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
@@ -4076,7 +4224,21 @@
 									</table>
 									<p id="yop-poll-add-customfield-holder" style="display: block;">
 										<button id="yop-poll-add-customfield-button" class="button"><?php _e( 'Add New Custom Field', 'yop_poll' ) ?></button>
+										<button id="yop-poll-customfield-advanced-options-button" class="button"><?php _e( 'Custom Fields Advanced Options', 'yop_poll' ); ?></button>
 									</p>
+									<table cellspacing="0" id="yop-poll-custom-fields-advanced-options-div" style="display:none;" class="links-table">
+									<tbody>
+										<tr>
+												<th>
+													<?php _e( 'Use HTML tags in poll custom fields ', 'yop_poll' ); ?>:
+												</th>
+												<td>
+													<label for="yop-poll-use-html-tags-in-poll-custom-field-no"><input id="yop-poll-use-html-tags-in-poll-custom-field-no" <?php echo 'no' == $default_options['poll_custom_field_html_tags'] ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_custom_field_html_tags]" value="no" /> <?php _e( 'No', 'yop_poll' ); ?></label>
+													<label for="yop-poll-use-html-tags-in-poll-custom-field-yes"><input id="yop-poll-use-html-tags-in-poll-custom-field-yes" <?php echo 'yes' == $default_options['poll_custom_field_html_tags']  ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_custom_field_html_tags]" value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label>
+												</td>
+											</tr>
+									</tbody>
+									</table>
 								</div>
 							</div>
 							<div class="meta-box-sortables ui-sortable" id="normal-sortables">

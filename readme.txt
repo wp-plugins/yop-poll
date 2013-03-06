@@ -136,7 +136,12 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
-= 3.67 = 
+= 3.8 = 
+
+* Fixed compatibility issue with Restore jQuery plugin
+* Added ability to link poll answers
+
+= 3.7 = 
 
 * Fixed issue with Loading text displayed above the polls
 * Fixed issue with deleting answers from polls

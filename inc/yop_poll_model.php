@@ -2611,14 +2611,20 @@
 			}
 			$template			= stripslashes_deep( $template );
 			$template			= str_ireplace( '%POLL-ID%', $poll_id, $template );
-			$template			= str_ireplace( '%POLL-NAME%', esc_html( stripslashes( $poll_details['name'] ) ), $template );
+			if ( 'yes' == $poll_options['poll_name_html_tags'] )
+				$template			= str_ireplace( '%POLL-NAME%', stripslashes( $poll_details['name'] ), $template );
+			else
+				$template			= str_ireplace( '%POLL-NAME%', esc_html( stripslashes( $poll_details['name'] ) ), $template );
 			$template			= str_ireplace( '%POLL-START-DATE%', esc_html( stripslashes( $poll_details['start_date'] ) ), $template );
 			$template			= str_ireplace( '%POLL-PAGE-URL%', esc_html( stripslashes( $poll_options['poll_page_url'] ) ), $template );
 			if ( '9999-12-31 23:59:59' == $poll_details['end_date'] )
 				$template			= str_ireplace( '%POLL-END-DATE%', 'Never Expire', $template );
 			else
 				$template			= str_ireplace( '%POLL-END-DATE%', esc_html( stripslashes( $poll_details['end_date'] ) ), $template );
-			$template			= str_ireplace( '%POLL-QUESTION%', esc_html( stripslashes( $poll_details['question'] ) ), $template );
+			if ( 'yes' == $poll_options['poll_question_html_tags'] )
+				$template			= str_ireplace( '%POLL-QUESTION%', stripslashes( $poll_details['question'] ), $template );
+			else
+				$template			= str_ireplace( '%POLL-QUESTION%', esc_html( stripslashes( $poll_details['question'] ) ), $template );
 
 			if( 'yes' == $poll_options['view_results_link'] ) {
 				$template		= str_ireplace( '%POLL-VIEW-RESULT-LINK%', '<a href="javascript:void(0)" class="yop_poll_result_link" id="yop_poll_result_link'.$poll_id.'" onClick="yop_poll_view_results(\''.$poll_id.'\')">'.$poll_options['view_results_link_label'].'</a>', $template );
@@ -2722,7 +2728,10 @@
 						}
 						$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-VOTES%', self::display_poll_result_votes( $answer, $poll_options ), $m[5] );
 						$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-PERCENTAGES%', self::display_poll_result_percentages( $answer, $poll_options ), $temp_string );
-						$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', esc_html( stripslashes( $answer['answer'] ) ), $temp_string );
+						if ( 'yes' == $poll_options['poll_answer_html_tags'] )
+							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', stripslashes( $answer['answer'] ), $temp_string );
+						else
+							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', esc_html( stripslashes( $answer['answer'] ) ), $temp_string );
 						$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $poll_id, $answer['id'], $answer['procentes'], $poll_options ), $temp_string );
 						$return_string	.= $temp_string;
 					}
@@ -2741,7 +2750,10 @@
 				$custom_fields	= self::get_poll_customfields( $poll_id );
 				if( count( $custom_fields ) > 0 ) {
 					foreach ($custom_fields as $custom_field) {
-						$temp_string	= str_ireplace( '%POLL-CUSTOM-FIELD-LABEL%', '<label for="yop-poll-customfield-'.$custom_field['id'].'">'.esc_html( stripslashes( $custom_field['custom_field'] ) ).'</label>', $m[5] );
+						if ( 'yes' == $poll_options['poll_custom_field_html_tags'] )
+							$temp_string	= str_ireplace( '%POLL-CUSTOM-FIELD-LABEL%', '<label for="yop-poll-customfield-'.$custom_field['id'].'">'.stripslashes( $custom_field['custom_field'] ).'</label>', $m[5] );
+						else
+							$temp_string	= str_ireplace( '%POLL-CUSTOM-FIELD-LABEL%', '<label for="yop-poll-customfield-'.$custom_field['id'].'">'.esc_html( stripslashes( $custom_field['custom_field'] ) ).'</label>', $m[5] );
 						$temp_string	= str_ireplace( '%POLL-CUSTOM-FIELD-TEXT-INPUT%', '<input type="text" value="" name="yop_poll_customfield['.$custom_field['id'].']" id="yop-poll-customfield-'.$custom_field['id'].'" />', $temp_string );
 						$return_string	.= $temp_string;
 					}
@@ -2783,7 +2795,10 @@
 							$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-CHECK-INPUT%', '<input type="checkbox" value="'.$other_answer[0]['id'].'" name="yop_poll_answer['.$other_answer[0]['id'].']" id="yop-poll-answer-'.$other_answer[0]['id'].'" />', $m[5] );
 						else
 							$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-CHECK-INPUT%', '<input type="radio" value="'.$other_answer[0]['id'].'" name="yop_poll_answer" id="yop-poll-answer-'.$other_answer[0]['id'].'" />', $m[5] );
-						$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$other_answer[0]['id'].'">'.esc_html( stripslashes( $other_answer[0]['answer'] ) ).'</label>', $temp_string );
+						if ( 'yes' == $poll_options['poll_answer_html_tags'] )
+							$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$other_answer[0]['id'].'">'.stripslashes( $other_answer[0]['answer'] ).'</label>', $temp_string );
+						else
+							$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$other_answer[0]['id'].'">'.esc_html( stripslashes( $other_answer[0]['answer'] ) ).'</label>', $temp_string );
 						$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-TEXT-INPUT%', '<label><input onclick="document.getElementById(\'yop-poll-answer-'.$other_answer[0]['id'].'\').checked=true;" type="text" value="" name="yop_poll_other_answer" id="yop-poll-other-answer-'.$other_answer[0]['id'].'" /></label>', $temp_string );
 						if (
 							( 'before' == $poll_options['view_results'] ) ||
@@ -2872,7 +2887,10 @@
 							$temp_string	= str_ireplace( '%POLL-ANSWER-CHECK-INPUT%', '<input type="checkbox" value="'.$answer['id'].'" name="yop_poll_answer['.$answer['id'].']" id="yop-poll-answer-'.$answer['id'].'" />', $m[5] );
 						else
 							$temp_string	= str_ireplace( '%POLL-ANSWER-CHECK-INPUT%', '<input type="radio" value="'.$answer['id'].'" name="yop_poll_answer" id="yop-poll-answer-'.$answer['id'].'" />', $m[5] );
-						$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$answer['id'].'">'.esc_html( stripslashes( $answer['answer'] ) ).'</label>', $temp_string );
+						if ( 'yes' == $poll_options['poll_answer_html_tags'] )
+							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$answer['id'].'">'.stripslashes( $answer['answer'] ).'</label>', $temp_string );
+						else
+							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$answer['id'].'">'.esc_html( stripslashes( $answer['answer'] ) ).'</label>', $temp_string );
 						if (
 							( 'before' == $poll_options['view_results'] ) ||
 							( 'after' == $poll_options['view_results'] && $is_voted ) ||

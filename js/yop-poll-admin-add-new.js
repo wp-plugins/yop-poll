@@ -98,6 +98,11 @@ jQuery(document).ready(function(jQuery) {
 				return false;
 		});
 
+		jQuery( "#yop-poll-customfield-advanced-options-button" ).click( function () {
+				jQuery( '#yop-poll-custom-fields-advanced-options-div' ).toggle( 'medium' );
+				return false;
+		});
+
 		jQuery( "#yop-poll-use-template-bar-no" ).click( function () {
 				jQuery( '.yop-poll-custom-result-bar-table' ).show();
 		});

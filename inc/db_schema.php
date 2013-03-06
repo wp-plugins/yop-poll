@@ -24,6 +24,10 @@
 			update_option( "yop_poll_admin_notices_donate", 'yes' );
 
 			$default_options = array(
+				'poll_name_html_tags'						=> 'yes',
+				'poll_question_html_tags'					=> 'yes',
+				'poll_answer_html_tags'						=> 'yes',
+				'poll_custom_field_html_tags'				=> 'yes',
 				'create_poll_page'							=> 'yes',
 				'auto_generate_poll_page'                   => 'no',
 				'has_auto_generate_poll_page'               => 'no',
