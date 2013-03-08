@@ -273,18 +273,18 @@
 						wp_enqueue_style( 'yop-poll-admin-results', "{$this->_config->plugin_url}/css/yop-poll-admin-results.css", array(), $this->_config->version );
 						wp_enqueue_style( 'yop-poll-timepicker', "{$this->_config->plugin_url}/css/timepicker.css", array(), $this->_config->version );
 						wp_enqueue_style( 'yop-poll-jquery-ui', "{$this->_config->plugin_url}/css/jquery-ui.css", array(), $this->_config->version );
-						wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
+						wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version, true);
 						wp_enqueue_style( 'yop-poll-admin-custom-fields', "{$this->_config->plugin_url}/css/yop-poll-admin-custom-fields.css", array(), $this->_config->version );
-						wp_enqueue_script( 'yop-poll-admin-custom-fields', "{$this->_config->plugin_url}/js/yop-poll-admin-custom-fields.js", array('jquery', 'yop-poll-jquery-ui-timepicker'), $this->_config->version );
+						wp_enqueue_script( 'yop-poll-admin-custom-fields', "{$this->_config->plugin_url}/js/yop-poll-admin-custom-fields.js", array('jquery', 'yop-poll-jquery-ui-timepicker'), $this->_config->version, true );
 						$this->yop_poll_custom_fields_results_operations();
 						break;
 					}
 					if ( 'custom-fields' == $action ) {
 						wp_enqueue_style( 'yop-poll-timepicker', "{$this->_config->plugin_url}/css/timepicker.css", array(), $this->_config->version );
 						wp_enqueue_style( 'yop-poll-jquery-ui', "{$this->_config->plugin_url}/css/jquery-ui.css", array(), $this->_config->version );
-						wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
+						wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version, true);
 						wp_enqueue_style( 'yop-poll-admin-custom-fields', "{$this->_config->plugin_url}/css/yop-poll-admin-custom-fields.css", array(), $this->_config->version );
-						wp_enqueue_script( 'yop-poll-admin-custom-fields', "{$this->_config->plugin_url}/js/yop-poll-admin-custom-fields.js", array( 'jquery', 'yop-poll-jquery-ui-timepicker' ), $this->_config->version );
+						wp_enqueue_script( 'yop-poll-admin-custom-fields', "{$this->_config->plugin_url}/js/yop-poll-admin-custom-fields.js", array( 'jquery', 'yop-poll-jquery-ui-timepicker' ), $this->_config->version, true );
 						$this->yop_poll_custom_fields_operations();
 						break;
 					}
@@ -346,8 +346,8 @@
 					wp_enqueue_style( 'yop-poll-timepicker', "{$this->_config->plugin_url}/css/timepicker.css", array(), $this->_config->version );
 					wp_enqueue_style( 'yop-poll-jquery-ui', "{$this->_config->plugin_url}/css/jquery-ui.css", array(), $this->_config->version );
 
-					wp_enqueue_script( 'yop-poll-admin-add-new', "{$this->_config->plugin_url}/js/yop-poll-admin-add-new.js", array( 'jquery', 'yop-poll-jquery-ui-timepicker' ), $this->_config->version );
-					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
+					wp_enqueue_script( 'yop-poll-admin-add-new', "{$this->_config->plugin_url}/js/yop-poll-admin-add-new.js", array( 'jquery', 'yop-poll-jquery-ui-timepicker' ), $this->_config->version, true );
+					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version, true);
 					wp_localize_script( 'yop-poll-admin-add-new', 'yop_poll_add_new_config', $yop_poll_add_new_config );
 					wp_enqueue_script('link');
 					wp_enqueue_script('xfn');
@@ -355,20 +355,20 @@
 				case 'yop-polls-logs' :
 					wp_enqueue_style( 'yop-poll-timepicker', "{$this->_config->plugin_url}/css/timepicker.css", array(), $this->_config->version );
 					wp_enqueue_style( 'yop-poll-jquery-ui', "{$this->_config->plugin_url}/css/jquery-ui.css", array(), $this->_config->version );
-					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
-					wp_enqueue_script( 'yop-poll-admin-logs', "{$this->_config->plugin_url}/js/yop-poll-admin-logs.js", array('jquery', 'yop-poll-jquery-ui-timepicker'), $this->_config->version );
+					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version, true);
+					wp_enqueue_script( 'yop-poll-admin-logs', "{$this->_config->plugin_url}/js/yop-poll-admin-logs.js", array('jquery', 'yop-poll-jquery-ui-timepicker'), $this->_config->version, true );
 					$this->view_yop_poll_logs_operations();
 					break;
 				case 'yop-polls-bans' :
-					wp_enqueue_script( 'yop-poll-admin-bans', "{$this->_config->plugin_url}/js/yop-poll-admin-bans.js", array( 'jquery' ), $this->_config->version );
+					wp_enqueue_script( 'yop-poll-admin-bans', "{$this->_config->plugin_url}/js/yop-poll-admin-bans.js", array( 'jquery' ), $this->_config->version, true );
 					$this->view_yop_poll_bans_operations();
 					break;
 				case 'yop-polls-options' :
 					wp_enqueue_style( 'yop-poll-admin-options', "{$this->_config->plugin_url}/css/yop-poll-admin-options.css", array(), $this->_config->version );
 					wp_enqueue_style( 'yop-poll-timepicker', "{$this->_config->plugin_url}/css/timepicker.css", array(), $this->_config->version );
 					wp_enqueue_style( 'yop-poll-jquery-ui', "{$this->_config->plugin_url}/css/jquery-ui.css", array(), $this->_config->version );
-					wp_enqueue_script( 'yop-poll-admin-options', "{$this->_config->plugin_url}/js/yop-poll-admin-options.js", array( 'jquery', 'yop-poll-jquery-ui-timepicker' ), $this->_config->version );
-					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version);
+					wp_enqueue_script( 'yop-poll-admin-options', "{$this->_config->plugin_url}/js/yop-poll-admin-options.js", array( 'jquery', 'yop-poll-jquery-ui-timepicker' ), $this->_config->version, true );
+					wp_enqueue_script( 'yop-poll-jquery-ui-timepicker', "{$this->_config->plugin_url}/js/jquery-ui-timepicker-addon.js",array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), $this->_config->version, true);
 					wp_enqueue_script('link');
 					wp_enqueue_script('xfn');
 					break;
@@ -376,7 +376,7 @@
 					add_filter( 'user_can_richedit' , create_function ( '$a' , 'return false;' ) , 1 );
 					wp_enqueue_script(array('editor', 'thickbox'));
 					wp_enqueue_style('thickbox');
-					wp_enqueue_script( 'yop-poll-admin-templates', "{$this->_config->plugin_url}/js/yop-poll-admin-templates.js", array( 'jquery' ), $this->_config->version );
+					wp_enqueue_script( 'yop-poll-admin-templates', "{$this->_config->plugin_url}/js/yop-poll-admin-templates.js", array( 'jquery' ), $this->_config->version, true );
 					$yop_poll_add_new_template_config = array(
 						'ajax' => array(
 							'url' => admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')),
