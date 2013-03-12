@@ -3024,9 +3024,9 @@
 			$result_bar	= '';
 			$result_bar	= ' <div class="yop-poll-results-bar-'.$poll_id.'" ';
 			if ( 'no' == $poll_options['use_template_bar'] ) {
-				$result_bar	.= ' style="height:'.intval( $poll_options['bar_height'] + 2 * intval( $poll_options['bar_border_width'] ) ).'px; ';
+				$result_bar	.= ' style="height:'.intval( $poll_options['bar_height'] + 2 * intval( $poll_options['bar_border_width'] ) ).'px;" ';
 			}
-			$result_bar	.= '">';
+			$result_bar	.= '>';
 			if ( floatval( $procent ) > 0 ) {
 				$result_bar	.= '<div style="'.
 				'width:'.$procent.'%; ';

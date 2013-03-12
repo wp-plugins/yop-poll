@@ -136,6 +136,10 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 3.9 = 
+
+* Fixed display issue with IE7 and IE8
+
 = 3.8 = 
 
 * Fixed compatibility issue with Restore jQuery plugin
