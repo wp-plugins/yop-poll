@@ -64,6 +64,7 @@
 
 	function yop_poll_uninstall() {
 		global $wpdb;
+		delete_option( 'yop_poll_version' );
 		delete_option( 'yop_poll_options' );
 		delete_option( 'yop_poll_first_install_date' );
 		delete_option( 'yop_poll_admin_notices_donate' );
