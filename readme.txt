@@ -141,7 +141,6 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 * Added ability to use custom loading animation. 
 * Added capabilities and roles
 * Fixed issue with update overwritting settings
-* Fixed display issue with IE7 and IE8
 
 = 3.9 = 
 
