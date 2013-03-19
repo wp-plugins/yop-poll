@@ -8,6 +8,7 @@
 		*/
 		public static function create_poll_database_tables() {
 			global $wpdb;
+			global $current_user;
 
 			Yop_Poll_DbSchema::create_polls_table();
 			Yop_Poll_DbSchema::create_polls_templates_table();
@@ -18,10 +19,6 @@
 			Yop_Poll_DbSchema::create_poll_logs_table();
 			Yop_Poll_DbSchema::create_poll_bans_table();
 			Yop_Poll_DbSchema::create_poll_votes_custom_fields_table();
-
-			update_option( "yop_poll_version", $wpdb->yop_poll_version );
-			update_option( "yop_poll_first_install_date", Yop_Poll_Model::get_mysql_curent_date() );
-			update_option( "yop_poll_admin_notices_donate", 'yes' );
 
 			$default_options = array(
 				'poll_name_html_tags'						=> 'yes',
@@ -82,42 +79,43 @@
 				'show_in_archive'							=> 'yes',
 				'archive_order'								=> '1',
 				'archive_polls_per_page'					=> '5',
-				'percentages_decimals'						=> '0'
+				'percentages_decimals'						=> '0',
+				'use_default_loading_image'					=> 'yes',
+				'loading_image_url'							=> '',
 			);
 
-			//prepopulate database
+			if ( ! get_option( "yop_poll_version" ) ) {
 
-			$poll_archive_page	= get_page_by_path('yop-poll-archive', ARRAY_A );
-			if ( ! $poll_archive_page ) {
-				$_p = array();
-				$_p['post_title'] = 'Yop Poll Archive';
-				$_p['post_content'] = "[yop_poll_archive]";
-				$_p['post_status'] = 'publish';
-				$_p['post_type'] = 'page';
-				$_p['comment_status'] = 'open';
-				$_p['ping_status'] = 'open';
-				$_p['post_category'] = array(1); // the default 'Uncategorised'
+				$poll_archive_page	= get_page_by_path('yop-poll-archive', ARRAY_A );
+				if ( ! $poll_archive_page ) {
+					$_p = array();
+					$_p['post_title'] = 'Yop Poll Archive';
+					$_p['post_content'] = "[yop_poll_archive]";
+					$_p['post_status'] = 'publish';
+					$_p['post_type'] = 'page';
+					$_p['comment_status'] = 'open';
+					$_p['ping_status'] = 'open';
+					$_p['post_category'] = array(1); // the default 'Uncategorised'
 
-				$poll_archive_page_id	= wp_insert_post( $_p );
+					$poll_archive_page_id	= wp_insert_post( $_p );
 
-			}
-			else {
-				$poll_archive_page_id	= $poll_archive_page['ID'];
-			}
+				}
+				else {
+					$poll_archive_page_id	= $poll_archive_page['ID'];
+				}
 
-			$default_options['poll_archive_url']	= get_permalink( $poll_archive_page_id );
+				$default_options['poll_archive_url']	= get_permalink( $poll_archive_page_id );
 
-			//addind default options
-			update_option( 'yop_poll_options', $default_options );
+				//addind default options
+				update_option( 'yop_poll_options', $default_options );
 
-			$is_poll = $wpdb->get_var("SELECT id FROM ". $wpdb->yop_polls . " LIMIT 0, 1");
-			if ( ! $is_poll ) {
-
+				wp_get_current_user();
 				//adding default poll
+				$poll_author	= $current_user->ID > 0 ? $current_user->ID : 0;
 				$wpdb->query(
 					"
-					INSERT INTO `". $wpdb->yop_polls . "` (`name`, `question`, `start_date`, `end_date`, `total_votes`, `total_answers`, `status`, `date_added`, `last_modified`, `show_in_archive`) VALUES
-					('Default Yop Poll', 'How is my plugin?', NOW(), '9999-12-31 23:59:59', 0, 0, 'open', NOW(), NOW(), 'yes')
+					INSERT INTO `". $wpdb->yop_polls . "` (`poll_author`, `name`, `question`, `start_date`, `end_date`, `total_votes`, `total_answers`, `status`, `date_added`, `last_modified`, `show_in_archive`) VALUES
+					(". $poll_author .", 'Default Yop Poll', 'How is my plugin?', NOW(), '9999-12-31 23:59:59', 0, 0, 'open', NOW(), NOW(), '".$default_options['show_in_archive']."')
 					"
 				);
 				$poll_id = $wpdb->insert_id;
@@ -130,16 +128,21 @@
 					(" . $poll_id . ", 'Other', 'other', 0, 'active')
 					"
 				);
+
+				$templates	= array( 'White', 'Grey', 'Dark', 'Blue v1', 'Blue v2', 'Blue v3', 'Red v1', 'Red v2', 'Red v3', 'Green v1', 'Green v2', 'Green v3', 'Orange v1', 'Orange v2', 'Orange v3' );
+				foreach( $templates as $template ) {
+					$is_template_in_database	= self::is_template_in_database( $template );
+					if ( $is_template_in_database )
+						self::add_update_templates_in_database( 'update', $template );
+					else
+						self::add_update_templates_in_database( 'add', $template );
+				}
+
+				update_option( "yop_poll_first_install_date", Yop_Poll_Model::get_mysql_curent_date() );
+				update_option( "yop_poll_admin_notices_donate", 'yes' );
 			}
 
-			$templates	= array( 'White', 'Grey', 'Dark', 'Blue v1', 'Blue v2', 'Blue v3', 'Red v1', 'Red v2', 'Red v3', 'Green v1', 'Green v2', 'Green v3', 'Orange v1', 'Orange v2', 'Orange v3' );
-			foreach( $templates as $template ) {
-				$is_template_in_database	= self::is_template_in_database( $template );
-				if ( $is_template_in_database )
-					self::add_update_templates_in_database( 'update', $template );
-				else
-					self::add_update_templates_in_database( 'add', $template );
-			}
+			update_option( "yop_poll_version", $wpdb->yop_poll_version );
 		}
 
 		public static function is_template_in_database( $template_name ) {
@@ -150,13 +153,15 @@
 
 		public static function add_update_templates_in_database( $action = 'add', $template_name ) {
 			global $wpdb;
-
+			global $current_user;
+			wp_get_current_user();
 			if ( 'add' == $action ) {
 				$sql	= "INSERT INTO `" . $wpdb->yop_poll_templates . "` SET ";
-				$sql	.= $wpdb ->prepare( "`name`			= %s, ", $template_name );
+				$sql	.= $wpdb ->prepare( "`name`				= %s, ", $template_name );
+				$sql	.= $wpdb ->prepare( "`template_author`	= %d, ", ( $current_user->ID > 0 ) ? $current_user->ID : 0 );
 			}
 			else
-				$sql	= "UPDATE `" . $wpdb->yop_poll_templates . "` SET ";
+			$sql	= "UPDATE `" . $wpdb->yop_poll_templates . "` SET ";
 			switch ( $template_name ) {
 				case 'White':	//White
 					$sql	.= "`before_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-answer-%POLL-ID%\\".'"'.">\r\n			%POLL-ANSWER-CHECK-INPUT% \r\n			%POLL-ANSWER-LABEL%\r\n			<span class=\\".'"'."yop-poll-results-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-RESULT-LABEL%</span>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n        </li>\r\n        [/ANSWER_CONTAINER]\r\n		[OTHER_ANSWER_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-answer-%POLL-ID%\\".'"'.">\r\n			%POLL-OTHER-ANSWER-CHECK-INPUT% \r\n			%POLL-OTHER-ANSWER-LABEL% \r\n			<span class=\\".'"'."yop-poll-results-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-RESULT-LABEL%</span>\r\n			%POLL-OTHER-ANSWER-TEXT-INPUT% \r\n            %POLL-ANSWER-RESULT-BAR%\r\n        </li>\r\n        [/OTHER_ANSWER_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-custom-%POLL-ID%\\".'"'.">\r\n	<ul>\r\n		[CUSTOM_FIELD_CONTAINER]\r\n		<li>%POLL-CUSTOM-FIELD-LABEL% %POLL-CUSTOM-FIELD-TEXT-INPUT%</li>\r\n		[/CUSTOM_FIELD_CONTAINER]\r\n	</ul>\r\n</div>    \r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-VOTE-BUTTON%</div>\r\n	<div id=\\".'"'."yop-poll-results-%POLL-ID%\\".'"'.">%POLL-VIEW-RESULT-LINK%</div>\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n</div>',
@@ -316,6 +321,7 @@
 			global $wpdb;
 			$create_poll_table_sql = "CREATE TABLE " . $wpdb->yop_polls . " (
 			id int(11) NOT NULL AUTO_INCREMENT,
+			poll_author bigint(20) NOT NULL DEFAULT '0',
 			name varchar(255) NOT NULL,
 			question varchar(255) NOT NULL,
 			start_date datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
@@ -336,6 +342,7 @@
 			global $wpdb;
 			$create_poll_table_sql = "CREATE TABLE " . $wpdb->yop_poll_templates . " (
 			id int(11) NOT NULL AUTO_INCREMENT,
+			template_author bigint(20) NOT NULL DEFAULT '0',
 			name varchar(255) NOT NULL,
 			before_vote_template text NOT NULL,
 			after_vote_template text NOT NULL,

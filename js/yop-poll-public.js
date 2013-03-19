@@ -1,4 +1,5 @@
 function yop_poll_do_vote( poll_id ) {
+	var yop_poll_public_config	= window['yop_poll_public_config_' +poll_id ];
 	jQuery('#yop_poll_vote-button-'+ poll_id).hide();
 	var vote_button_loading_image	= document.createElement('img');
 	vote_button_loading_image.src	= yop_poll_public_config.loading_image_src;
@@ -42,6 +43,7 @@ function yop_poll_do_vote( poll_id ) {
 }
 
 function yop_poll_view_results( poll_id ) {
+	var yop_poll_public_config	= window['yop_poll_public_config_' +poll_id ];
 	jQuery('#yop_poll_result_link'+ poll_id).hide();
 	var result_link_loading_image	= document.createElement('img');
 	result_link_loading_image.src	= yop_poll_public_config.loading_image_src;
@@ -85,6 +87,7 @@ function yop_poll_view_results( poll_id ) {
 }
 
 function yop_poll_back_to_vote( poll_id ) {
+	var yop_poll_public_config	= window['yop_poll_public_config_' +poll_id ];
 	jQuery('#yop_poll_back_to_vote_link'+ poll_id).hide();
 	var back_to_vote_loading_image	= document.createElement('img');
 	back_to_vote_loading_image.src	= yop_poll_public_config.loading_image_src;

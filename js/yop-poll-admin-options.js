@@ -6,10 +6,10 @@ jQuery(document).ready(function(jQuery) {
 		jQuery( "#yop-poll-allow-other-answers-no" ).click( function () {
 				jQuery( '#yop-poll-other-answers-label-div' ).hide();
 				jQuery( '#yop-poll-display-other-answers-values-div' ).hide();
-		});		
+		});
 		jQuery( "#yop-poll-display-answers-vertical" ).click( function () {
 				jQuery( '#yop-poll-display-answers-tabulated-div' ).hide();
-		}); 		
+		});
 		jQuery( "#yop-poll-display-answers-orizontal" ).click( function () {
 				jQuery( '#yop-poll-display-answers-tabulated-div' ).hide();
 		});
@@ -41,7 +41,7 @@ jQuery(document).ready(function(jQuery) {
 				jQuery( '#yop-poll-blocking-voters-interval-div' ).hide();
 		});
 		jQuery( ".yop-poll-blocking-voters-show-interval" ).click( function () {
-				jQuery( '#yop-poll-blocking-voters-interval-div' ).show(); 
+				jQuery( '#yop-poll-blocking-voters-interval-div' ).show();
 		});
 		jQuery( "#yop-poll-view-results-link-no" ).click( function () {
 				jQuery( '#yop-poll-view-results-link-div' ).hide();
@@ -49,49 +49,56 @@ jQuery(document).ready(function(jQuery) {
 		jQuery( "#yop-poll-view-results-link-yes" ).click( function () {
 				jQuery( '#yop-poll-view-results-link-div' ).show();
 		});
-		
+
 		jQuery( "#yop-poll-view-back-to-vote-link-no" ).click( function () {
 				jQuery( '#yop-poll-view-back-to-vote-link-div' ).hide();
 		});
 		jQuery( "#yop-poll-view-back-to-vote-link-yes" ).click( function () {
 				jQuery( '#yop-poll-view-back-to-vote-link-div' ).show();
 		});
-		
+
 		jQuery( "#yop-poll-view-total-votes-no" ).click( function () {
 				jQuery( '#yop-poll-view-total-votes-div' ).hide();
 		});
 		jQuery( "#yop-poll-view-total-votes-yes" ).click( function () {
 				jQuery( '#yop-poll-view-total-votes-div' ).show();
 		});
-		
+
 		jQuery( "#yop-poll-view-total-voters-no" ).click( function () {
 				jQuery( '#yop-poll-view-total-voters-div' ).hide();
 		});
 		jQuery( "#yop-poll-view-total-voters-yes" ).click( function () {
 				jQuery( '#yop-poll-view-total-voters-div' ).show();
 		});
-		
+
+		jQuery( "#yop-poll-use-default-loading-image-no" ).click( function () {
+				jQuery( '#yop-poll-use-default-loading-image-div' ).show();
+		});
+		jQuery( "#yop-poll-use-default-loading-image-yes" ).click( function () {
+				jQuery( '#yop-poll-use-default-loading-image-div' ).hide();
+		});
+
 		jQuery( "#yop-poll-view-poll-archive-link-no" ).click( function () {
 				jQuery( '#yop-poll-view-poll-archive-link-div' ).hide();
 		});
 		jQuery( "#yop-poll-view-poll-archive-link-yes" ).click( function () {
 				jQuery( '#yop-poll-view-poll-archive-link-div' ).show();
 		});
-		
+
 		jQuery( "#yop-poll-show-in-archive-no" ).click( function () {
 				jQuery( '#yop-poll-show-in-archive-div' ).hide();
 		});
 		jQuery( "#yop-poll-show-in-archive-yes" ).click( function () {
 				jQuery( '#yop-poll-show-in-archive-div' ).show();
 		});
-		
+
 		jQuery( "#yop-poll-use-template-bar-no" ).click( function () {
 				jQuery( '.yop-poll-custom-result-bar-table' ).show();
 		});
 		jQuery( "#yop-poll-use-template-bar-yes" ).click( function () {
 				jQuery( '.yop-poll-custom-result-bar-table' ).hide();
 		});
-		
+
 		jQuery( "#yop-poll-never-expire" ).click( function () {
 			if ( true == jQuery( this ).is(':checked') ) {
 				jQuery( "#yop-poll-end-date-input" ).attr("disabled", "disabled");
@@ -112,7 +119,7 @@ jQuery(document).ready(function(jQuery) {
 			dateFormat: 'yy-mm-dd'}
 		);
 
-		yopPollStartDateTextBox.datetimepicker({ 			
+		yopPollStartDateTextBox.datetimepicker({
 				onClose: function(dateText, inst) {
 					if (yopPollEndDateTextBox.val() != '') {
 						var testStartDate = yopPollStartDateTextBox.datetimepicker('getDate');
@@ -126,12 +133,12 @@ jQuery(document).ready(function(jQuery) {
 				},
 				onSelect: function (selectedDateTime){
 					yopPollEndDateTextBox.datetimepicker('option', 'minDate', yopPollStartDateTextBox.datetimepicker('getDate') );
-				}, 
+				},
 				showSecond: true,
 				timeFormat: 'hh:mm:ss',
 				dateFormat: 'yy-mm-dd'
 		});
-		yopPollEndDateTextBox.datetimepicker({ 
+		yopPollEndDateTextBox.datetimepicker({
 				onClose: function(dateText, inst) {
 					if (yopPollStartDateTextBox.val() != '') {
 						var testStartDate = yopPollStartDateTextBox.datetimepicker('getDate');
@@ -149,21 +156,21 @@ jQuery(document).ready(function(jQuery) {
 				showSecond: true,
 				timeFormat: 'hh:mm:ss',
 				dateFormat: 'yy-mm-dd'
-		}); 
-		
+		});
+
 });
 
 function yop_poll_update_bar_style( obj, property, value ) {
-	if( 
-		'background-color' == property || 
-		'height' == property || 
-		'border-color' == property || 
-		'border-width' == property || 
+	if(
+		'background-color' == property ||
+		'height' == property ||
+		'border-color' == property ||
+		'border-width' == property ||
 		'border-style' == property ) {
 		if( jQuery( obj ).length > 0 )
 			{
 			if( '' != value )
 				jQuery( obj ).css( property , value );
-		}	
+		}
 	}
 }

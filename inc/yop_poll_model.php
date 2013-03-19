@@ -1323,13 +1323,93 @@
 			return $result;
 		}
 
+		public static function get_poll_field_from_database_by_id ( $field = '', $poll_id ) {
+			global $wpdb;
+			$result = $wpdb->get_row(
+				$wpdb -> prepare(
+					"
+					SELECT *
+					FROM ".$wpdb->yop_polls."
+					WHERE id = %d
+					LIMIT 0,1
+					",
+					$poll_id
+				),
+				ARRAY_A
+			);
+			if ( isset( $result[ $field ] ) )
+				return $result[ $field ];
+			return false;
+		}
+
+		public static function get_poll_template_field_from_database_by_id ( $field = '', $template_id ) {
+			global $wpdb;
+			$result = $wpdb->get_row(
+				$wpdb -> prepare(
+					"
+					SELECT *
+					FROM ".$wpdb->yop_poll_templates."
+					WHERE id = %d
+					LIMIT 0,1
+					",
+					$template_id
+				),
+				ARRAY_A
+			);
+			if ( isset( $result[ $field ] ) )
+				return $result[ $field ];
+			return false;
+		}
+
+		public static function get_poll_log_field_from_database_by_id ( $field = '', $log_id ) {
+			global $wpdb;
+			$result = $wpdb->get_row(
+				$wpdb -> prepare(
+					"
+					SELECT *
+					FROM ".$wpdb->yop_poll_logs."
+					WHERE id = %d
+					LIMIT 0,1
+					",
+					$log_id
+				),
+				ARRAY_A
+			);
+			if ( isset( $result[ $field ] ) )
+				return $result[ $field ];
+			return false;
+		}
+
+		public static function get_poll_log_field_from_database_by_vote_id ( $field = '', $vote_id ) {
+			global $wpdb;
+			$result = $wpdb->get_row(
+				$wpdb -> prepare(
+					"
+					SELECT *
+					FROM ".$wpdb->yop_poll_logs."
+					WHERE vote_id = %s
+					LIMIT 0,1
+					",
+					$vote_id
+				),
+				ARRAY_A
+			);
+			if ( isset( $result[ $field ] ) )
+				return $result[ $field ];
+			return false;
+		}
+
 		private static function insert_poll_to_database ( $poll ) {
 			global $wpdb;
+			global $current_user;
+			wp_get_current_user();
 			$wpdb->query(
 				$wpdb->prepare(
 					"
 					INSERT INTO ".$wpdb->yop_polls."
-					SET name = %s,
+					SET
+					poll_author = %d,
+					name = %s,
 					question = %s,
 					start_date = %s,
 					end_date = %s,
@@ -1341,6 +1421,7 @@
 					show_in_archive = %s,
 					archive_order  = %d
 					",
+					$current_user->ID,
 					$poll['name'],
 					$poll['question'],
 					$poll['start_date'],
@@ -2059,11 +2140,15 @@
 
 		private static function insert_poll_template_to_database ( $template ) {
 			global $wpdb;
+			global $current_user;
+			wp_get_current_user();
 			$wpdb->query(
 				$wpdb->prepare(
 					"
 					INSERT INTO ".$wpdb->yop_poll_templates."
-					SET name = %s,
+					SET
+					template_author = %d,
+					name = %s,
 					before_vote_template = %s,
 					after_vote_template = %s,
 					before_start_date_template = %s,
@@ -2074,6 +2159,7 @@
 					last_modified = now(),
 					status = %s
 					",
+					$current_user->ID,
 					$template['name'],
 					$template['before_vote_template'],
 					$template['after_vote_template'],

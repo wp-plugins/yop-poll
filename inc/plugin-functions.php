@@ -16,7 +16,7 @@
 	* @param mixed $prev_value Optional. Previous value to check before removing.
 	* @return bool False on failure, true if success.
 	*/
-	
+
 	function update_yop_poll_meta($poll_id, $meta_key, $meta_value, $prev_value = '') {
 		return update_metadata('yop_poll', $poll_id, $meta_key, $meta_value, $prev_value);
 	}
@@ -72,7 +72,7 @@
 	function delete_yop_poll_meta_by_key($poll_meta_key) {
 		return delete_metadata( 'yop_poll', null, $poll_meta_key, '', true );
 	}
-	
+
 	//
 	// Yop poll answer meta functions
 	//
@@ -144,4 +144,17 @@
 	*/
 	function delete_yop_poll_answer_meta_by_key($poll_answer_meta_key) {
 		return delete_metadata( 'yop_poll_answer', null, $poll_answer_meta_key, '', true );
+	}
+
+	function get_human_time( $date ) {
+		$t_time = get_the_time( __( 'Y/m/d g:i:s A' ) );
+		$m_time = $date;
+		$time = get_post_time( 'G', true, $post );
+
+		$time_diff = time() - $time;
+
+		if ( $time_diff > 0 && $time_diff < DAY_IN_SECONDS )
+			$h_time = sprintf( __( '%s ago' ), human_time_diff( $time ) );
+		else
+			$h_time = mysql2date( __( 'Y/m/d' ), $m_time );
 	}

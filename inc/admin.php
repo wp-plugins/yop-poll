@@ -15,6 +15,7 @@
 
 		public function db_update() {
 			global $wpdb;
+			global $current_user;
 
 			require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
 			$installed_version	= get_option( "yop_poll_version" );
@@ -125,6 +126,30 @@
 				update_option( "yop_poll_version", $wpdb->yop_poll_version );
 				update_option( 'yop_poll_options', $default_options );
 			}
+
+			if( version_compare ( $installed_version, '3.9', '<=' ) ) {
+				require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+				require_once( YOP_POLL_INC . '/' . 'db_schema.php');
+				Yop_Poll_DbSchema::create_polls_table();
+				Yop_Poll_DbSchema::create_polls_templates_table();
+
+				wp_get_current_user();
+				if ( $current_user->ID > 0 ) {
+					$wpdb->query("UPDATE " . $wpdb->yop_polls . " SET poll_author = " . $current_user->ID . " WHERE poll_author = 0");
+					$wpdb->query("UPDATE " . $wpdb->yop_poll_templates . " SET template_author = " . $current_user->ID . " WHERE template_author = 0");
+				}
+
+				$default_options	= get_option( 'yop_poll_options' );
+				if ( ! isset( $default_options['use_default_loading_image'] ) ) {
+					$default_options['use_default_loading_image']	= 'yes';
+				}
+				if ( ! isset( $default_options['loading_image_url'] ) ) {
+					$default_options['loading_image_url']	= '';
+				}
+				update_option( 'yop_poll_options', $default_options );
+
+				update_option( "yop_poll_version", $wpdb->yop_poll_version );
+			}
 		}
 
 		public function admin_loader() {
@@ -193,24 +218,39 @@
 		}
 
 		public function admin_menu() {
-			if ( is_admin() && current_user_can( 'edit_posts' ) ) {
+			if ( is_admin() && $this->current_user_can( 'edit_own_polls' ) ) {
 				if (function_exists('add_menu_page')) {
-					$page = add_menu_page( __( 'Yop Poll', 'yop_poll' ), __( 'Yop Poll', 'yop_poll' ), 'edit_posts', 'yop-polls', array( $this, 'manage_pages' ), "{$this->_config->plugin_url}/images/yop-poll-admin-menu-icon16.png", '28.734' );
+					if ( $this->current_user_can( 'edit_own_polls' ) )
+						$page = add_menu_page( __( 'Yop Poll', 'yop_poll' ), __( 'Yop Poll', 'yop_poll' ), 'read', 'yop-polls', array( $this, 'manage_pages' ), "{$this->_config->plugin_url}/images/yop-poll-admin-menu-icon16.png", '28.734' );
 				}
-				add_action( "load-$page", array( &$this, 'manage_pages_load' ) );
+				if ( $this->current_user_can( 'edit_own_polls' ) )
+					add_action( "load-$page", array( &$this, 'manage_pages_load' ) );
 				if (function_exists('add_submenu_page')) {
-					$subpage = add_submenu_page( 'yop-polls', __( 'All Yop Polls', 'yop_poll' ), __( 'All Yop Polls', 'yop_poll' ), 'edit_posts', 'yop-polls', array( &$this, 'manage_pages' ) );
-					add_action( "load-$subpage", array( &$this, 'manage_pages_load' ) );
-					$subpage = add_submenu_page( 'yop-polls', __( 'Add New Yop Poll', 'yop_poll' ), __( 'Add New Yop Poll', 'yop_poll' ), 'edit_posts', 'yop-polls-add-new', array( &$this, 'manage_pages' ) );
-					add_action( "load-$subpage", array( &$this, 'manage_pages_load' ) );
-					$subpage = add_submenu_page( 'yop-polls', __( 'Yop Poll Options', 'yop_poll' ), __( 'Yop Poll Options', 'yop_poll' ), 'manage_options', 'yop-polls-options', array( &$this, 'manage_pages' ) );
-					add_action( "load-$subpage", array( &$this, 'manage_pages_load' ) );
-					$subpage = add_submenu_page( 'yop-polls', __( 'Yop Poll Templates', 'yop_poll' ), __( 'Yop Poll Templates', 'yop_poll' ), 'manage_options', 'yop-polls-templates', array( &$this, 'manage_pages' ) );
-					add_action( "load-$subpage", array( &$this, 'manage_pages_load' ) );
-					$subpage = add_submenu_page( 'yop-polls', __( 'Yop Poll Logs', 'yop_poll' ), __( 'Yop Poll Logs', 'yop_poll' ), 'manage_options', 'yop-polls-logs', array( &$this, 'manage_pages' ) );
-					add_action( "load-$subpage", array( &$this, 'manage_pages_load' ) );
-					$subpage = add_submenu_page( 'yop-polls', __( 'Yop Poll Bans', 'yop_poll' ), __( 'Yop Poll Bans', 'yop_poll' ), 'manage_options', 'yop-polls-bans', array( &$this, 'manage_pages' ) );
-					add_action( "load-$subpage", array( &$this, 'manage_pages_load' ) );
+
+					if ( $this->current_user_can( 'edit_own_polls' ) ) {
+						$subpage = add_submenu_page( 'yop-polls', __( 'All Yop Polls', 'yop_poll' ), __( 'All Yop Polls', 'yop_poll' ), 'read', 'yop-polls', array( &$this, 'manage_pages' ) );
+						add_action( "load-$subpage", array( &$this, 'manage_pages_load' ) );
+					}
+					if ( $this->current_user_can( 'edit_own_polls' ) ) {
+						$subpage = add_submenu_page( 'yop-polls', __( 'Add New Yop Poll', 'yop_poll' ), __( 'Add New Yop Poll', 'yop_poll' ), 'read', 'yop-polls-add-new', array( &$this, 'manage_pages' ) );
+						add_action( "load-$subpage", array( &$this, 'manage_pages_load' ) );
+					}
+					if ( $this->current_user_can( 'manage_polls_options' ) ) {
+						$subpage = add_submenu_page( 'yop-polls', __( 'Yop Poll Options', 'yop_poll' ), __( 'Yop Poll Options', 'yop_poll' ), 'read', 'yop-polls-options', array( &$this, 'manage_pages' ) );
+						add_action( "load-$subpage", array( &$this, 'manage_pages_load' ) );
+					}
+					if ( $this->current_user_can( 'edit_own_polls_templates' ) ) {
+						$subpage = add_submenu_page( 'yop-polls', __( 'Yop Poll Templates', 'yop_poll' ), __( 'Yop Poll Templates', 'yop_poll' ), 'read', 'yop-polls-templates', array( &$this, 'manage_pages' ) );
+						add_action( "load-$subpage", array( &$this, 'manage_pages_load' ) );
+					}
+					if ( $this->current_user_can( 'view_own_polls_logs' ) ) {
+						$subpage = add_submenu_page( 'yop-polls', __( 'Yop Poll Logs', 'yop_poll' ), __( 'Yop Poll Logs', 'yop_poll' ), 'read', 'yop-polls-logs', array( &$this, 'manage_pages' ) );
+						add_action( "load-$subpage", array( &$this, 'manage_pages_load' ) );
+					}
+					if ( $this->current_user_can( 'manage_polls_bans' ) ) {
+						$subpage = add_submenu_page( 'yop-polls', __( 'Yop Poll Bans', 'yop_poll' ), __( 'Yop Poll Bans', 'yop_poll' ), 'read', 'yop-polls-bans', array( &$this, 'manage_pages' ) );
+						add_action( "load-$subpage", array( &$this, 'manage_pages_load' ) );
+					}
 				}
 			}
 		}
@@ -269,7 +309,7 @@
 
 			switch ( $page ) {
 				case 'yop-polls':
-					if ( 'results' == $action ) {
+					if ( 'results' == $action  ) {
 						wp_enqueue_style( 'yop-poll-admin-results', "{$this->_config->plugin_url}/css/yop-poll-admin-results.css", array(), $this->_config->version );
 						wp_enqueue_style( 'yop-poll-timepicker', "{$this->_config->plugin_url}/css/timepicker.css", array(), $this->_config->version );
 						wp_enqueue_style( 'yop-poll-jquery-ui', "{$this->_config->plugin_url}/css/jquery-ui.css", array(), $this->_config->version );
@@ -400,17 +440,23 @@
 		*/
 
 		public function view_yop_poll_logs_operations() {
-			global $page, $action, $order, $orderby;
+			global $page, $action, $order, $orderby, $current_user;
 			if ( '-1' != $action && isset( $_REQUEST['yoppolllogscheck'] ) ) {
 				if ( 'delete' == $action ) {
 					check_admin_referer( 'yop-poll-logs' );
 					$bulklogs	= (array) $_REQUEST['yoppolllogscheck'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+					$total_deleted	= 0;
 					foreach ( $bulklogs as $log_id ) {
 						$log_id = (int) $log_id;
-						Yop_Poll_Model::delete_poll_log_from_db( $log_id );
+						$poll_id		= Yop_Poll_Model::get_poll_log_field_from_database_by_id( 'poll_id', $log_id );
+						$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $poll_id );
+						if ( ( $this->current_user_can( 'delete_own_polls_logs') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls_logs' ) ) )
+							Yop_Poll_Model::delete_poll_log_from_db( $log_id );
+						else
+							$total_deleted++;
 					}
-					wp_redirect( add_query_arg('deleted', count( $bulklogs ), remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'action', 'yoppolllogscheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
+					wp_redirect( add_query_arg('deleted', count( $bulklogs ) - $total_deleted, remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'action', 'yoppolllogscheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
 
@@ -418,10 +464,16 @@
 					check_admin_referer( 'yop-poll-logs' );
 					$bulklogs	= (array) $_REQUEST['yoppolllogscheck'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+					$total_deleted_group = 0;
 					foreach ( $bulklogs as $vote_id ) {
-						Yop_Poll_Model::delete_group_poll_log_from_db( $vote_id );
+						$poll_id		= Yop_Poll_Model::get_poll_log_field_from_database_by_vote_id( 'poll_id', $vote_id );
+						$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $poll_id );
+						if ( ( $this->current_user_can( 'delete_own_polls_logs') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls_logs' ) ) )
+							Yop_Poll_Model::delete_group_poll_log_from_db( $vote_id );
+						else
+							$total_deleted_group++;
 					}
-					wp_redirect( add_query_arg('deleted', count( $bulklogs ), remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'action', 'yoppolllogscheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
+					wp_redirect( add_query_arg('deleted', count( $bulklogs ) - $total_deleted_group, remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'action', 'yoppolllogscheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
 			}
@@ -430,7 +482,12 @@
 					check_admin_referer( 'yop-poll-logs-delete' );
 					$log_id = (int) $_REQUEST['id'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
-					Yop_Poll_Model::delete_poll_log_from_db( $log_id );
+					$poll_id		= Yop_Poll_Model::get_poll_log_field_from_database_by_id( 'poll_id', $log_id );
+					$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $poll_id );
+					if ( ( $this->current_user_can( 'delete_own_polls_logs') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls_logs' ) ) )
+						Yop_Poll_Model::delete_poll_log_from_db( $log_id );
+					else
+						wp_die( __( 'You are not allowed to delete this item.', 'yop_poll') );
 					wp_redirect( add_query_arg('deleted', 1, remove_query_arg( array( '_wpnonce', 'id', 'action' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
@@ -438,7 +495,12 @@
 					check_admin_referer( 'yop-poll-logs-delete' );
 					$vote_id = $_REQUEST['id'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
-					Yop_Poll_Model::delete_group_poll_log_from_db( $vote_id );
+					$poll_id		= Yop_Poll_Model::get_poll_log_field_from_database_by_vote_id( 'poll_id', $vote_id );
+					$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $poll_id );
+					if ( ( $this->current_user_can( 'delete_own_polls_logs') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls_logs' ) ) )
+						Yop_Poll_Model::delete_group_poll_log_from_db( $vote_id );
+					else
+						wp_die( __( 'You are not allowed to delete this item.', 'yop_poll') );
 					wp_redirect( add_query_arg('deleted', 1, remove_query_arg( array( '_wpnonce', 'id', 'action' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
@@ -456,6 +518,16 @@
 					$group_by						= ( isset( $_GET['group_by'] ) ? $_GET['group_by'] : 'vote' );
 
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+					$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $poll_id );
+					if ( $this->current_user_can( 'view_own_polls_logs' ) && $poll_id ) {
+						if ( $poll_author != $current_user->ID && ! $this->current_user_can( 'view_polls_logs' ) )
+							wp_die( __('You are not allowed to access this section.', 'yop_poll') );
+					}
+					elseif ( ! $this->current_user_can( 'view_polls_logs' ) ) {
+						wp_die( __('You are not allowed to access this section.', 'yop_poll') );
+					}
+
+
 					$yop_polls 	= Yop_Poll_Model::get_yop_polls_filter_search( 'id', 'asc' );
 					if ( $group_by == 'vote')
 						$search = array( 'fields' => array('name', 'ip', 'user_nicename', 'user_email'), 'value' => isset( $_REQUEST['s'] ) ? trim( $_REQUEST['s'] ) : '' );
@@ -732,28 +804,38 @@
 		}
 
 		public function view_yop_poll_templates_operations() {
-			global $page, $action, $yop_poll_add_new_config;
+			global $page, $action, $yop_poll_add_new_config, $current_user;
 			if ( '-1' != $action && isset( $_REQUEST['templatecheck'] ) ) {
 				if ( 'delete' == $action ) {
 					check_admin_referer( 'yop-poll-templates' );
 					$bulktemplates	= (array) $_REQUEST['templatecheck'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+					$total_deleted	= 0;
 					foreach ( $bulktemplates as $template_id ) {
-						$template_id = (int) $template_id;
-						Yop_Poll_Model::delete_poll_template_from_db( $template_id );
+						$template_id 		= (int) $template_id;
+						$template_author	= Yop_Poll_Model::get_poll_template_field_from_database_by_id( 'template_author', $template_id );
+						if ( ( $this->current_user_can( 'delete_own_polls_templates') && $template_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls_templates' ) ) )
+							Yop_Poll_Model::delete_poll_template_from_db( $template_id );
+						else
+							$total_deleted++;
 					}
-					wp_redirect( add_query_arg('deleted', count( $bulktemplates ), remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'templatecheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
+					wp_redirect( add_query_arg('deleted', count( $bulktemplates ) - $total_deleted, remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'templatecheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
 				if ( 'clone' == $action ) {
 					check_admin_referer( 'yop-poll-templates' );
 					$bulktemplates = (array) $_REQUEST['templatecheck'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+					$total_cloned	= 0;
 					foreach ( $bulktemplates as $template_id ) {
 						$template_id = (int) $template_id;
-						Yop_Poll_Model::clone_poll_template( $template_id );
+						$template_author	= Yop_Poll_Model::get_poll_template_field_from_database_by_id( 'template_author', $template_id );
+						if ( ( $this->current_user_can( 'clone_own_polls_templates') && $template_author == $current_user->ID ) || ($this->current_user_can( 'clone_polls_templates' ) ) )
+							Yop_Poll_Model::clone_poll_template( $template_id );
+						else
+							$total_cloned++;
 					}
-					wp_redirect( add_query_arg('cloned', count( $bulktemplates ), remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'templatecheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
+					wp_redirect( add_query_arg('cloned', count( $bulktemplates ) - $total_cloned, remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'templatecheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
 			}
@@ -762,7 +844,11 @@
 					check_admin_referer( 'yop-poll-templates' );
 					$template_id = (int) $_REQUEST['id'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
-					Yop_Poll_Model::delete_poll_template_from_db( $template_id );
+					$template_author	= Yop_Poll_Model::get_poll_template_field_from_database_by_id( 'template_author', $template_id );
+					if ( ( $this->current_user_can( 'delete_own_polls_templates') && $template_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls_templates' ) ) )
+						Yop_Poll_Model::delete_poll_template_from_db( $template_id );
+					else
+						wp_die( __( 'You are not allowed to delete this item.', 'yop_poll') );
 					wp_redirect( add_query_arg('deleted', 1, remove_query_arg( array( '_wpnonce', 'id', 'action' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
@@ -770,7 +856,11 @@
 					check_admin_referer( 'yop-poll-templates' );
 					$template_id = (int) $_REQUEST['id'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
-					Yop_Poll_Model::clone_poll_template( $template_id );
+					$template_author	= Yop_Poll_Model::get_poll_template_field_from_database_by_id( 'template_author', $template_id );
+					if ( ( $this->current_user_can( 'clone_own_polls_templates') && $template_author == $current_user->ID ) || ($this->current_user_can( 'clone_polls_templates' ) ) )
+						Yop_Poll_Model::clone_poll_template( $template_id );
+					else
+						wp_die( __( 'You are not allowed to clone this item.', 'yop_poll') );
 					wp_redirect( add_query_arg('cloned', 1, remove_query_arg( array( '_wpnonce', 'id', 'action' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
@@ -782,50 +872,70 @@
 		}
 
 		public function view_all_polls_operations() {
-			global $page, $action, $yop_poll_add_new_config;
+			global $page, $action, $yop_poll_add_new_config, $current_user;
 			if ( '-1' != $action && isset( $_REQUEST['yoppollcheck'] ) ) {
 				if ( 'delete' == $action ) {
 					check_admin_referer( 'yop-poll-view' );
 					$bulkyoppolls = (array) $_REQUEST['yoppollcheck'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+					$total_undeleted	= 0;
 					foreach ( $bulkyoppolls as $yoppoll_id ) {
 						$yoppoll_id = (int) $yoppoll_id;
-						Yop_Poll_Model::delete_poll_from_db( $yoppoll_id );
+						$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $yoppoll_id );
+						if ( ( $this->current_user_can( 'delete_own_polls') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls' ) ) )
+							Yop_Poll_Model::delete_poll_from_db( $yoppoll_id );
+						else
+							$total_undeleted++;
 					}
-					wp_redirect( add_query_arg('deleted', count( $bulkyoppolls ), remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'yoppollcheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
+					wp_redirect( add_query_arg('deleted', count( $bulkyoppolls ) - $total_undeleted, remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'yoppollcheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
 				if ( 'clone' == $action ) {
 					check_admin_referer( 'yop-poll-view' );
 					$bulkyoppolls = (array) $_REQUEST['yoppollcheck'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+					$total_uncloned	= 0;
 					foreach ( $bulkyoppolls as $yoppoll_id ) {
 						$yoppoll_id = (int) $yoppoll_id;
-						Yop_Poll_Model::clone_poll( $yoppoll_id );
+						$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $yoppoll_id );
+						if ( ( $this->current_user_can( 'clone_own_polls') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'clone_polls' ) ) )
+							Yop_Poll_Model::clone_poll( $yoppoll_id );
+						else
+							$total_uncloned++;
 					}
-					wp_redirect( add_query_arg('cloned', count( $bulkyoppolls ), remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'yoppollcheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
+					wp_redirect( add_query_arg('cloned', count( $bulkyoppolls ) - $total_uncloned, remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'yoppollcheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
 				if ( 'reset_votes' == $action ) {
 					check_admin_referer( 'yop-poll-view' );
 					$bulkyoppolls = (array) $_REQUEST['yoppollcheck'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+					$total_unreseted	= 0;
 					foreach ( $bulkyoppolls as $yoppoll_id ) {
 						$yoppoll_id = (int) $yoppoll_id;
-						Yop_Poll_Model::reset_votes_for_poll( $yoppoll_id );
+						$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $yoppoll_id );
+						if ( ( $this->current_user_can( 'reset_own_polls_stats') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'reset_polls_stats' ) ) )
+							Yop_Poll_Model::reset_votes_for_poll( $yoppoll_id );
+						else
+							$total_unreseted++;
 					}
-					wp_redirect( add_query_arg('reseted_votes', count( $bulkyoppolls ), remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'yoppollcheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
+					wp_redirect( add_query_arg('reseted_votes', count( $bulkyoppolls ) - $total_unreseted, remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'yoppollcheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
 				if ( 'delete_logs' == $action ) {
 					check_admin_referer( 'yop-poll-view' );
 					$bulkyoppolls = (array) $_REQUEST['yoppollcheck'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+					$total_undeleted_logs	= 0;
 					foreach ( $bulkyoppolls as $yoppoll_id ) {
 						$yoppoll_id = (int) $yoppoll_id;
-						Yop_Poll_Model::delete_all_poll_logs( $yoppoll_id );
+						$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $yoppoll_id );
+						if ( ( $this->current_user_can( 'delete_own_polls_logs') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls_logs' ) ) )
+							Yop_Poll_Model::delete_all_poll_logs( $yoppoll_id );
+						else
+							$total_undeleted_logs++;
 					}
-					wp_redirect( add_query_arg('deleted_logs', count( $bulkyoppolls ), remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'yoppollcheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
+					wp_redirect( add_query_arg('deleted_logs', count( $bulkyoppolls ) - $total_undeleted_logs, remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'yoppollcheck' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
 			}
@@ -834,7 +944,11 @@
 					check_admin_referer( 'yop-poll-delete' );
 					$yoppoll_id = (int) $_REQUEST['id'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
-					Yop_Poll_Model::delete_poll_from_db( $yoppoll_id );
+					$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $yoppoll_id );
+					if ( ( $this->current_user_can( 'delete_own_polls') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls' ) ) )
+						Yop_Poll_Model::delete_poll_from_db( $yoppoll_id );
+					else
+						wp_die( __( 'You are not allowed to delete this item.', 'yop_poll') );
 					wp_redirect( add_query_arg('deleted', 1, remove_query_arg( array( '_wpnonce', 'id', 'action' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
@@ -843,7 +957,11 @@
 					check_admin_referer( 'yop-poll-clone' );
 					$yoppoll_id = (int) $_REQUEST['id'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
-					Yop_Poll_Model::clone_poll( $yoppoll_id );
+					$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $yoppoll_id );
+					if ( ( $this->current_user_can( 'clone_own_polls') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'clone_polls' ) ) )
+						Yop_Poll_Model::clone_poll( $yoppoll_id );
+					else
+						wp_die( __( 'You are not allowed to clone this item.', 'yop_poll') );
 					wp_redirect( add_query_arg('cloned', 1, remove_query_arg( array( '_wpnonce', 'id', 'action' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
@@ -852,7 +970,11 @@
 					check_admin_referer( 'yop-poll-reset-votes' );
 					$yoppoll_id = (int) $_REQUEST['id'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
-					Yop_Poll_Model::reset_votes_for_poll( $yoppoll_id );
+					$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $yoppoll_id );
+					if ( ( $this->current_user_can( 'reset_own_polls_stats') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'reset_polls_stats' ) ) )
+						Yop_Poll_Model::reset_votes_for_poll( $yoppoll_id );
+					else
+						wp_die( __( 'You are not allowed to reset stats for this item.', 'yop_poll') );
 					wp_redirect( add_query_arg('reseted_votes', 1, remove_query_arg( array( '_wpnonce', 'id', 'action' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
@@ -861,7 +983,11 @@
 					check_admin_referer( 'yop-poll-delete-logs' );
 					$yoppoll_id = (int) $_REQUEST['id'];
 					require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
-					Yop_Poll_Model::delete_all_poll_logs( $yoppoll_id );
+					$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $yoppoll_id );
+					if ( ( $this->current_user_can( 'delete_own_polls_logs') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls_logs' ) ) )
+						Yop_Poll_Model::delete_all_poll_logs( $yoppoll_id );
+					else
+						wp_die( __( 'You are not allowed to delete logs for this item.', 'yop_poll') );
 					wp_redirect( add_query_arg('deleted_logs', 1, remove_query_arg( array( '_wpnonce', 'id', 'action' ), stripslashes( $_SERVER['REQUEST_URI'] ) ) ) );
 					exit;
 				}
@@ -881,7 +1007,7 @@
 		* Start Views section
 		*/
 		public function view_all_polls() {
-			global $page, $action, $orderby, $order;
+			global $page, $action, $orderby, $order, $current_user;
 			$orderby	= ( empty( $orderby ) ) ? 'name' : $orderby;
 			$order_direction	= array(
 				'id'			=> 'asc',
@@ -1042,11 +1168,14 @@
 												<span class="sorting-indicator"></span>
 											</a>
 										</th>
-										<th id="question" class="manage-column <?php echo $order_sortable[ 'question' ] ?> <?php echo $order_direction_reverse[ 'question' ] ?>" style="width:30%" scope="col">
+										<th id="question" class="manage-column <?php echo $order_sortable[ 'question' ] ?> <?php echo $order_direction_reverse[ 'question' ] ?>" style="width:24%" scope="col">
 											<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'question', 'order' => $order_direction[ 'question' ] ) ) ); ?>">
 												<span><?php _e( 'Question', 'yop_poll' ); ?></span>
 												<span class="sorting-indicator"></span>
 											</a>
+										</th>
+										<th id="poll_author" class="manage-column" style="width:5%" scope="col">
+											<span><?php _e( 'Author', 'yop_poll' ); ?></span>
 										</th>
 										<th id="start-date" class="manage-column <?php echo $order_sortable[ 'start_date' ] ?> <?php echo $order_direction_reverse[ 'start_date' ] ?>" style="width:10%" scope="col">
 											<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'start_date', 'order' => $order_direction[ 'start_date' ] ) ) ); ?>">
@@ -1069,22 +1198,52 @@
 										<tbody id="the-list">
 											<tr valign="middle" class="alternate" id="yop-poll-<?php echo $yop_poll['id']; ?>">
 												<th class="check-column" scope="row">
-													<input type="checkbox" value="<?php echo $yop_poll['id']; ?>" name="yoppollcheck[]">
+													<?php if ( ( $this->current_user_can( 'delete_own_polls') && $yop_poll['poll_author'] == $current_user->ID ) || ($this->current_user_can( 'delete_polls' ) ) ) { ?>
+														<input type="checkbox" value="<?php echo $yop_poll['id']; ?>" name="yoppollcheck[]">
+														<?php } ?>
 												</th>
 												<td>
-													<strong><a title="<?php echo $yop_poll['id']; ?>" href="<?php echo esc_url( add_query_arg( array( 'action' => 'edit', 'id' => $yop_poll['id'] ) ) ); ?>" class="row-title"><?php echo $yop_poll['id']; ?></a></strong><br>
+													<strong>
+														<?php if ( ( $this->current_user_can( 'edit_own_polls') && $yop_poll['poll_author'] == $current_user->ID ) || ($this->current_user_can( 'edit_polls' ) ) ) { ?>
+															<a title="<?php echo $yop_poll['id']; ?>" href="<?php echo esc_url( add_query_arg( array( 'action' => 'edit', 'id' => $yop_poll['id'] ) ) ); ?>" class="row-title">
+																<?php }?>
+															<?php echo $yop_poll['id']; ?>
+															<?php if ( ( $this->current_user_can( 'edit_own_polls') && $yop_poll['poll_author'] == $current_user->ID ) || ($this->current_user_can( 'edit_polls' ) ) ) { ?>
+															</a>
+														<?php } ?></strong><br>
 												</td>
 												<td>
-													<strong><a title="<?php echo esc_html( stripslashes( $yop_poll['name'] ) ); ?>" href="<?php echo esc_url( add_query_arg( array( 'action' => 'edit', 'id' => $yop_poll['id'] ) ) ); ?>" class="row-title"><?php echo esc_html( stripslashes( $yop_poll['name'] ) ); ?></a></strong><br>
+													<strong>
+														<?php if ( ( $this->current_user_can( 'edit_own_polls') && $yop_poll['poll_author'] == $current_user->ID ) || ($this->current_user_can( 'edit_polls' ) ) ) { ?>
+															<a title="<?php echo esc_html( stripslashes( $yop_poll['name'] ) ); ?>" href="<?php echo esc_url( add_query_arg( array( 'action' => 'edit', 'id' => $yop_poll['id'] ) ) ); ?>" class="row-title">
+																<?php } ?>
+															<?php echo esc_html( stripslashes( $yop_poll['name'] ) ); ?>
+															<?php if ( ( $this->current_user_can( 'edit_own_polls') && $yop_poll['poll_author'] == $current_user->ID ) || ($this->current_user_can( 'edit_polls' ) ) ) { ?>
+															</a>
+															<?php } ?>
+													</strong><br>
 													<div class="row-actions">
-														<span class="edit"><a href="<?php echo esc_url( add_query_arg( array( 'action' => 'edit', 'id' => $yop_poll['id'] ) ) ); ?>"><?php _e( 'Edit', 'yop_poll' ) ?></a> | </span>
-														<span class="edit"><a href="<?php echo esc_url( add_query_arg( array( 'page' => 'yop-polls-logs', 'poll_id' => $yop_poll['id'] ) ) ); ?>"><?php _e( 'Logs', 'yop_poll' ) ?></a> | </span>
-														<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to delete this poll",'yop_poll').": \'".esc_html( $yop_poll['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to delete', 'yop_poll'); ?>' ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'delete', 'id' => $yop_poll['id'] ) ), 'yop-poll-delete' ); ?>" class="submitdelete"><?php _e( 'Delete', 'yop_poll' ) ?></a> | </span>
-														<span class="clone"><a onclick="if ( confirm( '<?php echo __( "You are about to clone this poll",'yop_poll').": \'".esc_html( $yop_poll['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to clone', 'yop_poll'); ?>' ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'clone', 'id' => $yop_poll['id'] ) ), 'yop-poll-clone' ); ?>" class="submitclone"><?php _e( 'Clone', 'yop_poll' ) ?></a> | </span>
-														<span class="results"><a href="<?php echo esc_url( add_query_arg( array( 'action' => 'results', 'id' => $yop_poll['id'] ) ) ); ?>"><?php _e( 'Results', 'yop_poll' ) ?></a> | </span>
-														<!--<span class="custom-fields"><a href="<?php echo esc_url( add_query_arg( array( 'action' => 'custom-fields', 'id' => $yop_poll['id'] ) ) ); ?>"><?php _e( 'Custom Fields', 'yop_poll' ) ?></a> | </span>-->
-														<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to reset votes for this poll",'yop_poll').": \'".esc_html( $yop_poll['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to reset votes', 'yop_poll'); ?>' ) ?>' ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'reset_votes', 'id' => $yop_poll['id'] ) ), 'yop-poll-reset-votes' ); ?>" class="submitresetvotes"><?php _e( 'Reset Stats', 'yop_poll' ) ?></a> | </span>
-														<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to delete logs for this poll",'yop_poll').": \'".esc_html( $yop_poll['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to delete logs', 'yop_poll'); ?>' ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'delete_logs', 'id' => $yop_poll['id'] ) ), 'yop-poll-delete-logs' ); ?>" class="submitresetvotes"><?php _e( 'Delete Logs', 'yop_poll' ) ?></a></span>
+														<?php if ( ( $this->current_user_can( 'edit_own_polls') && $yop_poll['poll_author'] == $current_user->ID ) || ($this->current_user_can( 'edit_polls' ) ) ) { ?>
+															<span class="edit"><a href="<?php echo esc_url( add_query_arg( array( 'action' => 'edit', 'id' => $yop_poll['id'] ) ) ); ?>"><?php _e( 'Edit', 'yop_poll' ) ?></a> | </span>
+															<?php } ?>
+														<?php if ( ( $this->current_user_can( 'view_own_polls_logs') && $yop_poll['poll_author'] == $current_user->ID ) || ($this->current_user_can( 'view_polls_logs' ) ) ) { ?>
+															<span class="edit"><a href="<?php echo esc_url( add_query_arg( array( 'page' => 'yop-polls-logs', 'poll_id' => $yop_poll['id'] ) ) ); ?>"><?php _e( 'Logs', 'yop_poll' ) ?></a> | </span>
+															<?php } ?>
+														<?php if ( ( $this->current_user_can( 'delete_own_polls') && $yop_poll['poll_author'] == $current_user->ID ) || ($this->current_user_can( 'delete_polls' ) ) ) { ?>
+															<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to delete this poll",'yop_poll').": \'".esc_html( $yop_poll['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to delete', 'yop_poll'); ?>' ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'delete', 'id' => $yop_poll['id'] ) ), 'yop-poll-delete' ); ?>" class="submitdelete"><?php _e( 'Delete', 'yop_poll' ) ?></a> | </span>
+															<?php } ?>
+														<?php if ( ( $this->current_user_can( 'clone_own_polls') && $yop_poll['poll_author'] == $current_user->ID ) || ($this->current_user_can( 'clone_polls' ) ) ) { ?>
+															<span class="clone"><a onclick="if ( confirm( '<?php echo __( "You are about to clone this poll",'yop_poll').": \'".esc_html( $yop_poll['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to clone', 'yop_poll'); ?>' ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'clone', 'id' => $yop_poll['id'] ) ), 'yop-poll-clone' ); ?>" class="submitclone"><?php _e( 'Clone', 'yop_poll' ) ?></a> | </span>
+															<?php } ?>
+														<?php if ( ( $this->current_user_can( 'view_own_polls_results') && $yop_poll['poll_author'] == $current_user->ID ) || ($this->current_user_can( 'view_polls_results' ) ) ) { ?>
+															<span class="results"><a href="<?php echo esc_url( add_query_arg( array( 'action' => 'results', 'id' => $yop_poll['id'] ) ) ); ?>"><?php _e( 'Results', 'yop_poll' ) ?></a> | </span>
+															<?php } ?>
+														<?php if ( ( $this->current_user_can( 'reset_own_polls_stats') && $yop_poll['poll_author'] == $current_user->ID ) || ($this->current_user_can( 'reset_polls_stats' ) ) ) { ?>
+															<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to reset votes for this poll",'yop_poll').": \'".esc_html( $yop_poll['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to reset votes', 'yop_poll'); ?>' ) ?>' ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'reset_votes', 'id' => $yop_poll['id'] ) ), 'yop-poll-reset-votes' ); ?>" class="submitresetvotes"><?php _e( 'Reset Stats', 'yop_poll' ) ?></a> | </span>
+															<?php } ?>
+														<?php if ( ( $this->current_user_can( 'delete_own_polls_logs') && $yop_poll['poll_author'] == $current_user->ID ) || ($this->current_user_can( 'delete_polls_logs' ) ) ) { ?>
+															<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to delete logs for this poll",'yop_poll').": \'".esc_html( $yop_poll['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to delete logs', 'yop_poll'); ?>' ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'delete_logs', 'id' => $yop_poll['id'] ) ), 'yop-poll-delete-logs' ); ?>" class="submitresetvotes"><?php _e( 'Delete Logs', 'yop_poll' ) ?></a></span>
+															<?php } ?>
 													</div>
 												</td>
 												<td>
@@ -1095,6 +1254,15 @@
 												</td>
 												<td>
 													<?php echo esc_html( stripslashes( $yop_poll['question'] ) ); ?>
+												</td>
+												<td>
+													<?php
+														$user_info = get_userdata( $yop_poll['poll_author'] );
+														if ( $user_info )
+															echo esc_html( stripslashes( $user_info->user_login ) );
+														else
+															echo '';
+													?>
 												</td>
 												<td>
 													<?php echo esc_html( stripslashes( $yop_poll['start_date'] ) ); ?>
@@ -1117,7 +1285,7 @@
 									?>
 									<tbody id="the-list">
 										<tr valign="middle" class="alternate" id="yop-poll-<?php ?>">
-											<th colspan="8">
+											<th colspan="9">
 												<?php _e( 'No poll found!', 'yop_poll' ); ?>
 											</th>
 										</tr>
@@ -1161,6 +1329,9 @@
 												<span class="sorting-indicator"></span>
 											</a>
 										</th>
+										<th id="poll_author" class="manage-column" style="width:5%" scope="col">
+											<span><?php _e( 'Author', 'yop_poll' ); ?></span>
+										</th>
 										<th id="start-date" class="manage-column <?php echo $order_sortable[ 'start_date' ] ?> <?php echo $order_direction_reverse[ 'start_date' ] ?>" style="" scope="col">
 											<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'start_date', 'order' => $order_direction[ 'start_date' ] ) ) ); ?>">
 												<span><?php _e( 'Start Date', 'yop_poll' ); ?></span>
@@ -1187,9 +1358,12 @@
 		}
 
 		public function view_poll_results() {
-			global $page, $action;
+			global $page, $action, $current_user;
 			$poll_id						= ( isset( $_GET['id'] ) ? intval( $_GET['id'] ) : 0 );
 			require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+			$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $poll_id );
+			if ( ( ! $this->current_user_can( 'view_own_polls_results') || $poll_author != $current_user->ID ) && ( ! $this->current_user_can( 'view_polls_results' ) ) )
+				wp_die( __( 'You are not allowed to view results for this item.', 'yop_poll') );
 			$poll_details					= YOP_POLL_MODEL::get_poll_from_database_by_id( $poll_id );
 			$poll_answers					= YOP_POLL_MODEL::get_poll_answers( $poll_id, array( 'default', 'other' ));
 			$poll_other_answer				= YOP_POLL_MODEL::get_poll_answers( $poll_id, array( 'other' ));
@@ -1581,26 +1755,26 @@
 		}
 
 		public function view_yop_poll_templates() {
-			global $page, $action, $orderby, $order;
+			global $page, $action, $orderby, $order, $current_user;
 			$orderby	= ( empty( $orderby ) ) ? 'last_modified' : $orderby;
 			$order_direction	= array(
-				'id'			=> 'asc',
-				'name'			=> 'asc',
-				'last_modified'	=> 'desc'
+				'id'				=> 'asc',
+				'name'				=> 'asc',
+				'last_modified'		=> 'desc'
 			);
 			$order_direction[ $orderby ] = ( 'desc' == $order ) ? 'asc' : 'desc';
 
 			$order_direction_reverse	= array(
-				'id'			=> 'desc',
-				'name'			=> 'desc',
-				'last_modified'	=> 'desc'
+				'id'				=> 'desc',
+				'name'				=> 'desc',
+				'last_modified'		=> 'desc'
 			);
 			$order_direction_reverse[ $orderby ]	= ( 'desc' == $order ) ? 'desc' : 'asc';
 
 			$order_sortable	= array(
-				'id'			=> 'sortable',
-				'name'			=> 'sortable',
-				'last_modified'	=> 'sortable'
+				'id'				=> 'sortable',
+				'name'				=> 'sortable',
+				'last_modified'		=> 'sortable'
 			);
 			$order_sortable[ $orderby ]	= 'sorted';
 			require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
@@ -1660,13 +1834,16 @@
 									<span class="sorting-indicator"></span>
 								</a>
 							</th>
-							<th id="name" class="manage-column <?php echo $order_sortable[ 'name' ] ?> <?php echo $order_direction_reverse[ 'name' ] ?>" style="width:43%;" scope="col">
+							<th id="name" class="manage-column <?php echo $order_sortable[ 'name' ] ?> <?php echo $order_direction_reverse[ 'name' ] ?>" style="width:38%;" scope="col">
 								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'name', 'order' => $order_direction[ 'name' ] ) ) ); ?>">
 									<span><?php _e( 'Name', 'yop_poll' ); ?></span>
 									<span class="sorting-indicator"></span>
 								</a>
 							</th>
-							<th id="last_modified" class="manage-column <?php echo $order_sortable[ 'last_modified' ] ?> <?php echo $order_direction_reverse[ 'last_modified' ] ?>" style="width:45%;" scope="col">
+							<th id="template_author" class="manage-column" style="width:10%;" scope="col">
+								<span><?php _e( 'Author', 'yop_poll' ); ?></span>
+							</th>
+							<th id="last_modified" class="manage-column <?php echo $order_sortable[ 'last_modified' ] ?> <?php echo $order_direction_reverse[ 'last_modified' ] ?>" style="width:40%;" scope="col">
 								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'last_modified', 'order' => $order_direction[ 'last_modified' ] ) ) ); ?>">
 									<span><?php _e( 'Last Modified', 'yop_poll' ); ?></span>
 									<span class="sorting-indicator"></span>
@@ -1681,18 +1858,51 @@
 							<tbody id="the-list">
 								<tr valign="middle" class="alternate" id="yop-poll-<?php echo $template['id']; ?>">
 									<th class="check-column" scope="row">
-										<input type="checkbox" value="<?php echo $template['id']; ?>" name="templatecheck[]">
+										<?php if ( ( $this->current_user_can( 'delete_own_polls_templates') && $template['template_author'] == $current_user->ID ) || ($this->current_user_can( 'delete_polls_templates' ) ) ) { ?>
+											<input type="checkbox" value="<?php echo $template['id']; ?>" name="templatecheck[]">
+											<?php } ?>
 									</th>
 									<td>
-										<strong><a title="<?php echo $template['id']; ?>" href="<?php echo esc_url( add_query_arg( array( 'action' => 'edit', 'id' => $template['id'] ) ) ); ?>" class="row-title"><?php echo $template['id']; ?></a></strong><br>
+										<strong>
+											<?php if ( ( $this->current_user_can( 'edit_own_polls_templates') && $template['template_author'] == $current_user->ID ) || ($this->current_user_can( 'edit_polls_templates' ) ) ) { ?>
+												<a title="<?php echo $template['id']; ?>" href="<?php echo esc_url( add_query_arg( array( 'action' => 'edit', 'id' => $template['id'] ) ) ); ?>" class="row-title">
+													<?php } ?>
+												<?php echo $template['id']; ?>
+												<?php if ( ( $this->current_user_can( 'edit_own_polls_templates') && $template['template_author'] == $current_user->ID ) || ($this->current_user_can( 'edit_polls_templates' ) ) ) { ?>
+												</a>
+												<?php } ?>
+										</strong><br>
 										<div class="row-actions">
-											<span class="edit"><a href="<?php echo esc_url( add_query_arg( array( 'action' => 'edit', 'id' => $template['id'] ) ) ); ?>"><?php _e( 'Edit', 'yop_poll' ) ?></a> | </span>
-											<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to delete this poll template",'yop_poll').": \'".esc_html( $template['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to delete', 'yop_poll'); ?>' ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'delete', 'id' => $template['id'] ) ), 'yop-poll-templates' ); ?>" class="submitdelete"><?php _e( 'Delete', 'yop_poll' ) ?></a> | </span>
-											<span class="clone"><a onclick="if ( confirm( '<?php echo __( "You are about to clone this poll template",'yop_poll').": \'".esc_html( $template['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to clone', 'yop_poll'); ?>' ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'clone', 'id' => $template['id'] ) ), 'yop-poll-templates' ); ?>" class="submitdelete"><?php _e( 'Clone', 'yop_poll' ) ?></a></span>
+											<?php if ( ( $this->current_user_can( 'edit_own_polls_templates') && $template['template_author'] == $current_user->ID ) || ($this->current_user_can( 'edit_polls_templates' ) ) ) { ?>
+												<span class="edit"><a href="<?php echo esc_url( add_query_arg( array( 'action' => 'edit', 'id' => $template['id'] ) ) ); ?>"><?php _e( 'Edit', 'yop_poll' ) ?></a> | </span>
+												<?php } ?>
+											<?php if ( ( $this->current_user_can( 'delete_own_polls_templates') && $template['template_author'] == $current_user->ID ) || ($this->current_user_can( 'delete_polls_templates' ) ) ) { ?>
+												<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to delete this poll template",'yop_poll').": \'".esc_html( $template['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to delete', 'yop_poll'); ?>' ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'delete', 'id' => $template['id'] ) ), 'yop-poll-templates' ); ?>" class="submitdelete"><?php _e( 'Delete', 'yop_poll' ) ?></a> | </span>
+												<?php } ?>
+											<?php if ( ( $this->current_user_can( 'clone_own_polls_templates') && $template['template_author'] == $current_user->ID ) || ($this->current_user_can( 'clone_polls_templates' ) ) ) { ?>
+												<span class="clone"><a onclick="if ( confirm( '<?php echo __( "You are about to clone this poll template",'yop_poll').": \'".esc_html( $template['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to clone', 'yop_poll'); ?>' ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'clone', 'id' => $template['id'] ) ), 'yop-poll-templates' ); ?>" class="submitdelete"><?php _e( 'Clone', 'yop_poll' ) ?></a></span>
+												<?php } ?>
 										</div>
 									</td>
 									<td>
-										<strong><a title="<?php echo esc_html( stripslashes( $template['name'] ) ); ?>" href="<?php echo esc_url( add_query_arg( array( 'action' => 'edit', 'id' => $template['id'] ) ) ); ?>" class="row-title"><?php echo esc_html( stripslashes( $template['name'] ) ); ?></a></strong><br>
+										<strong>
+											<?php if ( ( $this->current_user_can( 'edit_own_polls_templates') && $template['template_author'] == $current_user->ID ) || ($this->current_user_can( 'edit_polls_templates' ) ) ) { ?>
+												<a title="<?php echo esc_html( stripslashes( $template['name'] ) ); ?>" href="<?php echo esc_url( add_query_arg( array( 'action' => 'edit', 'id' => $template['id'] ) ) ); ?>" class="row-title">
+													<?php } ?>
+												<?php echo esc_html( stripslashes( $template['name'] ) ); ?>
+												<?php if ( ( $this->current_user_can( 'edit_own_polls_templates') && $template['template_author'] == $current_user->ID ) || ($this->current_user_can( 'edit_polls_templates' ) ) ) { ?>
+												</a>
+												<?php } ?>
+										</strong><br>
+									</td>
+									<td>
+										<?php
+											$user_info = get_userdata( $template['template_author'] );
+											if ( $user_info )
+												echo esc_html( stripslashes( $user_info->user_login ) );
+											else
+												echo '';
+										?>
 									</td>
 									<td>
 										<?php echo esc_html( stripslashes( $template['last_modified'] ) ); ?>
@@ -1706,7 +1916,7 @@
 						?>
 						<tbody id="the-list">
 							<tr valign="middle" class="alternate" id="yop-poll-<?php ?>">
-								<td id="empty-set" colspan="4">
+								<td id="empty-set" colspan="5">
 									<h3 style="margin-bottom:0px;"><?php _e(" You haven't used our template editor to create any yop poll templates!", 'yop_poll' ); ?> </h3>
 									<p style="margin-bottom:20px;"><?php _e( "Please create your poll template first.", 'yop_poll' ); ?></p>
 									<a class="button-primary" href="<?php echo esc_url( add_query_arg( array( 'page' => 'yop-polls-templates', 'action' => 'add-new', 'id' => false, 'deleted' => false, 'cloned' => false ) ) ); ?>"><?php _e( "Create a poll template now", 'yop_poll' ); ?></a>
@@ -1736,6 +1946,9 @@
 									<span class="sorting-indicator"></span>
 								</a>
 							</th>
+							<th id="template_author" class="manage-column" style="width:10%;" scope="col">
+								<span><?php _e( 'Author', 'yop_poll' ); ?></span>
+							</th>
 							<th id="question" class="manage-column <?php echo $order_sortable[ 'last_modified' ] ?> <?php echo $order_direction_reverse[ 'last_modified' ] ?>" style="" scope="col">
 								<a href="<?php echo esc_url( add_query_arg( array( 'orderby' => 'last_modified', 'order' => $order_direction[ 'last_modified' ] ) ) ); ?>">
 									<span><?php _e( 'Last Modified', 'yop_poll' ); ?></span>
@@ -1751,7 +1964,7 @@
 		}
 
 		public function view_yop_poll_logs() {
-			global $wpdb, $page, $action, $orderby, $order;
+			global $wpdb, $page, $action, $orderby, $order, $current_user;
 			$per_page	= ( isset( $_GET['per_page'] ) ? intval( $_GET['per_page'] ) : 100 );
 			$page_no	= isset( $_REQUEST['page_no'] ) ? (int) $_REQUEST['page_no'] : 1;
 			$orderby	= ( empty( $orderby ) ) ? 'name' : $orderby;
@@ -1789,11 +2002,21 @@
 			$order_sortable[ $orderby ]	= 'sorted';
 			$poll_id	= isset( $_REQUEST['poll_id'] ) ? (int) $_REQUEST['poll_id'] : NULL;
 
+			require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+
+			$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $poll_id );
+			if ( $this->current_user_can( 'view_own_polls_logs' ) && $poll_id ) {
+				if ( $poll_author != $current_user->ID && ! $this->current_user_can( 'view_polls_logs' ) )
+					wp_die( __('You are not allowed to access this section.', 'yop_poll') );
+			}
+			elseif ( ! $this->current_user_can( 'view_polls_logs' ) ) {
+				wp_die( __('You are not allowed to access this section.', 'yop_poll') );
+			}
 			$log_sdate						= ( isset( $_GET['log_sdate'] ) ?  $_GET['log_sdate'] : '' );
 			$log_edate						= ( isset( $_GET['log_edate'] ) ? $_GET['log_edate'] : '' );
 			$group_by						= ( isset( $_GET['group_by'] ) ? $_GET['group_by'] : 'vote' );
 
-			require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
+
 			$yop_polls 	= Yop_Poll_Model::get_yop_polls_filter_search( 'id', 'asc' );
 			if ( $group_by == 'vote')
 				$search = array( 'fields' => array('name', 'ip', 'user_nicename', 'user_email'), 'value' => isset( $_REQUEST['s'] ) ? trim( $_REQUEST['s'] ) : '' );
@@ -2009,10 +2232,20 @@
 								<tr valign="middle" class="alternate" id="yop-poll-log<?php echo $log['id']; ?>">
 									<th class="check-column" scope="row">
 										<?php if ( $group_by == 'vote') { ?>
-											<input type="checkbox" value="<?php echo $log['vote_id']; ?>" name="yoppolllogscheck[]">
+											<?php
+												$poll_id		= Yop_Poll_Model::get_poll_log_field_from_database_by_vote_id( 'poll_id', $log['vote_id'] );
+												$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $poll_id );
+												if ( ( $this->current_user_can( 'delete_own_polls_logs') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls_logs' ) ) ) { ?>
+												<input type="checkbox" value="<?php echo $log['vote_id']; ?>" name="yoppolllogscheck[]">
+												<?php } ?>
 											<?php }
 											else { ?>
-											<input type="checkbox" value="<?php echo $log['id']; ?>" name="yoppolllogscheck[]">
+											<?php
+												$poll_id		= Yop_Poll_Model::get_poll_log_field_from_database_by_id( 'poll_id', $log['id'] );
+												$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $poll_id );
+												if ( ( $this->current_user_can( 'delete_own_polls_logs') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls_logs' ) ) ) { ?>
+												<input type="checkbox" value="<?php echo $log['id']; ?>" name="yoppolllogscheck[]">
+												<?php } ?>
 											<?php } ?>
 									</th>
 									<td>
@@ -2022,10 +2255,20 @@
 										<strong><?php echo esc_html( stripslashes( $log['name'] ) ); ?></strong><br>
 										<div class="row-actions">
 											<?php if ( $group_by == 'vote') { ?>
-												<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to delete this vote log",'yop_poll')." \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to delete', 'yop_poll'); ?>'  ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'delete_group', 'id' => $log['vote_id'] ) ), 'yop-poll-logs-delete' ); ?>" class="submitdelete"><?php _e( 'Delete', 'yop_poll' ) ?></a></span>
+												<?php
+													$poll_id		= Yop_Poll_Model::get_poll_log_field_from_database_by_vote_id( 'poll_id', $log['vote_id'] );
+													$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $poll_id );
+													if ( ( $this->current_user_can( 'delete_own_polls_logs') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls_logs' ) ) ) { ?>
+													<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to delete this vote log",'yop_poll')." \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to delete', 'yop_poll'); ?>'  ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'delete_group', 'id' => $log['vote_id'] ) ), 'yop-poll-logs-delete' ); ?>" class="submitdelete"><?php _e( 'Delete', 'yop_poll' ) ?></a></span>
+													<?php } ?>
 												<?php }
 												else { ?>
-												<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to delete this poll log",'yop_poll').": \'".esc_html( $log['id'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to delete', 'yop_poll'); ?>'  ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'delete', 'id' => $log['id'] ) ), 'yop-poll-logs-delete' ); ?>" class="submitdelete"><?php _e( 'Delete', 'yop_poll' ) ?></a></span>
+												<?php
+													$poll_id		= Yop_Poll_Model::get_poll_log_field_from_database_by_id( 'poll_id', $log['id'] );
+													$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $poll_id );
+													if ( ( $this->current_user_can( 'delete_own_polls_logs') && $poll_author == $current_user->ID ) || ($this->current_user_can( 'delete_polls_logs' ) ) ) { ?>
+													<span class="delete"><a onclick="if ( confirm( '<?php echo __( "You are about to delete this poll log",'yop_poll').": \'".esc_html( $log['id'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to delete', 'yop_poll'); ?>'  ) ) { return true;}return false;" href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'delete', 'id' => $log['id'] ) ), 'yop-poll-logs-delete' ); ?>" class="submitdelete"><?php _e( 'Delete', 'yop_poll' ) ?></a></span>
+													<?php } ?>
 												<?php } ?>
 										</div>
 									</td>
@@ -3044,6 +3287,40 @@
 				$errors												.= __( 'Option "View Total Answers" Not Updated!', 'yop_poll' ).$message_delimiter;
 			}
 
+			//use_default_loading_image
+			if ( isset( $input['use_default_loading_image'] ) ) {
+				if ( in_array( $input['use_default_loading_image'], array('yes', 'no' ) ) ) {
+					$newinput['use_default_loading_image']			= trim( $input['use_default_loading_image'] );
+					$updated										.= __( 'Option "Use Default Loading Image" Updated!', 'yop_poll' ).$message_delimiter;
+
+					//view_total_answers
+					if( 'no' == $input['use_default_loading_image'] ) {
+						if ( isset( $input['loading_image_url'] ) ) {
+							if ( stripos( $input['loading_image_url'], 'http' ) === false ) {
+								$newinput['loading_image_url']	= $default_options['loading_image_url'];
+								$errors 							.= __('You must use a url like "http://.." to define your Loading Image Url!', 'yop_poll' ).$message_delimiter;
+							}
+							else {
+								$newinput['loading_image_url']	= trim( $input['loading_image_url'] );
+								$updated							.= __( 'Option "Loading Image Url" Updated!', 'yop_poll' ).$message_delimiter;
+							}
+						}
+						else {
+							$newinput['loading_image_url']			= $default_options['loading_image_url'];
+							$errors 								.= __('Option "Loading Image Url" Not Updated!', 'yop_poll' ).$message_delimiter;
+						}
+					}
+				}
+				else {
+					$newinput['use_default_loading_image']					= $default_options['use_default_loading_image'];
+					$errors											.= __( 'Option "Use Default Loading Image" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ).$message_delimiter;
+				}
+			}
+			else {
+				$newinput['use_default_loading_image']						= $default_options['use_default_loading_image'];
+				$errors												.= __( 'Option "Use Default Loading Image" Not Updated!', 'yop_poll' ).$message_delimiter;
+			}
+
 			//vote_permisions
 			if ( isset( $input['vote_permisions'] ) ) {
 				if ( in_array( $input['vote_permisions'], array('quest-only', 'registered-only', 'guest-registered' ) ) ) {
@@ -3720,6 +3997,23 @@
 														<input id="yop-poll-percentages-decimals" type="text" name="yop_poll_options[percentages_decimals]" value="<?php echo esc_html( stripslashes( $default_options['percentages_decimals'] ) ); ?>" />
 													</td>
 												</tr>
+												<tr>
+													<th>
+														<?php _e( 'Use Default Loading Image', 'yop_poll' ); ?>:
+													</th>
+													<td>
+														<label for="yop-poll-use-default-loading-image-yes"><input <?php echo 'yes' == $default_options['use_default_loading_image'] ? 'checked="checked"' : '';  ?> id="yop-poll-use-default-loading-image-yes" type="radio" value="yes" name="yop_poll_options[use_default_loading_image]" /> <?php _e( 'Yes' , 'yop_poll'); ?></label>
+														<label for="yop-poll-use-default-loading-image-no"><input <?php echo 'no' == $default_options['use_default_loading_image'] ? 'checked="checked"' : '';  ?> id="yop-poll-use-default-loading-image-no" type="radio" value="no" name="yop_poll_options[use_default_loading_image]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
+													</td>
+												</tr>
+												<tr id="yop-poll-use-default-loading-image-div" style="<?php echo 'yes' == $default_options['use_default_loading_image'] ? 'display: none;' : '';  ?>">
+													<th>
+														<?php _e( 'Loading Image Url', 'yop_poll' ); ?>:
+													</th>
+													<td>
+														<input id="yop-poll-loading-image-url" type="text" name="yop_poll_options[loading_image_url]" value="<?php echo esc_html( stripslashes( $default_options['loading_image_url'] ) ); ?>" />
+													</td>
+												</tr>
 											</tbody>
 										</table>
 									</div>
@@ -3819,7 +4113,7 @@
 		}
 
 		public function view_add_edit_new_poll( ) {
-			global $yop_poll_add_new_config, $action;
+			global $yop_poll_add_new_config, $action, $current_user;
 			require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
 			$yop_poll_model	= new Yop_Poll_Model( );
 			$page_name		= __( 'Add New Yop Poll', 'yop_poll' );
@@ -3828,6 +4122,9 @@
 			$default_options		= get_option( 'yop_poll_options', array() );
 			if ( 'edit' == $action ) {
 				$poll_id			= ( isset( $_GET['id'] ) ? intval( $_GET['id'] ) : 0 );
+				$poll_author	= Yop_Poll_Model::get_poll_field_from_database_by_id( 'poll_author', $poll_id );
+				if ( ( ! $this->current_user_can( 'edit_own_polls') || $poll_author != $current_user->ID ) && ( ! $this->current_user_can( 'edit_polls' ) ) )
+					wp_die( __( 'You are not allowed to edit this item.', 'yop_poll') );
 				$yop_poll_model			= new Yop_Poll_Model( $poll_id );
 				$answers				= Yop_Poll_Model::get_poll_answers( $poll_id );
 				$other_answer			= Yop_Poll_Model::get_poll_answers( $poll_id, array('other') );
@@ -4227,8 +4524,8 @@
 										<button id="yop-poll-customfield-advanced-options-button" class="button"><?php _e( 'Custom Fields Advanced Options', 'yop_poll' ); ?></button>
 									</p>
 									<table cellspacing="0" id="yop-poll-custom-fields-advanced-options-div" style="display:none;" class="links-table">
-									<tbody>
-										<tr>
+										<tbody>
+											<tr>
 												<th>
 													<?php _e( 'Use HTML tags in poll custom fields ', 'yop_poll' ); ?>:
 												</th>
@@ -4237,7 +4534,7 @@
 													<label for="yop-poll-use-html-tags-in-poll-custom-field-yes"><input id="yop-poll-use-html-tags-in-poll-custom-field-yes" <?php echo 'yes' == $default_options['poll_custom_field_html_tags']  ? 'checked="checked"' : '';  ?> type="radio" name="yop_poll_options[poll_custom_field_html_tags]" value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label>
 												</td>
 											</tr>
-									</tbody>
+										</tbody>
 									</table>
 								</div>
 							</div>
@@ -4489,6 +4786,23 @@
 														<input id="yop-poll-percentages-decimals" type="text" name="yop_poll_options[percentages_decimals]" value="<?php echo esc_html( stripslashes( $default_options['percentages_decimals'] ) ); ?>" />
 													</td>
 												</tr>
+												<tr>
+													<th>
+														<?php _e( 'Use Default Loading Image', 'yop_poll' ); ?>:
+													</th>
+													<td>
+														<label for="yop-poll-use-default-loading-image-yes"><input <?php echo 'yes' == $default_options['use_default_loading_image'] ? 'checked="checked"' : '';  ?> id="yop-poll-use-default-loading-image-yes" type="radio" value="yes" name="yop_poll_options[use_default_loading_image]" /> <?php _e( 'Yes' , 'yop_poll'); ?></label>
+														<label for="yop-poll-use-default-loading-image-no"><input <?php echo 'no' == $default_options['use_default_loading_image'] ? 'checked="checked"' : '';  ?> id="yop-poll-use-default-loading-image-no" type="radio" value="no" name="yop_poll_options[use_default_loading_image]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
+													</td>
+												</tr>
+												<tr id="yop-poll-use-default-loading-image-div" style="<?php echo 'yes' == $default_options['use_default_loading_image'] ? 'display: none;' : '';  ?>">
+													<th>
+														<?php _e( 'Loading Image Url', 'yop_poll' ); ?>:
+													</th>
+													<td>
+														<input id="yop-poll-loading-image-url" type="text" name="yop_poll_options[loading_image_url]" value="<?php echo esc_html( stripslashes( $default_options['loading_image_url'] ) ); ?>" />
+													</td>
+												</tr>
 											</tbody>
 										</table>
 									</div>
@@ -4579,12 +4893,15 @@
 		}
 
 		public function view_add_edit_poll_template( ) {
-			global $action;
+			global $action, $current_user;
 			$page_name			= __( 'Add New Poll Template', 'yop_poll' );
 			$action_type		= 'add-new';
 			$template_id		= '';
 			if ( 'edit' == $action ) {
 				$template_id			= ( isset( $_GET['id'] ) ? intval( $_GET['id'] ) : 0 );
+				$template_author		= Yop_Poll_Model::get_poll_template_field_from_database_by_id( 'template_author', $template_id );
+				if ( ( ! $this->current_user_can( 'edit_own_polls_templates') || $template_author != $current_user->ID ) && ( ! $this->current_user_can( 'edit_polls_templates' ) ) )
+					wp_die( __( 'You are not allowed to edit this item.', 'yop_poll') );
 				$page_name				= __( 'Edit Poll Template', 'yop_poll' );
 				$action_type			= 'edit';
 			}
@@ -4896,7 +5213,7 @@
 
 		public function yop_poll_load_css() {
 			header('Content-Type: text/css');
-			check_ajax_referer('yop-poll-public-css');
+			//check_ajax_referer('yop-poll-public-css');
 			if ( is_admin() ) {
 				$poll_id = isset( $_REQUEST['id'] ) ? $_REQUEST['id'] : NULL;
 				if ( $poll_id ) {
@@ -4912,7 +5229,7 @@
 
 		public function yop_poll_load_js() {
 			header('Content-Type: text/javascript');
-			check_ajax_referer('yop-poll-public-js');
+			//check_ajax_referer('yop-poll-public-js');
 			if ( is_admin() ) {
 				$poll_id = isset( $_REQUEST['id'] ) ? $_REQUEST['id'] : NULL;
 				if ( $poll_id ) {
@@ -5209,4 +5526,171 @@
 		}
 
 		/*END donate*/
+
+		private function current_user_can( $capability = '' ) {
+			global $current_user;
+			get_currentuserinfo();
+			$user_roles = $current_user->roles;
+			$user_role = array_shift($user_roles);
+
+			$capabilities_roles	= array(
+				'manage_polls_options' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> false,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'manage_polls_bans' => array(
+					'administrator' => true,
+					'editor' 		=> false,
+					'author' 		=> false,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'delete_polls' => array(
+					'administrator' => true,
+					'editor' 		=> false,
+					'author' 		=> false,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'delete_own_polls' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> true,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'edit_polls' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> false,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'edit_own_polls' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> true,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'clone_polls' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> false,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'clone_own_polls' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> true,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'view_polls_logs' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> false,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'view_own_polls_logs' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> true,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'view_polls_results' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> false,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'view_own_polls_results' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> true,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'reset_polls_stats' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> false,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'reset_own_polls_stats' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> true,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'delete_polls_logs' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> false,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'delete_own_polls_logs' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> true,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'edit_polls_templates' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> false,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'edit_own_polls_templates' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> true,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'delete_polls_templates' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> false,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'delete_own_polls_templates' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> true,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'clone_polls_templates' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> false,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+				'clone_own_polls_templates' => array(
+					'administrator' => true,
+					'editor' 		=> true,
+					'author' 		=> true,
+					'contributor' 	=> false,
+					'subscriber' 	=> false,
+				),
+			);
+			if ( isset( $capabilities_roles[ $capability ][ $user_role ] ) )
+				return $capabilities_roles[ $capability ][ $user_role ];
+			return false;
+		}
 }

@@ -136,6 +136,17 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 4.0 =
+
+* Added ability to use custom loading animation. 
+
+  You can now use a custom loading animation for each poll or use the same one for all polls. Your call.
+
+* Added capabilities and roles
+* Fixed issue with update overwritting settings
+
+* Fixed display issue with IE7 and IE8
+
 = 3.9 = 
 
 * Fixed display issue with IE7 and IE8

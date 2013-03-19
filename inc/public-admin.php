@@ -64,10 +64,14 @@
 			if ( ! $yop_poll_model->poll )
 				return '';
 			$template			= $yop_poll_model->return_poll_html( );
+			if ( 'yes' == $yop_poll_model->poll_options['use_default_loading_image'] )
+				$loading_image_src	= $this->_config->plugin_url.'/images/loading36x36.gif';
+			else
+				$loading_image_src	= $yop_poll_model->poll_options['loading_image_url'];
 			wp_enqueue_script( 'jquery' );
-			wp_enqueue_style( 'yop-poll-user-defined_'.$id, wp_nonce_url( add_query_arg( array( 'id' => $id ), admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_load_css' ), 'yop-poll-public-css' ), array(), $this->_config->version);
+			wp_enqueue_style( 'yop-poll-user-defined_'.$id, add_query_arg( array( 'id' => $id ), admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_load_css' ), array(), $this->_config->version);
 			wp_enqueue_style( 'yop-poll-public', "{$this->_config->plugin_url}/css/yop-poll-public.css", array(), $this->_config->version );
-			wp_enqueue_script( 'yop-poll-user-defined_'.$id, wp_nonce_url( add_query_arg( array( 'id' => $id ), admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_load_js' ), 'yop-poll-public-js' ), array( 'jquery' ), $this->_config->version, true);
+			wp_enqueue_script( 'yop-poll-user-defined_'.$id, add_query_arg( array( 'id' => $id ), admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_load_js' ), array( 'jquery' ), $this->_config->version, true);
 			wp_enqueue_script( 'yop-poll-public_'.$id, "{$this->_config->plugin_url}/js/yop-poll-public.js", array(), $this->_config->version );
 			wp_enqueue_script( 'yop-poll-json2', "{$this->_config->plugin_url}/js/yop-poll-json2.js", array(), $this->_config->version );
 			$yop_poll_public_config = array(
@@ -77,10 +81,10 @@
 					'view_results_action'	=> 'yop_poll_view_results',
 					'back_to_vote_action'	=> 'yop_poll_back_to_vote'
 				),
-				'loading_image_src'	=> 	$this->_config->plugin_url.'/images/loading36x36.gif',
+				'loading_image_src'	=> 	$loading_image_src,
 				'loading_image_alt'	=> __( 'Loading', 'yop_poll')
 			);
-			wp_localize_script( 'yop-poll-public_'.$id, 'yop_poll_public_config', $yop_poll_public_config );
+			wp_localize_script( 'yop-poll-public_'.$id, 'yop_poll_public_config_'.$id, $yop_poll_public_config );
 
 			return $template;
 		}

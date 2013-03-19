@@ -79,6 +79,13 @@ jQuery(document).ready(function(jQuery) {
 				jQuery( '#yop-poll-view-total-voters-div' ).show();
 		});
 
+		jQuery( "#yop-poll-use-default-loading-image-no" ).click( function () {
+				jQuery( '#yop-poll-use-default-loading-image-div' ).show();
+		});
+		jQuery( "#yop-poll-use-default-loading-image-yes" ).click( function () {
+				jQuery( '#yop-poll-use-default-loading-image-div' ).hide();
+		});
+
 		jQuery( "#yop-poll-view-poll-archive-link-no" ).click( function () {
 				jQuery( '#yop-poll-view-poll-archive-link-div' ).hide();
 		});
