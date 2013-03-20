@@ -50,6 +50,12 @@ Current poll features:
 
    *  Logs and bans - user logs and bans can be seen in the admin section. You can ban users by email, username and IP and you can set the limitation preferences for all your polls or for just one of them.   
 
+   *  Edit access to YOP Poll for administrators, editors, authors.   
+
+   *  Use custom animations when voting and viewing results.   
+
+   *  Option to use html tags for answers.   
+
 
 == Installation ==
 
@@ -120,8 +126,29 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 	*  Use the "Results" link to track the results of the poll,      
 
-	*  or access the "Logs" for a more detailed evaluation.      
+	*  or access the "Logs" for a more detailed evaluation. 
 
+
+8.  What is the difference between YOP Poll Options and Poll Options for each poll?      
+
+	*  YOP Poll Options (located under plugin menu) is the way to specifify general settings for all your polls.     
+	
+	*  If you want to go further and customize each poll, these settings will take precedence over YOP Poll Options settings.         
+
+
+9.  How can I edit access to YOP Poll for administrators, editors, authors?      
+
+	*  To do this, in your wordpress go to Plugins->Editor.     
+	
+	*  On the right choose Yop Poll as the plugin to be edited.
+
+	*  The file you need to edit is yop-poll/inc/admin.php.
+
+	*  The file you need to edit is yop-poll/inc/admin.php.
+
+	*  Once you open the file, do a search for function current_user_can.
+
+	*  In that function you can find the options you need to edit.
 
 
 == Screenshots ==
@@ -138,7 +165,7 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 = 4.1 =
 
-* Fixed issue with js widget
+* Fixed js issue causing the widget poll not to work
 
 = 4.0 =
 
