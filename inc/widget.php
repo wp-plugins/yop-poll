@@ -19,12 +19,16 @@
 			$yop_poll_model		= new YOP_POLL_MODEL( $poll_id );
 			$poll_id			= $yop_poll_model->poll['id'];
 			$template			= $yop_poll_model->return_poll_html( );
+			if ( 'yes' == $yop_poll_model->poll_options['use_default_loading_image'] )
+				$loading_image_src	= YOP_POLL_URL.'/images/loading36x36.gif';
+			else
+				$loading_image_src	= $yop_poll_model->poll_options['loading_image_url'];
 			wp_enqueue_script( 'jquery' );
 			wp_enqueue_style( 'yop-poll-user-defined_'.$poll_id, wp_nonce_url( add_query_arg( array( 'id' => $poll_id ), admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_load_css' ), 'yop-poll-public-css' ), array(), YOP_POLL_VERSION);
 			wp_enqueue_style( 'yop-poll-public', YOP_POLL_URL."/css/yop-poll-public.css", array(), YOP_POLL_VERSION );
 			wp_enqueue_script( 'yop-poll-user-defined_'.$poll_id, wp_nonce_url( add_query_arg( array( 'id' => $poll_id ), admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_load_js' ), 'yop-poll-public-js' ), array( 'jquery' ), YOP_POLL_VERSION, true);
-			wp_enqueue_script( 'yop-poll-public_'.$poll_id, YOP_POLL_URL.'/js/yop-poll-public.js', array(), YOP_POLL_VERSION );
-			wp_enqueue_script( 'yop-poll-json2', YOP_POLL_URL."/js/yop-poll-json2.js", array(), YOP_POLL_VERSION );
+			wp_enqueue_script( 'yop-poll-public_'.$poll_id, YOP_POLL_URL.'/js/yop-poll-public.js', array(), YOP_POLL_VERSION, true );
+			wp_enqueue_script( 'yop-poll-json2', YOP_POLL_URL."/js/yop-poll-json2.js", array(), YOP_POLL_VERSION, true );
 			$yop_poll_public_config = array(
 				'ajax' => array(
 					'url'					=> admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')),
@@ -32,10 +36,10 @@
 					'view_results_action'	=> 'yop_poll_view_results',
 					'back_to_vote_action'	=> 'yop_poll_back_to_vote'
 				),
-				'loading_image_src'	=> 	YOP_POLL_URL.'/images/loading36x36.gif',
+				'loading_image_src'	=> 	$loading_image_src,
 				'loading_image_alt'	=> __( 'Loading', 'yop_poll')
 			);
-			wp_localize_script( 'yop-poll-public_'.$poll_id, 'yop_poll_public_config', $yop_poll_public_config );
+			wp_localize_script( 'yop-poll-public_'.$poll_id, 'yop_poll_public_config_'.$poll_id, $yop_poll_public_config );
 			echo $before_widget;
 			echo $before_title . $title . $after_title;
 			echo do_shortcode($template);
