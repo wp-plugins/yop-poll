@@ -9,7 +9,7 @@ License: GPLv2 or later
 
 Use a full option polling functionality to get the answers you need.           
 
-YOP Poll is the perfect, easy to use poll plugin for your WordPress site.
+YOP Poll is the perfect, easy to use poll plugin for your WP site.
 
 
 == Description ==
