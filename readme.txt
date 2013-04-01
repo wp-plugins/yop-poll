@@ -68,18 +68,18 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 1.  How can I create a poll?        
 
-	*  Go to your YOP Poll menu and select the "Add New Yop Poll" option.    
+	*  Go to your YOP Poll menu and select the "Add New" option.    
 
 	*  Fill the required information according to the examples we included: name, question, answers (add additional ones if you need), select the start/end date for your poll, and decide on the advanced settings for results, votes, voters, accessibility etc.   
 
 	*  Once you decided on all your poll details, click on "Save".   
 
-	*  To view your new poll access "All YOP Polls" from your main menu and choose the corresponding entry from the list.   
+	*  To view your new poll access "All Polls" from your main menu and choose the corresponding entry from the list.   
 
 
 2.  How can I link a poll to my webpage?     
 
-	*  Find out the ID assigned to poll by accessing "All YOP Polls".   
+	*  Find out the ID assigned to poll by accessing "All Polls".   
 	   Locate your poll and notice the ID on the left, before the name section.   
 
 	*  Copy the following shortcode and paste it in your page: [yop_poll id="ID"]   
@@ -106,21 +106,21 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 5.  Can I ask for additional information from my voters?       
 
-	Yes, you can customize your poll to request additional information. Eg. name, email, age, profession. To include this, when you create your poll using the "Add New Yop Poll" form, go to "Custom Text Fields" -> "Add new custom field" and include as many requests as you need.   
+	Yes, you can customize your poll to request additional information. Eg. name, email, age, profession. To include this, when you create your poll using the "Add New" form, go to "Custom Text Fields" -> "Add new custom field" and include as many requests as you need.   
 
 
 6.  How can I create/modify a template?      
 
-	*  Access the "YOP Poll Templates" menu.     
+	*  Access the "Templates" menu.     
 	
 	*  If you want to create a new template use the "Add new" option and include the corresponding HTML/visual code.    
 
-	*  If you want to modify an existing template, select it from the YOP Poll Templates list and choose "Edit". You will access the HTML/visual code you want to edit.     
+	*  If you want to modify an existing template, select it from the Templates list and choose "Edit". You will access the HTML/visual code you want to edit.     
 
 
 7.  How do I check the results?      
 
-	*  Locate the poll you want to evaluate by accessing "All YOP Polls".     
+	*  Locate the poll you want to evaluate by accessing "All Polls".     
 	
 	*  Below the name of the poll you have several options.       
 
@@ -129,11 +129,11 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 	*  or access the "Logs" for a more detailed evaluation. 
 
 
-8.  What is the difference between YOP Poll Options and Poll Options for each poll?      
+8.  What is the difference between Options and Poll Options for each poll?      
 
-	*  YOP Poll Options (located under plugin menu) is the way to specifify general settings for all your polls.     
+	*  Options (located under plugin menu) is the way to specifify general settings for all your polls.     
 	
-	*  If you want to go further and customize each poll, these settings will take precedence over YOP Poll Options settings.         
+	*  If you want to go further and customize each poll, these settings will take precedence over Options settings.         
 
 
 9.  How can I edit access to YOP Poll for administrators, editors, authors?      
@@ -154,14 +154,20 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 == Screenshots ==
 
 
-1. Add New YOP Poll
-2. YOP Poll Templates
-3. View All YOP Polls
+1. Add New
+2. Templates
+3. View All
 4. YOP Poll as a widget with a custom field defined
 5. YOP Poll on a page with a custom field defined
 
 
 == Changelog ==
+
+= 4.2 =
+
+* Added captcha
+* Fixed issue with start date and end date when adding/editing a poll
+* Fixed issue with the message displayed when editing a poll
 
 = 4.1 =
 

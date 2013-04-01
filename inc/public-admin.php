@@ -78,6 +78,7 @@
 				'ajax' => array(
 					'url'					=> admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')),
 					'vote_action' 			=> 'yop_poll_do_vote',
+					'captcha_action' 		=> 'yop_poll_show_captcha',
 					'view_results_action'	=> 'yop_poll_view_results',
 					'back_to_vote_action'	=> 'yop_poll_back_to_vote'
 				),

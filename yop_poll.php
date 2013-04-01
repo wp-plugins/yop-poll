@@ -5,17 +5,15 @@
 	Description: Use a full option polling functionality to get the answers you need. YOP Poll is the perfect, easy to use plugin for your WordPress website.
 	Author: yourownprogrammer
 	Author URL: http://www.yourownprogrammer.com
-	Version: 4.1
+	Version: 4.2
 	*/
 	define( 'YOP_POLL_WP_VERSION', '3.3' );
-	define( 'YOP_POLL_VERSION', '4.1' );
+	define( 'YOP_POLL_VERSION', '4.2' );
 	define( 'YOP_POLL_PATH', plugin_dir_path( __FILE__ ) );
 	define( 'YOP_POLL_URL', plugins_url( '', __FILE__ ) );
 	define( 'YOP_POLL_PLUGIN_FILE', plugin_basename( __FILE__ ) );
 	define( 'YOP_POLL_PLUGIN_DIR', plugin_basename( dirname( __FILE__ ) ) );
 	define( 'YOP_POLL_INC', YOP_POLL_PATH . 'inc' );
-	define( 'YOP_POLL_VIEWS', YOP_POLL_INC . '/views' );
-	define( 'YOP_POLL_MODEL', YOP_POLL_INC . '/models' );
 
 	require_once( YOP_POLL_INC . '/plugin.php' );
 	require_once( YOP_POLL_INC . '/config.php' );
@@ -50,6 +48,7 @@
 	$yop_poll_config_data = array(
 		'plugin_file' => YOP_POLL_PLUGIN_FILE,
 		'plugin_url' => YOP_POLL_URL,
+		'plugin_path' => YOP_POLL_PATH,
 		'plugin_dir' => YOP_POLL_PLUGIN_DIR,
 		'plugin_inc_dir' => YOP_POLL_INC,
 		'languages_dir' => 'languages',
@@ -74,4 +73,4 @@
 			$poll_archive_page_id	= $poll_archive_page['ID'];
 			wp_delete_post( $poll_archive_page_id, true );
 		}
-}
+	}

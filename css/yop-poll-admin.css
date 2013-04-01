@@ -1,4 +1,6 @@
 .icon32-yop-poll{background:url(../images/yop-poll-admin-menu-icon32.png) no-repeat center center;}
 .yop-small-input { max-width:280px; }
-#donate_ul{ margin-left: 20px; }
+#donate_ul{ margin-left: 20px; margin-right: 20px; }
 #donate_ul li { line-height: 16px; list-style: disc outside none; }
+#news_ul{ margin-left: 20px; margin-right: 20px; }
+#news_ul li { line-height: 16px; list-style: disc outside none; }

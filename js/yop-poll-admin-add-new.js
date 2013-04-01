@@ -138,39 +138,11 @@ jQuery(document).ready(function(jQuery) {
 		);
 
 		yopPollStartDateTextBox.datetimepicker({
-				onClose: function(dateText, inst) {
-					if (yopPollEndDateTextBox.val() != '') {
-						var testStartDate = yopPollStartDateTextBox.datetimepicker('getDate');
-						var testEndDate = yopPollEndDateTextBox.datetimepicker('getDate');
-						if (testStartDate > testEndDate)
-							yopPollEndDateTextBox.datetimepicker('setDate', testStartDate);
-					}
-					else {
-						yopPollEndDateTextBox.val(dateText);
-					}
-				},
-				onSelect: function (selectedDateTime){
-					yopPollEndDateTextBox.datetimepicker('option', 'minDate', yopPollStartDateTextBox.datetimepicker('getDate') );
-				},
 				showSecond: true,
 				timeFormat: 'hh:mm:ss',
 				dateFormat: 'yy-mm-dd'
 		});
 		yopPollEndDateTextBox.datetimepicker({
-				onClose: function(dateText, inst) {
-					if (yopPollStartDateTextBox.val() != '') {
-						var testStartDate = yopPollStartDateTextBox.datetimepicker('getDate');
-						var testEndDate = yopPollEndDateTextBox.datetimepicker('getDate');
-						if (testStartDate > testEndDate)
-							yopPollStartDateTextBox.datetimepicker('setDate', testEndDate);
-					}
-					else {
-						yopPollStartDateTextBox.val(dateText);
-					}
-				},
-				onSelect: function (selectedDateTime){
-					yopPollStartDateTextBox.datetimepicker('option', 'maxDate', yopPollEndDateTextBox.datetimepicker('getDate') );
-				},
 				showSecond: true,
 				timeFormat: 'hh:mm:ss',
 				dateFormat: 'yy-mm-dd'
