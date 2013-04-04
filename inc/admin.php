@@ -3726,7 +3726,7 @@
 													</th>
 													<td>
 														<input style="<?php echo 'yes' == $default_options['never_expire'] ? 'display: none;' : '';  ?>" <?php echo 'yes' == $default_options['never_expire'] ? 'disabled="disabled"' : '';  ?> id="yop-poll-end-date-input" type="text" name="yop_poll_options[end_date]" value="<?php echo '' == $default_options['end_date'] ? '' : $default_options['end_date']; ?>" />
-														<label for="yop-poll-never-expire"><input type="checkbox" <?php echo $default_options['never_expire'] == 'yes' ? 'checked="checked"' : '';  ?>  id="yop-poll-never-expire" name="yop_poll_options[never_expire]" value="yes" /> Do NOT Expire This Poll</label>
+														<label for="yop-poll-never-expire"><input type="checkbox" <?php echo $default_options['never_expire'] == 'yes' ? 'checked="checked"' : '';  ?>  id="yop-poll-never-expire" name="yop_poll_options[never_expire]" value="yes" /> <?php _e( 'Do NOT Expire This Poll', 'yop_poll'); ?></label>
 													</td>
 												</tr>
 											</tbody>
@@ -3769,7 +3769,7 @@
 														<?php _e( 'Poll Answer Result Label', 'yop_poll'); ?>:
 													</th>
 													<td>
-														<input id="yop-poll-answer-result-label" type="text" name="yop_poll_options[answer_result_label]" value="<?php echo esc_html( stripslashes( $default_options['answer_result_label'] ) ); ?>" /> <small><i>Use %POLL-ANSWER-RESULT-PERCENTAGES% for showing answer percentages and  %POLL-ANSWER-RESULT-VOTES% for showing answer number of votes</i></small>
+														<input id="yop-poll-answer-result-label" type="text" name="yop_poll_options[answer_result_label]" value="<?php echo esc_html( stripslashes( $default_options['answer_result_label'] ) ); ?>" /> <small><i><?php _e('Use %POLL-ANSWER-RESULT-PERCENTAGES% for showing answer percentages and  %POLL-ANSWER-RESULT-VOTES% for showing answer number of votes', 'yop_poll'); ?></i></small>
 													</td>
 												</tr>
 												<tr>
@@ -4003,7 +4003,7 @@
 									</div>
 								</div>
 							</div>
-							<input name="Submit" class="button-primary" type="submit" value="<?php _e('Save Changes'); ?>" />
+							<input name="Submit" class="button-primary" type="submit" value="<?php _e('Save Changes', 'yop_poll'); ?>" />
 						</div>
 
 						<div class="postbox-container" id="postbox-container-1">
@@ -4019,7 +4019,7 @@
 
 
 												<div id="publishing-action">
-													<input name="Submit" class="button-primary" type="submit" value="<?php esc_attr_e('Save Changes'); ?>" />
+													<input name="Submit" class="button-primary" type="submit" value="<?php _e('Save Changes', 'yop_poll'); ?>" />
 												</div>
 												<div class="clear"></div>
 											</div>
@@ -4435,7 +4435,7 @@
 													</th>
 													<td>
 														<input style="<?php echo 'yes' == $default_options['never_expire'] ? 'display: none;' : '';  ?>" <?php echo 'yes' == $default_options['never_expire'] ? 'disabled="disabled"' : '';  ?> id="yop-poll-end-date-input" type="text" name="yop_poll_options[end_date]" value="<?php echo '' == $default_options['end_date'] ? '' : $default_options['end_date']; ?>" />
-														<label for="yop-poll-never-expire"><input type="checkbox" <?php echo $default_options['never_expire'] == 'yes' ? 'checked="checked"' : '';  ?>  id="yop-poll-never-expire" name="yop_poll_options[never_expire]" value="yes" /> Do NOT Expire This Poll</label>
+														<label for="yop-poll-never-expire"><input type="checkbox" <?php echo $default_options['never_expire'] == 'yes' ? 'checked="checked"' : '';  ?>  id="yop-poll-never-expire" name="yop_poll_options[never_expire]" value="yes" /> <?php _e( 'Do NOT Expire This Poll', 'yop_poll'); ?></label>
 													</td>
 												</tr>
 											</tbody>
@@ -4478,7 +4478,7 @@
 														<?php _e( 'Poll Answer Result Label', 'yop_poll'); ?>:
 													</th>
 													<td>
-														<input id="yop-poll-answer-result-label" type="text" name="yop_poll_options[answer_result_label]" value="<?php echo esc_html( stripslashes( $default_options['answer_result_label'] ) ); ?>" /> <small><i>Use %POLL-ANSWER-RESULT-PERCENTAGES% for showing answer percentages and  %POLL-ANSWER-RESULT-VOTES% for showing answer number of votes</i></small>
+														<input id="yop-poll-answer-result-label" type="text" name="yop_poll_options[answer_result_label]" value="<?php echo esc_html( stripslashes( $default_options['answer_result_label'] ) ); ?>" /> <small><i><?php _e('Use %POLL-ANSWER-RESULT-PERCENTAGES% for showing answer percentages and  %POLL-ANSWER-RESULT-VOTES% for showing answer number of votes', 'yop_poll' ); ?></i></small>
 													</td>
 												</tr>
 												<tr>
