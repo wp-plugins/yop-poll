@@ -1,7 +1,7 @@
 === YOP Poll ===
 Contributors: yourownprogrammer
-Donate Link: http://www.yourownprogrammer.com/thankyou/donation.html
-Tags: poll, polls, vote, survey, polling, yop poll, yop
+Donate Link: http://www.yourownprogrammer.com/thankyou/bee.php
+Tags: poll, polls, vote, survey, polling, yop poll, yop, poll widget
 Requires at least: 3.3
 Tested up to: 3.5
 Stable tag: trunk
