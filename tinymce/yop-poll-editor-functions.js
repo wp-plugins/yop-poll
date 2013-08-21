@@ -1,9 +1,13 @@
-function insertYopPoll( destination, poll_id ) {
+function insertYopPoll( destination, poll_id, tr_id ) {
+	tr_id  = typeof tr_id  !== 'undefined' ? tr_id  : '';
 	if ( isNaN( poll_id ) ) {
 		edInsertContent( destination, '[yop_poll]' );
 	}
 	else {
 		if ( poll_id != null && poll_id != '' ) {
+			if ( tr_id != '' )
+			edInsertContent( destination, '[yop_poll id="'+poll_id+'" tr_id="'+tr_id+'"]' );
+			else 
 			edInsertContent( destination, '[yop_poll id="'+poll_id+'"]' );
 		}
 		else {

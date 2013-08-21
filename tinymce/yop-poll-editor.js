@@ -5,7 +5,7 @@
 							ed.windowManager.open({
 									file : yop_poll_editor_config.dialog_url,
 									width : 300 + 'px',
-									height : 100 + 'px',
+									height : 150 + 'px',
 									inline : 1
 								});
 

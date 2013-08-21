@@ -1,7 +1,7 @@
 === YOP Poll ===
 Contributors: yourownprogrammer
-Donate Link: http://www.yourownprogrammer.com/thankyou/bee.php
-Tags: poll, polls, vote, survey, polling, yop poll, yop, poll widget
+Donate Link: http://www.yourownprogrammer.com/thankyou/donation.html
+Tags: poll, polls, vote, survey, polling, yop poll, yop
 Requires at least: 3.3
 Tested up to: 3.5
 Stable tag: trunk
@@ -162,6 +162,19 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 
 == Changelog ==
+
+= 4.3 =
+
+* Added multisite support
+* Added ability to redirect to a custom url after voting
+* Added ability to edit polls and templates author
+* Added ability to set a response as default
+* Improvements on View Results
+* Added ability to edit number of votes (very usefull when migrating polls)
+* Added tracking capabilities
+* Various improvements on logs
+
+
 
 = 4.2 =
 
