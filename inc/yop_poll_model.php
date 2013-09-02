@@ -2,6 +2,7 @@
 	class Yop_Poll_Model {
 
 		var $error							= NULL;
+		var $success						= NULL;
 		var $poll							= array(
 			'id'							=> NULL,
 			'name'							=> NULL,
@@ -37,6 +38,8 @@
 		);
 		var $vote							= false;
 		var $vote_types						= array( 'default', 'wordpress', 'facebook', 'anonymous' );
+		var $unique_id						= '';
+		var $tr_id							= '';
 
 		public function __construct( $poll_id = -99 ) {
 			//do not load id= -99
@@ -72,6 +75,28 @@
 					}
 				}
 			}
+		}
+
+		public static function get_poll_options_by_id( $poll_id = 0 ) {
+			$poll_options	= get_yop_poll_meta( $poll_id, 'options', true );
+			$default_options	= get_option( 'yop_poll_options', false );
+			if ( is_array( $default_options) ) {
+				if ( count( $default_options ) > 0 ) {
+					foreach ( $default_options as $option_name => $option_value ) {
+						if( ! isset( $poll_options [ $option_name ] ) )
+							$poll_options	[ $option_name ] = $option_value;
+					}
+				}
+			}
+			return $poll_options; 
+		}
+
+		public function set_unique_id( $unique_id ) {
+			$this->unique_id	= $unique_id;
+		}
+
+		public function get_unique_id() {
+			return $this->unique_id;
 		}
 
 		private function countAnswers( $request = array() ) {
@@ -533,7 +558,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n	width:%POLL-WIDTH%;\r\n	background:#fff;\r\n	padding:10px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#555; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#555; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n	width:%POLL-WIDTH%;\r\n	background:#fff;\r\n	padding:10px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#555; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#555; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n	if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -542,7 +567,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#eee;\r\n    padding:10px;\r\n    color:#000;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#000; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#000; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#eee;\r\n    padding:10px;\r\n    color:#000;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#000; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#000; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -551,7 +576,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n	width:%POLL-WIDTH%;\r\n	background:#555;\r\n	padding:10px;\r\n    color:#fff;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#333333; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n	width:%POLL-WIDTH%;\r\n	background:#555;\r\n	padding:10px;\r\n    color:#fff;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#333333; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -560,7 +585,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#327BD6;\r\n    padding:10px;\r\n    color:#fff;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#327BD6;\r\n    padding:10px;\r\n    color:#fff;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -569,7 +594,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:0px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-weight:bold;\r\n	background:#327BD6;\r\n	color:#fff;\r\n	padding:5px;\r\n        text-align:center;\r\n        font-size:12px;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#327BD6; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#327BD6; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:0px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-weight:bold;\r\n	background:#327BD6;\r\n	color:#fff;\r\n	padding:5px;\r\n        text-align:center;\r\n        font-size:12px;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#327BD6; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#327BD6; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -578,7 +603,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:10px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n    border:5px solid #327BD6;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px;  }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#327BD6; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#327BD6; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:10px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n    border:5px solid #327BD6;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px;  }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#327BD6; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#327BD6; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -587,7 +612,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#B70004;\r\n    padding:10px;\r\n    color:#fff;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#B70004;\r\n    padding:10px;\r\n    color:#fff;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -596,7 +621,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:0px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-weight:bold;\r\n	background:#B70004;\r\n	color:#fff;\r\n	padding:5px;\r\n        text-align:center;\r\n        font-size:12px;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#B70004; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#B70004; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:0px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-weight:bold;\r\n	background:#B70004;\r\n	color:#fff;\r\n	padding:5px;\r\n        text-align:center;\r\n        font-size:12px;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#B70004; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#B70004; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -605,7 +630,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:10px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n    border:5px solid #B70004;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#B70004; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#B70004; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:10px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n    border:5px solid #B70004;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#B70004; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#B70004; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -614,7 +639,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#3F8B43;\r\n    padding:10px;\r\n    color:#fff;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#3F8B43;\r\n    padding:10px;\r\n    color:#fff;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:00FF00;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -623,7 +648,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:0px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-weight:bold;\r\n	background:#3F8B43;\r\n	color:#fff;\r\n	padding:5px;\r\n        text-align:center;\r\n        font-size:12px;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#3F8B43; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#3F8B43; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:0px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-weight:bold;\r\n	background:#3F8B43;\r\n	color:#fff;\r\n	padding:5px;\r\n        text-align:center;\r\n        font-size:12px;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#3F8B43; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#3F8B43; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -632,7 +657,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:10px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n    border:5px solid #3F8B43;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#3F8B43; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#3F8B43; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:10px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n    border:5px solid #3F8B43;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#3F8B43; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#3F8B43; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -641,7 +666,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#FB6911;\r\n    padding:10px;\r\n    color:#fff;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#FB6911;\r\n    padding:10px;\r\n    color:#fff;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#fff; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -650,7 +675,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:0px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-weight:bold;\r\n	background:#FB6911;\r\n	color:#fff;\r\n	padding:5px;\r\n        text-align:center;\r\n        font-size:12px;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#FB6911; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#FB6911; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:0px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-weight:bold;\r\n	background:#FB6911;\r\n	color:#fff;\r\n	padding:5px;\r\n        text-align:center;\r\n        font-size:12px;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#FB6911; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#FB6911; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -659,7 +684,7 @@
 					`after_vote_template`			= '<div id=\\".'"'."yop-poll-name-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-name\\".'"'.">%POLL-NAME%</div>\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label-%POLL-ID%\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text-%POLL-ID%\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result-%POLL-ID%\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per-%POLL-ID%\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<div>\r\n             %POLL-ANSWER-RESULT-BAR%\r\n           </div>\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n<div id=\\".'"'."yop-poll-vote-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-footer\\".'"'.">\r\n	<div>%POLL-TOTAL-ANSWERS%</div>\r\n	<div>%POLL-TOTAL-VOTES%</div>\r\n	<div id=\\".'"'."yop-poll-back-%POLL-ID%\\".'"'.">%POLL-BACK-TO-VOTE-LINK%</div>\r\n</div>',
 					`before_start_date_template`	= 'This poll is about to <br>\r\nstart at %POLL-START-DATE%<br>\r\nand finish at %POLL-END-DATE%<br>',
 					`after_end_date_template`		= 'This poll is closed!\r\nPoll activity: <br>\r\nstart_date %POLL-START-DATE%<br>\r\nend_date %POLL-END-DATE%<br>\r\n\r\nPoll Results:\r\n<div id=\\".'"'."yop-poll-question-%POLL-ID%\\".'"'." class=\\".'"'."yop-poll-question\\".'"'.">%POLL-QUESTION%</div>\r\n<div id=\\".'"'."yop-poll-answers-1\\".'"'." class=\\".'"'."yop-poll-answers\\".'"'.">\r\n	<ul>\r\n		[ANSWER_RESULT_CONTAINER]\r\n		<li class=\\".'"'."yop-poll-li-result-%POLL-ID%\\".'"'.">\r\n			<label class=\\".'"'."pds-feedback-label\\".'"'.">\r\n				<span class=\\".'"'."pds-answer-text\\".'"'.">%POLL-ANSWER-LABEL%</span>\r\n				<span class=\\".'"'."pds-feedback-result\\".'"'.">\r\n					<span class=\\".'"'."pds-feedback-per\\".'"'."> %POLL-ANSWER-RESULT-LABEL%</span>\r\n				</span>\r\n			</label>\r\n			<span class=\\".'"'."pds-clear\\".'"'." style=\\".'"'."display: block;clear: both;height:1px;line-height:1px;\\".'"'."> </span>\r\n	%POLL-ANSWER-RESULT-BAR%\r\n		</li>\r\n		[/ANSWER_RESULT_CONTAINER]\r\n	</ul>\r\n</div>\r\n%POLL-VOTE-BUTTON%',
-					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:10px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n    border:5px solid #FB6911;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#FB6911; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#FB6911; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}',
+					`css`							= '#yop-poll-container-%POLL-ID% {\r\n    width:%POLL-WIDTH%;\r\n    background:#fff;\r\n    padding:10px;\r\n    color:#555;\r\n    overflow:hidden;\r\n    font-size:12px;\r\n    border:5px solid #FB6911;\r\n}\r\n#yop-poll-name-%POLL-ID% {\r\n	font-size:14px;\r\n	font-weight:bold;\r\n}\r\n\r\n#yop-poll-question-%POLL-ID% {\r\n	font-size:14px;\r\n	margin:5px 0px;\r\n}\r\n#yop-poll-answers-%POLL-ID% {  }\r\n#yop-poll-answers-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li { \r\n	font-style:normal;\r\n	margin:0px 0px 10px 0px;\r\n	padding:0px;\r\n	font-size:12px;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li input { \r\n	margin:0px; \r\n	float:none;\r\n}\r\n#yop-poll-answers-%POLL-ID% ul li label { \r\n	margin:0px; \r\n	font-style:normal; \r\n	font-weight:normal; \r\n	font-size:12px; \r\n	float:none;\r\n}\r\n.yop-poll-results-%POLL-ID% {\r\n    font-size: 12px;\r\n    font-style: italic;\r\n    font-weight: normal;\r\n    margin-left: 15px;\r\n}\r\n\r\n#yop-poll-custom-%POLL-ID% {  }\r\n#yop-poll-custom-%POLL-ID% ul {\r\n    list-style: none outside none;\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n#yop-poll-custom-%POLL-ID% ul li { \r\n	padding:0px;\r\n	margin:0px;	\r\n	font-size:14px;\r\n}\r\n#yop-poll-container-%POLL-ID% input[type=\'text\'] { margin:0px 0px 5px 0px; padding:2%; width:96%; text-indent:2%; font-size:12px; }\r\n\r\n#yop-poll-captcha-input-div-%POLL-ID% {\r\nmargin-top:5px;\r\n}\r\n#yop-poll-captcha-helpers-div-%POLL-ID% {\r\nwidth:30px;\r\nfloat:left;\r\nmargin-left:5px;\r\nheight:0px;\r\n}\r\n\r\n#yop-poll-captcha-helpers-div-%POLL-ID% img {\r\nmargin-bottom:2px;\r\n}\r\n\r\n#yop-poll-captcha-image-div-%POLL-ID% {\r\nmargin-bottom:5px;\r\n}\r\n\r\n#yop_poll_captcha_image_%POLL-ID% {\r\nfloat:left;\r\n}\r\n\r\n.yop_poll_clear {\r\nclear:both;\r\n}\r\n\r\n#yop-poll-vote-%POLL-ID% {\r\n\r\n}\r\n.yop-poll-results-bar-%POLL-ID% { background:#f5f5f5; height:10px;  }\r\n.yop-poll-results-bar-%POLL-ID% div { background:#555; height:10px; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-vote-%POLL-ID% button { float:left; }\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% {\r\n    float: right;\r\n    margin-bottom: 20px;\r\n    margin-top: -20px;\r\n    width: auto;\r\n}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-results-%POLL-ID% a { color:#FB6911; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div#yop-poll-back-%POLL-ID% a { color:#FB6911; text-decoration:underline; font-size:12px;}\r\n#yop-poll-vote-%POLL-ID% div { float:left; width:100%; }\r\n\r\n#yop-poll-container-error-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:red;\r\n	text-transform:lowercase;\r\n}\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}',
 					`js`							= 'function stripBorder_%POLL-ID%(object) {\r\n	object.each(function() {\r\n			if( parseInt(jQuery(this).width() ) > 0) {\r\n				jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."border-left-width\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."border-right-width\\".'"'.")) );\r\n			}\r\n			else {\r\n				jQuery(this).css(\\".'"'."border-left-width\\".'"'.", \'0px\');\r\n				jQuery(this).css(\\".'"'."border-right-width\\".'"'.", \'0px\');\r\n			}\r\n	});\r\n}\r\nfunction stripPadding_%POLL-ID%(object) {\r\n	object.each(function() { \r\n			jQuery(this).width( parseInt( jQuery(this).width() ) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) - parseInt(jQuery(this).css(\\".'"'."padding-left\\".'"'.")) );\r\n	});\r\n}\r\n\r\nfunction strip_results_%POLL-ID%() {\r\n        stripPadding_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%\\".'"'.") );   \r\n	stripBorder_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%\\".'"'."));\r\n}\r\n\r\njQuery(document).ready(function(e) {\r\n                if(typeof window.strip_results_%POLL-ID% == \'function\') \r\n			strip_results_%POLL-ID%();\r\n    \r\n		if(typeof window.tabulate_answers_%POLL-ID% == \'function\') \r\n			tabulate_answers_%POLL-ID%();\r\n		\r\n		if(typeof window.tabulate_results_%POLL-ID% == \'function\') \r\n			tabulate_results_%POLL-ID%();\r\n		\r\n});\r\n\r\nfunction equalWidth_%POLL-ID%(obj, cols, findWidest ) {\r\n findWidest  = typeof findWidest  !== \'undefined\' ? findWidest  : false;\r\n    if ( findWidest ) {\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				width = parseInt(thisWidth / cols); \r\n				jQuery(this).width(width);	\r\n				jQuery(this).css(\'float\', \'left\');	\r\n		});\r\n	}\r\n	else {\r\n		var widest = 0;\r\n		obj.each(function() {\r\n				var thisWidth = jQuery(this).width();\r\n				if(thisWidth > widest) {\r\n					widest = thisWidth; \r\n				}	\r\n		});\r\n		width = parseInt( widest / cols); \r\n		obj.width(width);	\r\n		obj.css(\'float\', \'left\');	\r\n	}	\r\n}\r\n\r\nfunction tabulate_answers_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%\\".'"'."), %ANSWERS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %ANSWERS-TABULATED-COLS%, true );\r\n}\r\n\r\nfunction tabulate_results_%POLL-ID%() {\r\n	equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%\\".'"'."), %RESULTS-TABULATED-COLS% );\r\n        //equalWidth_%POLL-ID%( jQuery(\\".'"'."#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div \\".'"'."), %RESULTS-TABULATED-COLS%, true );\r\n}',
 					`last_modified`					= NOW() ";
 					break;
@@ -784,6 +809,35 @@
 						$poll_options['never_expire']	= 'no';
 					}
 
+					if( isset( $request['yop_poll_options']['schedule_reset_poll_date'] ) ) {
+						$poll_options['schedule_reset_poll_date']	= strtotime( $request['yop_poll_options']['schedule_reset_poll_date'] );
+					}
+					else {
+						$poll_options['schedule_reset_poll_date']	= current_time( 'timestamp' );
+					}
+
+					if( 'yes' == $request['yop_poll_options']['schedule_reset_poll_stats'] ) { 
+						$default_options['start_scheduler']			= 'yes';
+					}
+					else {
+						$change_start_scheduler_to_no	= true;
+						$yop_polls = self::get_yop_polls_fields ( array( 'id' ) );
+						if ( count( $yop_polls ) > 0 ) {
+							foreach( $yop_polls as $yop_poll_id ) {
+								if ( $yop_poll_id['id'] != $this->poll['id'] ) {
+									$yop_poll_options	= get_yop_poll_meta( $yop_poll_id['id'], 'options', true );
+									if ( 'yes' == $yop_poll_options['schedule_reset_poll_stats'] )
+										$change_start_scheduler_to_no	= false;
+								}
+							}
+						}
+						if ( $change_start_scheduler_to_no )
+							$default_options['start_scheduler']			= 'no';
+						else 
+							$default_options['start_scheduler']			= 'yes';
+					}
+					update_option ( 'yop_poll_options', $default_options );
+
 					//if ( count( $poll_options ) > 0 )
 					update_yop_poll_meta( $this->poll['id'], 'options', $poll_options );
 
@@ -894,6 +948,35 @@
 					if( ! isset( $request['yop_poll_options']['never_expire'] ) ) {
 						$poll_options['never_expire']	= 'no';
 					}
+
+					if( isset( $request['yop_poll_options']['schedule_reset_poll_date'] ) ) {
+						$poll_options['schedule_reset_poll_date']	= strtotime( $request['yop_poll_options']['schedule_reset_poll_date'] );
+					}
+					else {
+						$poll_options['schedule_reset_poll_date']	= current_time( 'timestamp' );
+					}
+
+					if( 'yes' == $request['yop_poll_options']['schedule_reset_poll_stats'] ) { 
+						$default_options['start_scheduler']			= 'yes';
+					}
+					else {
+						$change_start_scheduler_to_no	= true;
+						$yop_polls = self::get_yop_polls_fields ( array( 'id' ) );
+						if ( count( $yop_polls ) > 0 ) {
+							foreach( $yop_polls as $yop_poll_id ) {
+								if ( $yop_poll_id['id'] != $this->poll['id'] ) {
+									$yop_poll_options	= get_yop_poll_meta( $yop_poll_id['id'], 'options', true );
+									if ( 'yes' == $yop_poll_options['schedule_reset_poll_stats'] )
+										$change_start_scheduler_to_no	= false;
+								}
+							}
+						}
+						if ( $change_start_scheduler_to_no )
+							$default_options['start_scheduler']			= 'no';
+						else 
+							$default_options['start_scheduler']			= 'yes';
+					}
+					update_option ( 'yop_poll_options', $default_options );  
 
 					//if ( count( $poll_options ) > 0 )
 					update_yop_poll_meta( $this->poll['id'], 'options', $poll_options );
@@ -1587,6 +1670,21 @@
 			if ( ($filter['field'] && $filter['value']) ||  count ( $search['fields'] ) > 0 )
 				$sql	.= ' WHERE '.$sql_filter.$sql_search;
 			$sql	.= ' ORDER BY '.esc_attr( $orderby ).' '.esc_attr( $order );
+			return $wpdb->get_results( $sql, ARRAY_A );
+		}
+
+		public static function get_yop_polls_fields ( $fields = array( 'id' ) ) {
+			global $wpdb;
+			$fields_text	= '';
+			if ( count( $fields ) > 0 ) {
+				foreach ( $fields as $field ) {
+					$fields_text	.= $field . ', ';
+				}
+			}
+			$fields_text	= trim( $fields_text, ', ' );
+			if ( $fields_text == '' )
+				$fields_text	= 'id';
+			$sql		= 'SELECT ' . $fields_text . ' FROM '.$wpdb->yop_polls;
 			return $wpdb->get_results( $sql, ARRAY_A );
 		}
 
@@ -2298,6 +2396,7 @@
 			global $wpdb;
 			$wpdb->query( $wpdb->prepare( 'UPDATE '.$wpdb->yop_polls.' SET total_votes = 0, total_answers = 0 WHERE id = %d', $poll_id ) );
 			$wpdb->query( $wpdb->prepare( 'UPDATE '.$wpdb->yop_poll_answers.' SET votes = 0 WHERE poll_id = %d', $poll_id ) );
+			$wpdb->query( $wpdb->prepare( 'DELETE FROM '.$wpdb->yop_poll_voters.' WHERE poll_id = %d', $poll_id ) );
 		}
 
 		public static function count_poll_template_from_database_like_name ( $template_name ) {
@@ -2315,7 +2414,7 @@
 			return $result;
 		}
 
-		private static function insert_vote_in_database( $answer = array() ) {
+		public static function insert_vote_in_database( $answer = array() ) {
 			global $wpdb;
 
 			$wpdb->query(
@@ -2348,6 +2447,55 @@
 				)
 			);
 			return $wpdb->insert_id;
+		}
+
+		public static function insert_voter_in_database( $voter = array() ) {
+			global $wpdb;
+
+			$wpdb->query(
+				$wpdb->prepare(
+					"
+					INSERT INTO ".$wpdb->yop_poll_voters."
+					SET
+					poll_id				= %d,
+					user_id				= %s,
+					user_type			= %s
+					",
+					$voter['poll_id'],
+					$voter['user_id'],
+					$voter['user_type']
+				)
+			);
+			return $wpdb->insert_id;
+		}
+
+		public function get_voter_number_of_votes( $voter ) {
+			global $wpdb;
+			$result	= $wpdb->get_var(
+				$wpdb->prepare(
+					"
+					SELECT count(*) as total_votes
+					FROM ".$wpdb->yop_poll_voters."
+					WHERE 
+					poll_id = %d AND
+					user_id = %d AND
+					user_type = %s
+					",
+					$voter['poll_id'],
+					$voter['user_id'], 
+					$voter['user_type']
+				)
+			);
+			return $result;	
+		}
+
+		public function user_have_votes_to_vote( $voter ) {
+			$poll_options			= $this->poll_options;
+			if ( $voter['user_id'] > 0 )
+				if ( 'yes' == $poll_options['limit_number_of_votes_per_user'] )
+					if ( $this->get_voter_number_of_votes( $voter ) >= $poll_options['number_of_votes_per_user'] )
+						return false;	
+					return true;
 		}
 
 		public static function delete_all_poll_logs( $poll_id ) {
@@ -2540,7 +2688,7 @@
 				)
 			);
 		}
-		
+
 		public static function update_template_field( $template_id = 0, $field = array('name'=>NULL, 'value' => NULL, 'type' => NULL ) ) {
 			global $wpdb;
 			$wpdb->query(
@@ -2575,276 +2723,312 @@
 		public function register_vote( $request ) {
 			global $current_user;
 			$poll_id 				= $this->poll['id'];
-			$poll_details			= $this->poll;
-			$poll_options			= $this->poll_options;
-			$vote_id				= uniqid('vote_id_');
-			$vote_type				= $request['vote_type']; 
-			$tr_id					= $request['yop_poll_tr_id']; 
+			$unique_id 				= $this->unique_id;
+			$location 				= $request['location'];
+			if ( wp_verify_nonce( $request[ 'yop-poll-nonce-'.$poll_id.$unique_id ], 'yop_poll-'.$poll_id.$unique_id.'-user-actions' ) ) {
+				$poll_details			= $this->poll;
+				$poll_options			= $this->poll_options;
+				$vote_id				= uniqid('vote_id_');
+				$vote_type				= $request['vote_type']; 
+				$tr_id					= $request['yop_poll_tr_id']; 
 
-			$facebook_error			= $request['facebook_error'];
-			$facebook_user_details	= json_decode( self::base64_decode( $request['facebook_user_details'] ), true );
+				$facebook_error			= $request['facebook_error'];
+				$facebook_user_details	= json_decode( self::base64_decode( $request['facebook_user_details'] ), true );
 
-			if ( 'facebook' == $vote_type ) {
-				if ( ! is_array( $facebook_user_details ) ) {
-					$this->error = __( 'An Error Has Occured!', 'yop_poll' );
-					return false;
+				if ( 'facebook' == $vote_type ) {
+					if ( ! is_array( $facebook_user_details ) ) {
+						$this->error = __( 'An Error Has Occured!', 'yop_poll' );
+						return false;
+					}
+
+					if ( '' == $facebook_user_details['id'] ) {
+						$this->error = __( 'An Error Has Occured!', 'yop_poll' );
+						return false;
+					} 
+
+					if ( $facebook_error == 'access_denied' ) {
+						$this->error = __( 'You Don`t Have Permission to Vote! You must authorize YOP POLL application in your facebook account!', 'yop_poll' );
+						return false;
+					}			
+					if ( $facebook_error == 'access_error' ) {
+						$this->error = __( 'You Don`t Have Permission to Vote!', 'yop_poll' );
+						return false;
+					}
+
+					$facebook_user_id	= $this->insert_facebook_user_in_database( $facebook_user_details );
 				}
 
-				if ( '' == $facebook_user_details['id'] ) {
-					$this->error = __( 'An Error Has Occured!', 'yop_poll' );
-					return false;
-				} 
+				$current_date = YOP_POLL_MODEL::get_mysql_curent_date();
+				if ( $this->is_allowed_to_vote( $vote_type, $facebook_user_details ) ) {
+					if ( $current_date >= $poll_details['start_date'] ) {
+						if ( $current_date <= $poll_details['end_date'] ) {
+							if( 'closed' == $poll_details['status'] ) {
+								$this->error = __( 'This poll is closed!', 'yop_poll' );
+								return false;
+							}
+							else {
+								if ( ! $this->is_voted( $vote_type, $facebook_user_details, true ) ) {
+									$answers			= array();
+									$voter				= array();
+									$voter['poll_id']	= $poll_id;
+									$voter['user_id']	= $current_user->ID;
+									$voter['user_type']	= 'wordpress';
+									if ( 'facebook'	== $vote_type ) {
+										$voter['user_id']	=  $facebook_user_id;
+										$voter['user_type']	= $vote_type;
+									}
+									if ( $this->user_have_votes_to_vote( $voter ) ) {
+										if ( isset ( $request['yop_poll_answer'] ) ) {
+											if ( 'yes' == $poll_options['allow_multiple_answers'] ) {
+												if ( count( $request['yop_poll_answer'] ) <= intval( $poll_options['allow_multiple_answers_number'] ) ) {
+													if ( count( $request['yop_poll_answer'] ) >= intval( $poll_options['allow_multiple_answers_min_number'] ) ) {													
+														foreach( $request['yop_poll_answer'] as $answer_id ) {
+															$answer							= array();
+															$answer['poll_id']				= $poll_id;
+															$answer['vote_id']				= $vote_id;
+															$answer['answer_id']			= $answer_id;
+															$answer['ip']					= self::get_ip();
+															$answer['user_id']				= $current_user->ID;
 
-				if ( $facebook_error == 'access_denied' ) {
-					$this->error = __( 'You Don`t Have Permission to Vote! You must authorize YOP POLL application in your facebook account!', 'yop_poll' );
-					return false;
-				}			
-				if ( $facebook_error == 'access_error' ) {
-					$this->error = __( 'You Don`t Have Permission to Vote!', 'yop_poll' );
-					return false;
-				}
-			}
+															$answer['user_type']			= 'default';
+															if ( in_array( $vote_type, $this->vote_types ) )
+																$answer['user_type']	= $vote_type;
 
-			$current_date = YOP_POLL_MODEL::get_mysql_curent_date();
-			if ( $this->is_allowed_to_vote( $vote_type, $facebook_user_details ) ) {
-				if ( $current_date >= $poll_details['start_date'] ) {
-					if ( $current_date <= $poll_details['end_date'] ) {
-						if( 'closed' == $poll_details['status'] ) {
-							$this->error = __( 'This poll is closed!', 'yop_poll' );
-							return false;
-						}
-						else {
-							if ( ! $this->is_voted( $vote_type, $facebook_user_details, true ) ) {
-								$answers	= array();
-								if ( isset ( $request['yop_poll_answer'] ) ) {
-									if ( 'yes' == $poll_options['allow_multiple_answers'] ) {
-										if ( count( $request['yop_poll_answer'] ) <= intval( $poll_options['allow_multiple_answers_number'] ) ) {
-											if ( count( $request['yop_poll_answer'] ) >= intval( $poll_options['allow_multiple_answers_min_number'] ) ) {
-												foreach( $request['yop_poll_answer'] as $answer_id ) {
-													$answer							= array();
-													$answer['poll_id']				= $poll_id;
-													$answer['vote_id']				= $vote_id;
-													$answer['answer_id']			= $answer_id;
-													$answer['ip']					= self::get_ip();
-													$answer['user_id']				= $current_user->ID;
-
-													$answer['user_type']			= 'default';
-													if ( in_array( $vote_type, $this->vote_types ) )
-														$answer['user_type']	= $vote_type;
-
-													$answer['http_referer']			= $_SERVER['HTTP_REFERER'];
-													$answer['tr_id']				= $tr_id;
-													$answer['host']					= esc_attr(@gethostbyaddr(self::get_ip()));
-													$answer['other_answer_value']	= '';
-													$answer_details					= self::get_poll_answer_by_id( $answer_id );
-													if ( 'other' == $answer_details['type'] ) {
-														if( isset( $request['yop_poll_other_answer'] ) ) {
-															if ( '' != trim( $request['yop_poll_other_answer'] ) ) {
-																$answer['other_answer_value']	= $request['yop_poll_other_answer'];
+															$answer['http_referer']			= $_SERVER['HTTP_REFERER'];
+															$answer['tr_id']				= $tr_id;
+															$answer['host']					= esc_attr(@gethostbyaddr(self::get_ip()));
+															$answer['other_answer_value']	= '';
+															$answer_details					= self::get_poll_answer_by_id( $answer_id );
+															if ( 'other' == $answer_details['type'] ) {
+																if( isset( $request['yop_poll_other_answer'] ) ) {
+																	if ( '' != trim( $request['yop_poll_other_answer'] ) ) {
+																		$answer['other_answer_value']	= $request['yop_poll_other_answer'];
+																	}
+																	else {
+																		$this->error	= __( 'Your other answer is empty!', 'yop_poll' );
+																		return false;
+																	}
+																}
+																else {
+																	$this->error	= __( 'Your other answer is invalid!', 'yop_poll' );
+																	return false;
+																}
 															}
-															else {
-																$this->error	= __( 'Your other answer is empty!', 'yop_poll' );
-																return false;
-															}
-														}
-														else {
-															$this->error	= __( 'Your other answer is invalid!', 'yop_poll' );
-															return false;
+															$answers[]	= $answer;
 														}
 													}
-													$answers[]	= $answer;
-												}
-											}
-											else {
-												$this->error	= __( 'To few answers! Only more than ', 'yop_poll' ) . $poll_options['allow_multiple_answers_min_number'] . __(' answers allowed!', 'yop_poll' );
-												return false;
-											}
-										}
-										else {
-											$this->error	= __( 'To many answers! Only ', 'yop_poll' ) . $poll_options['allow_multiple_answers_number'] . __(' answers allowed!', 'yop_poll' );
-											return false;
-										}
-									}
-									else {
-										$answer							= array();
-										$answer['poll_id']				= $poll_id;
-										$answer['vote_id']				= $vote_id;
-										$answer['answer_id']			= $request['yop_poll_answer'];
-										$answer['ip']					= self::get_ip();
-										$answer['user_id']				= $current_user->ID;
-
-										$answer['user_type']			= 'default';
-										if ( in_array( $vote_type, $this->vote_types ) )
-											$answer['user_type']	= $vote_type;
-
-										$answer['http_referer']			= $_SERVER['HTTP_REFERER'];
-										$answer['tr_id']				= $tr_id;
-										$answer['host']					= esc_attr(@gethostbyaddr(self::get_ip()));
-										$answer['other_answer_value']	= '';
-										$answer_details					= self::get_poll_answer_by_id( $request['yop_poll_answer'] );
-										if ( 'other' == $answer_details['type'] ) {
-											if( isset( $request['yop_poll_other_answer'] ) ) {
-												if ( '' != trim( $request['yop_poll_other_answer'] ) ) {
-													$answer['other_answer_value']	= $request['yop_poll_other_answer'];
+													else {
+														$this->error	= __( 'To few answers! Only more than ', 'yop_poll' ) . $poll_options['allow_multiple_answers_min_number'] . __(' answers allowed!', 'yop_poll' );
+														return false;
+													}
 												}
 												else {
-													$this->error	= __( 'Your other answer is empty!', 'yop_poll' );
+													$this->error	= __( 'To many answers! Only ', 'yop_poll' ) . $poll_options['allow_multiple_answers_number'] . __(' answers allowed!', 'yop_poll' );
 													return false;
 												}
 											}
 											else {
-												$this->error	= __( 'Your other answer is invalid!', 'yop_poll' );
-												return false;
-											}
-										}
-										$answers[]	= $answer;
-									}
-									if ( count($answers) > 0 ) {
-										$custom_fields		= array();
-										$poll_custom_fields	= self::get_poll_customfields( $poll_id);
-										if ( count( $poll_custom_fields ) > 0 ) {
-											if( isset( $request['yop_poll_customfield'] ) ) {
-												foreach ( $poll_custom_fields as $custom_field ) {
-													if ( isset( $request['yop_poll_customfield'][ $custom_field['id'] ] ) ) {
-														if ( '' == trim( $request['yop_poll_customfield'][ $custom_field['id'] ] ) &&  'yes' == $custom_field['required'] ) {
-															$this->error	= __( 'Custom field ', 'yop_poll').$custom_field['custom_field'].__( ' is required! ', 'yop_poll' );
-															return false;
+												$answer							= array();
+												$answer['poll_id']				= $poll_id;
+												$answer['vote_id']				= $vote_id;
+												$answer['answer_id']			= $request['yop_poll_answer'];
+												$answer['ip']					= self::get_ip();
+												$answer['user_id']				= $current_user->ID;
+
+												$answer['user_type']			= 'default';
+												if ( in_array( $vote_type, $this->vote_types ) )
+													$answer['user_type']	= $vote_type;
+
+												$answer['http_referer']			= $_SERVER['HTTP_REFERER'];
+												$answer['tr_id']				= $tr_id;
+												$answer['host']					= esc_attr(@gethostbyaddr(self::get_ip()));
+												$answer['other_answer_value']	= '';
+												$answer_details					= self::get_poll_answer_by_id( $request['yop_poll_answer'] );
+												if ( 'other' == $answer_details['type'] ) {
+													if( isset( $request['yop_poll_other_answer'] ) ) {
+														if ( '' != trim( $request['yop_poll_other_answer'] ) ) {
+															$answer['other_answer_value']	= $request['yop_poll_other_answer'];
 														}
 														else {
-															if (  $request['yop_poll_customfield'][ $custom_field['id'] ] != '' ) {
-																$new_custom_field						=  array();
-																$new_custom_field['poll_id']			= $poll_id;
-																$new_custom_field['vote_id']			= $vote_id;
-																$new_custom_field['custom_field_id']	= $custom_field['id'];
-																$new_custom_field['user_id']			= $current_user->ID;
+															$this->error	= __( 'Your other answer is empty!', 'yop_poll' );
+															return false;
+														}
+													}
+													else {
+														$this->error	= __( 'Your other answer is invalid!', 'yop_poll' );
+														return false;
+													}
+												}
+												$answers[]	= $answer;
+											}
+											if ( count($answers) > 0 ) {
+												$custom_fields		= array();
+												$poll_custom_fields	= self::get_poll_customfields( $poll_id);
+												if ( count( $poll_custom_fields ) > 0 ) {
+													if( isset( $request['yop_poll_customfield'] ) ) {
+														foreach ( $poll_custom_fields as $custom_field ) {
+															if ( isset( $request['yop_poll_customfield'][ $custom_field['id'] ] ) ) {
+																if ( '' == trim( $request['yop_poll_customfield'][ $custom_field['id'] ] ) &&  'yes' == $custom_field['required'] ) {
+																	$this->error	= __( 'Custom field ', 'yop_poll').$custom_field['custom_field'].__( ' is required! ', 'yop_poll' );
+																	return false;
+																}
+																else {
+																	if (  $request['yop_poll_customfield'][ $custom_field['id'] ] != '' ) {
+																		$new_custom_field						=  array();
+																		$new_custom_field['poll_id']			= $poll_id;
+																		$new_custom_field['vote_id']			= $vote_id;
+																		$new_custom_field['custom_field_id']	= $custom_field['id'];
+																		$new_custom_field['user_id']			= $current_user->ID;
 
-																$new_custom_field['user_type']			= 'default';
-																if ( in_array( $vote_type, $this->vote_types ) )
-																	$new_custom_field['user_type']		= $vote_type;
+																		$new_custom_field['user_type']			= 'default';
+																		if ( in_array( $vote_type, $this->vote_types ) )
+																			$new_custom_field['user_type']		= $vote_type;
 
-																$new_custom_field['custom_field_value']	= trim( $request['yop_poll_customfield'][ $custom_field['id'] ] );
-																$custom_fields[]						= $new_custom_field;
+																		$new_custom_field['custom_field_value']	= trim( $request['yop_poll_customfield'][ $custom_field['id'] ] );
+																		$custom_fields[]						= $new_custom_field;
+																	}
+																}
+															}
+															else {
+																$this->error	= __( 'Custom field ', 'yop_poll').$custom_field['custom_field'].__( ' is missing! ', 'yop_poll' );
+																return false;
 															}
 														}
 													}
 													else {
-														$this->error	= __( 'Custom field ', 'yop_poll').$custom_field['custom_field'].__( ' is missing! ', 'yop_poll' );
+														$this->error	= __('Custom fields are missing!', 'yop_poll');
 														return false;
 													}
 												}
+
+												if ( 'yes' == $poll_options['use_captcha'] ) {
+													require_once( YOP_POLL_INC.'/securimage.php');
+													$img 				= new Yop_Poll_Securimage();
+													$img->namespace		= 'yop_poll_'.$poll_id.$unique_id;
+													if ( $img->check( $_REQUEST[ 'yop_poll_captcha_input' ][ $poll_id ] ) ) {
+														$cookie_ids = '';
+														$votes		= 0;
+														foreach( $answers as $answer ) {
+															if ( 'facebook'	== $vote_type ) {
+																$answer['user_id']	=  $facebook_user_id;
+															}
+															if ( 'anonymous'	== $vote_type )
+																$answer['user_id']	=  0;
+															self::insert_vote_in_database( $answer );
+															$cookie_ids	.= $answer['answer_id'].',';
+															$this->update_answer_votes( $answer['answer_id'], 1 );
+															$votes++;
+														}
+
+														self::insert_voter_in_database( $voter );
+														$this->update_poll_votes_and_answers( $votes, 1 );
+
+														foreach( $custom_fields as $custom_field ) {
+															if ( 'facebook'	== $vote_type )
+																$custom_field['user_id']	= $facebook_user_id;
+															if ( 'anonymous'	== $vote_type )
+																$custom_field['user_id']	= 0;
+															$custom_field['tr_id']	= $tr_id;
+															self::insert_vote_custom_field_in_database( $custom_field );
+														}
+														$this->set_vote_cookie( trim($cookie_ids, ',' ), $vote_type, $facebook_user_details );
+														$this->vote		= true;
+														$this -> poll	= self::get_poll_from_database_by_id( $poll_id );
+														if ( 'yes' == $poll_options['number_of_votes_per_user'] )
+															$this->success	= str_replace( '%USER-VOTES-LEFT%',  intval( $poll_options['number_of_votes_per_user'] ) - $this->get_voter_number_of_votes( $voter ), $poll_options['message_after_vote'] );
+														else
+															$this->success	= str_replace( '%USER-VOTES-LEFT%',  '', $poll_options['message_after_vote'] );
+														return do_shortcode( $this->return_poll_html( array( 'tr_id' => $tr_id, 'location' => $location ) ) );
+													}
+													else {
+														$this->error	= __( 'Incorrect security code entered!', 'yop_poll');
+														return false;
+													}
+												}
+												else {
+													$cookie_ids = '';
+													$votes		= 0;
+													foreach( $answers as $answer ) {
+														if ( 'facebook'	== $vote_type ) {
+															$answer['user_id']	=  $facebook_user_id;
+														}
+														if ( 'anonymous'	== $vote_type )
+															$answer['user_id']	=  0;
+
+														self::insert_vote_in_database( $answer );
+														$cookie_ids	.= $answer['answer_id'].',';
+														$this->update_answer_votes( $answer['answer_id'], 1 );
+														$votes++;
+													}
+
+													self::insert_voter_in_database( $voter );
+
+													$this->update_poll_votes_and_answers( $votes, 1 );
+
+													foreach( $custom_fields as $custom_field ) {
+														if ( 'facebook'	== $vote_type )
+															$custom_field['user_id']	= $facebook_user_id;
+														if ( 'anonymous' == $vote_type )
+															$custom_field['user_id']	= 0;
+														$custom_field['tr_id']	= $tr_id;
+														self::insert_vote_custom_field_in_database( $custom_field );
+													}
+													$this->set_vote_cookie( trim($cookie_ids, ',' ), $vote_type, $facebook_user_details );
+													$this->vote		= true;
+													$this -> poll	= self::get_poll_from_database_by_id( $poll_id );
+													if ( 'yes' == $poll_options['limit_number_of_votes_per_user'] )
+														$this->success	= str_replace( '%USER-VOTES-LEFT%',  intval( $poll_options['number_of_votes_per_user'] ) - $this->get_voter_number_of_votes( $voter ), $poll_options['message_after_vote'] );
+													else
+														$this->success	= str_replace( '%USER-VOTES-LEFT%',  '', $poll_options['message_after_vote'] );
+													return do_shortcode( $this->return_poll_html( array( 'tr_id' => $tr_id, 'location' => $location ) ) );
+												}
 											}
 											else {
-												$this->error	= __('Custom fields are missing!', 'yop_poll');
-												return false;
-											}
-										}
-
-										if ( 'yes' == $poll_options['use_captcha'] ) {
-											require_once( YOP_POLL_INC.'/securimage.php');
-											$img 				= new Yop_Poll_Securimage();
-											$img->namespace		= 'yop_poll_'.$poll_id;
-											if ( $img->check( $_REQUEST[ 'yop_poll_captcha_input' ][ $poll_id ] ) ) {
-												$cookie_ids = '';
-												$votes		= 0;
-												if ( 'facebook'	== $vote_type )
-													$facebook_user_id	= $this->insert_facebook_user_in_database( $facebook_user_details );
-												foreach( $answers as $answer ) {
-													if ( 'facebook'	== $vote_type )
-														$answer['user_id']	=  $facebook_user_id;
-													if ( 'anonymous'	== $vote_type )
-														$answer['user_id']	=  0;
-													self::insert_vote_in_database( $answer );
-													$cookie_ids	.= $answer['answer_id'].',';
-													$this->update_answer_votes( $answer['answer_id'], 1 );
-													$votes++;
-												}
-
-												$this->update_poll_votes_and_answers( $votes, 1 );
-
-												foreach( $custom_fields as $custom_field ) {
-													if ( 'facebook'	== $vote_type )
-														$custom_field['user_id']	= $facebook_user_id;
-													if ( 'anonymous'	== $vote_type )
-														$custom_field['user_id']	= 0;
-													$custom_field['tr_id']	= $tr_id;
-													self::insert_vote_custom_field_in_database( $custom_field );
-												}
-												$this->set_vote_cookie( trim($cookie_ids, ',' ), $vote_type, $facebook_user_details );
-												$this->vote		= true;
-												$this -> poll	= self::get_poll_from_database_by_id( $poll_id );
-												return do_shortcode( $this->return_poll_html() );
-											}
-											else {
-												$this->error	= __( 'Incorrect security code entered!', 'yop_poll');
+												$this->error	= __( 'No vote was registered!', 'yop_poll');
 												return false;
 											}
 										}
 										else {
-											$cookie_ids = '';
-											$votes		= 0;
-											if ( 'facebook'	== $vote_type )
-												$facebook_user_id	= $this->insert_facebook_user_in_database( $facebook_user_details );
-											foreach( $answers as $answer ) {
-												if ( 'facebook'	== $vote_type )
-													$answer['user_id']	=  $facebook_user_id;
-												if ( 'anonymous'	== $vote_type )
-													$answer['user_id']	=  0;
-												self::insert_vote_in_database( $answer );
-												$cookie_ids	.= $answer['answer_id'].',';
-												$this->update_answer_votes( $answer['answer_id'], 1 );
-												$votes++;
-											}
-
-											$this->update_poll_votes_and_answers( $votes, 1 );
-
-											foreach( $custom_fields as $custom_field ) {
-												if ( 'facebook'	== $vote_type )
-													$custom_field['user_id']	= $facebook_user_id;
-												if ( 'anonymous' == $vote_type )
-													$custom_field['user_id']	= 0;
-												$custom_field['tr_id']	= $tr_id;
-												self::insert_vote_custom_field_in_database( $custom_field );
-											}
-											$this->set_vote_cookie( trim($cookie_ids, ',' ), $vote_type, $facebook_user_details );
-											$this->vote		= true;
-											$this -> poll	= self::get_poll_from_database_by_id( $poll_id );
-											return do_shortcode( $this->return_poll_html() );
+											$this->error = __( 'No answer selected!', 'yop_poll' );
+											return false;
 										}
 									}
 									else {
-										$this->error	= __( 'No vote was registered!', 'yop_poll');
+										$this->error = __( 'You have left no votes!', 'yop_poll' );
 										return false;
 									}
 								}
 								else {
-									$this->error = __( 'No answer selected!', 'yop_poll' );
+									$this->error = __( 'You Already voted!', 'yop_poll' );
 									return false;
 								}
 							}
-							else {
-								$this->error = __( 'You Already voted!', 'yop_poll' );
-								return false;
-							}
+						}
+						else {
+							$this->error = __( 'This poll is closed!', 'yop_poll' );
+							return false;
 						}
 					}
 					else {
-						$this->error = __( 'This poll is closed!', 'yop_poll' );
+						$this->error = __( 'You can vote once the poll starts!', 'yop_poll' );
 						return false;
 					}
 				}
 				else {
-					$this->error = __( 'You can vote once the poll starts!', 'yop_poll' );
+					$this->error = __( 'You are not allowed to vote!', 'yop_poll' );
 					return false;
 				}
 			}
 			else {
-				$this->error = __( 'You are not allowed to vote!', 'yop_poll' );
+				$this->error = __( 'Bad Request!', 'yop_poll' );
 				return false;
 			}
 		}
 
-		public function return_poll_css( $location = 'page' ) {
+		public function return_poll_css( $attr	= array( 'location' => 'page' ) ) {
 			$poll_id 			= $this->poll['id'];
+			$location			= isset( $attr['location'] ) ? $attr['location'] : 'page'; 
+			$unique_id			= $this->unique_id;
 			if( ! $poll_id )
 				return '';
 			$poll_details		= $this->poll;
@@ -2853,14 +3037,14 @@
 				$template_id		= $poll_options['widget_template'];
 			else
 				$template_id		= $poll_options['template'];
-				
+
 			if ( '' == $template_id ) {
 				$default_template	= self::get_default_template();
 				$template_id	= $default_template['id'] ? $default_template['id'] : 0;
 			}
 			$template_details	= self::get_poll_template_from_database_by_id( $template_id );
 			$template			= $template_details['css']; 
-			$template			= str_ireplace( '%POLL-ID%', $poll_id, $template );
+			$template			= str_ireplace( '%POLL-ID%', $poll_id.$unique_id, $template );
 			if ( 'widget' == $location )
 				$template			= str_ireplace( '%POLL-WIDTH%', $poll_options['widget_template_width'], $template );
 			else
@@ -2868,8 +3052,10 @@
 			return stripslashes( $template );
 		}
 
-		public function return_poll_js( $location = 'page' ) {
+		public function return_poll_js( $attr	= array( 'location' => 'page' ) ) {
 			$poll_id 			= $this->poll['id'];
+			$location			= isset( $attr['location'] ) ? $attr['location'] : 'page'; 
+			$unique_id			= $this->unique_id;
 			if( ! $poll_id )
 				return '';
 			$poll_details			= $this->poll;
@@ -2907,13 +3093,18 @@
 				$results_tabulated_cols	= $poll_options['display_results_tabulated_cols'];
 			$template_details	= self::get_poll_template_from_database_by_id( $template_id );
 			$template			= $template_details['js'];   
-			$template			= str_ireplace( '%POLL-ID%', $poll_id, $template );
+			$template			= str_ireplace( '%POLL-ID%', $poll_id.$unique_id, $template );
 			$template			= str_ireplace( '%ANSWERS-TABULATED-COLS%', $answers_tabulated_cols, $template );
 			$template			= str_ireplace( '%RESULTS-TABULATED-COLS%', $results_tabulated_cols, $template );
 			return stripslashes( $template );
 		}
 
-		public function return_poll_html( $tr_id = '', $location = 'page' ) {
+		public function return_poll_html( $attr	= array( 'tr_id' => '', 'location' => 'page' ) ) {
+
+			$tr_id				= isset( $attr['tr_id'] ) ? $attr['tr_id'] : ''; 
+			$location			= isset( $attr['location'] ) ? $attr['location'] : 'page'; 
+			$unique_id			= $this->unique_id; 
+
 			$poll_id 			= $this->poll['id'];
 			if ( ! $poll_id )
 				return '';
@@ -2937,7 +3128,7 @@
 						$template		= $template_details['before_vote_template'];
 						if ( 'before' == $poll_options['view_results'] )
 							$template	= str_ireplace( '%POLL-ANSWER-RESULT-LABEL%', $poll_options['answer_result_label'], $template );  
-						$template	= str_ireplace( '%POLL-VOTE-BUTTON%', '<button class="yop_poll_vote_button" id="yop_poll_vote-button-'.$poll_id.'" onclick="yop_poll_register_vote(\''.$poll_id.'\'); return false;">'.$poll_options['vote_button_label'].'</button>', $template );
+						$template	= str_ireplace( '%POLL-VOTE-BUTTON%', '<button class="yop_poll_vote_button" id="yop_poll_vote-button-'.$poll_id.$unique_id.'" onclick="yop_poll_register_vote(\''.$poll_id.'\', \''.$location.'\', \''.$unique_id.'\'); return false;">'.$poll_options['vote_button_label'].'</button>', $template );
 					}
 					else {
 						$template		= $template_details['after_vote_template'];
@@ -2948,7 +3139,7 @@
 							$vote		= $this->vote;
 							$this->vote	= false;
 							if ( ! $this->is_voted() ) {  
-								$template		= str_ireplace( '%POLL-BACK-TO-VOTE-LINK%', '<a href="javascript:void(0)" class="yop_poll_back_to_vote_link" id="yop_poll_back_to_vote_link'.$poll_id.'" onClick="yop_poll_back_to_vote(\''.$poll_id.'\')">'.$poll_options['view_back_to_vote_link_label'].'</a>', $template );
+								$template		= str_ireplace( '%POLL-BACK-TO-VOTE-LINK%', '<a href="javascript:void(0)" class="yop_poll_back_to_vote_link" id="yop_poll_back_to_vote_link'.$poll_id.$unique_id.'" onClick="yop_poll_back_to_vote(\''.$poll_id.'\', \''.$location.'\', \''.$unique_id.'\')">'.$poll_options['view_back_to_vote_link_label'].'</a>', $template );
 							}
 							$this->vote	= $vote;
 						}
@@ -2971,7 +3162,7 @@
 					$template	= str_ireplace( '%POLL-ANSWER-RESULT-LABEL%', $poll_options['answer_result_label'], $template );
 			}
 			$template			= stripslashes_deep( $template ); 
-			$template			= str_ireplace( '%POLL-ID%', $poll_id, $template );
+			$template			= str_ireplace( '%POLL-ID%', $poll_id.$unique_id, $template );
 			if ( 'yes' == $poll_options['poll_name_html_tags'] )
 				$template			= str_ireplace( '%POLL-NAME%', stripslashes( $poll_details['name'] ), $template );
 			else
@@ -2988,11 +3179,11 @@
 				$template			= str_ireplace( '%POLL-QUESTION%', esc_html( stripslashes( $poll_details['question'] ) ), $template );
 
 			if( 'yes' == $poll_options['view_results_link'] ) {
-				$template		= str_ireplace( '%POLL-VIEW-RESULT-LINK%', '<a href="javascript:void(0)" class="yop_poll_result_link" id="yop_poll_result_link'.$poll_id.'" onClick="yop_poll_view_results(\''.$poll_id.'\')">'.$poll_options['view_results_link_label'].'</a>', $template );
+				$template		= str_ireplace( '%POLL-VIEW-RESULT-LINK%', '<a href="javascript:void(0)" class="yop_poll_result_link" id="yop_poll_result_link'.$poll_id.$unique_id.'" onClick="yop_poll_view_results(\''.$poll_id.'\', \''.$location.'\', \''.$unique_id.'\')">'.$poll_options['view_results_link_label'].'</a>', $template );
 			}
 
 			if( 'yes' == $poll_options['view_poll_archive_link'] ) {
-				$template		= str_ireplace( '%POLL-VIEW-ARCHIVE-LINK%', '<a href="'.$poll_options['poll_archive_url'].'" class="yop_poll_archive_link" id="yop_poll_archive_link_'.$poll_id.'" >'.$poll_options['view_poll_archive_link_label'].'</a>', $template );
+				$template		= str_ireplace( '%POLL-VIEW-ARCHIVE-LINK%', '<a href="'.$poll_options['poll_archive_url'].'" class="yop_poll_archive_link" id="yop_poll_archive_link_'.$poll_id.$unique_id.'" >'.$poll_options['view_poll_archive_link_label'].'</a>', $template );
 			}
 			if( 'yes' == $poll_options['view_total_answers'] ) {
 				$template		= str_ireplace( '%POLL-TOTAL-ANSWERS%', $poll_options['view_total_answers_label'], $template );
@@ -3013,12 +3204,13 @@
 			$pattern			= '\[(\[?)(CAPTCHA_CONTAINER)\b([^\]\/]*(?:\/(?!\])[^\]\/]*)*?)(?:(\/)\]|\](?:([^\[]*+(?:\[(?!\/\2\])[^\[]*+)*+)\[\/\2\])?)(\]?)';
 			$template			= preg_replace_callback( "/$pattern/s", array(&$this,'captcha_replace_callback'), $template );
 			$template			= self::strip_all_tags( $template ); 
-			$template			= '<div id="yop-poll-container-'.$poll_id.'" class="yop-poll-container"><div id="yop-poll-container-error-'.$poll_id.'" class="yop-poll-container-error"></div><form id="yop-poll-form-'.$poll_id.'" class="yop-poll-forms">'.$template.'<input type="hidden" name="yop_poll_tr_id" value="'.$tr_id.'"/></form></div>';
+			$template			= '<div id="yop-poll-container-'.$poll_id.$unique_id.'" class="yop-poll-container"><div id="yop-poll-container-error-'.$poll_id.$unique_id.'" class="yop-poll-container-error"></div><div id="yop-poll-container-success-'.$poll_id.$unique_id.'" class="yop-poll-container-success"></div><form id="yop-poll-form-'.$poll_id.$unique_id.'" class="yop-poll-forms">'.$template.'<input type="hidden" id="yop-poll-tr-id-'.$poll_id.$unique_id.'" name="yop_poll_tr_id" value="'.$tr_id.'"/>'.wp_nonce_field( 'yop_poll-'.$poll_id.$unique_id.'-user-actions', 'yop-poll-nonce-'.$poll_id.$unique_id, false, false ).'</form></div>';
 			return $template;
 		}
 
 		public function answer_result_replace_callback( $m ) {
 			$poll_id			= $this->poll['id'];
+			$unique_id			= $this->unique_id;
 			$poll_options		= $this->poll_options;
 			$return_string		= '';
 			$is_voted			= $this->is_voted();
@@ -3095,7 +3287,7 @@
 							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', stripslashes( $answer['answer'] ), $temp_string );
 						else
 							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', esc_html( stripslashes( $answer['answer'] ) ), $temp_string );
-						$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $poll_id, $answer['id'], $answer['procentes'], $poll_options ), $temp_string );
+						$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $poll_id, $answer['id'], $answer['procentes'], $poll_options, $unique_id ), $temp_string );
 						$return_string	.= $temp_string;
 					}
 				}
@@ -3127,6 +3319,7 @@
 
 		public function other_answer_replace_callback( $m ) {
 			$poll_id			= $this->poll['id'];
+			$unique_id			= $this->unique_id;
 			$poll_options		= $this->poll_options;
 			$return_string		= '';
 			$is_voted			= $this->is_voted();
@@ -3156,29 +3349,29 @@
 						$other_answer = self::get_poll_answers( $poll_id, array( 'other'), 'id', '', false, $percentages_decimals );
 						if( $multiple_answers ) {
 							if ( 'yes' == $poll_options['is_default_answer'] )
-								$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-CHECK-INPUT%', '<input checked="checked" type="checkbox" value="'.$other_answer[0]['id'].'" name="yop_poll_answer['.$other_answer[0]['id'].']" id="yop-poll-answer-'.$other_answer[0]['id'].'" />', $m[5] );
+								$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-CHECK-INPUT%', '<input checked="checked" type="checkbox" value="'.$other_answer[0]['id'].'" name="yop_poll_answer['.$other_answer[0]['id'].']" id="yop-poll-answer-'.$other_answer[0]['id'].$unique_id.'" />', $m[5] );
 							else
-								$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-CHECK-INPUT%', '<input type="checkbox" value="'.$other_answer[0]['id'].'" name="yop_poll_answer['.$other_answer[0]['id'].']" id="yop-poll-answer-'.$other_answer[0]['id'].'" />', $m[5] );
+								$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-CHECK-INPUT%', '<input type="checkbox" value="'.$other_answer[0]['id'].'" name="yop_poll_answer['.$other_answer[0]['id'].']" id="yop-poll-answer-'.$other_answer[0]['id'].$unique_id.'" />', $m[5] );
 						}
 						else {
 							if ( 'yes' == $poll_options['is_default_answer'] )
-								$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-CHECK-INPUT%', '<input checked="checked" type="radio" value="'.$other_answer[0]['id'].'" name="yop_poll_answer" id="yop-poll-answer-'.$other_answer[0]['id'].'" />', $m[5] );
+								$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-CHECK-INPUT%', '<input checked="checked" type="radio" value="'.$other_answer[0]['id'].'" name="yop_poll_answer" id="yop-poll-answer-'.$other_answer[0]['id'].$unique_id.'" />', $m[5] );
 							else
-								$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-CHECK-INPUT%', '<input type="radio" value="'.$other_answer[0]['id'].'" name="yop_poll_answer" id="yop-poll-answer-'.$other_answer[0]['id'].'" />', $m[5] );
+								$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-CHECK-INPUT%', '<input type="radio" value="'.$other_answer[0]['id'].'" name="yop_poll_answer" id="yop-poll-answer-'.$other_answer[0]['id'].$unique_id.'" />', $m[5] );
 						}
 						if ( 'yes' == $poll_options['poll_answer_html_tags'] )
-							$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$other_answer[0]['id'].'">'.stripslashes( $other_answer[0]['answer'] ).'</label>', $temp_string );
+							$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$other_answer[0]['id'].$unique_id.'">'.stripslashes( $other_answer[0]['answer'] ).'</label>', $temp_string );
 						else
-							$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$other_answer[0]['id'].'">'.esc_html( stripslashes( $other_answer[0]['answer'] ) ).'</label>', $temp_string );
-						$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-TEXT-INPUT%', '<label><input onclick="document.getElementById(\'yop-poll-answer-'.$other_answer[0]['id'].'\').checked=true;" type="text" value="" name="yop_poll_other_answer" id="yop-poll-other-answer-'.$other_answer[0]['id'].'" /></label>', $temp_string );
+							$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$other_answer[0]['id'].$unique_id.'">'.esc_html( stripslashes( $other_answer[0]['answer'] ) ).'</label>', $temp_string );
+						$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-TEXT-INPUT%', '<label><input onclick="document.getElementById(\'yop-poll-answer-'.$other_answer[0]['id'].$unique_id.'\').checked=true;" type="text" value="" name="yop_poll_other_answer" id="yop-poll-other-answer-'.$other_answer[0]['id'].'" /></label>', $temp_string );
 						if (
 							( 'before' == $poll_options['view_results'] ) ||
 							( 'after' == $poll_options['view_results'] && $is_voted ) ||
 							( 'custom-date' == $poll_options['view_results'] && self::get_mysql_curent_date() >= $poll_options['view_results_start_date'] ) ||
 							( self::get_mysql_curent_date() >= $this -> poll['end_date'] )
 						) {
-							$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $poll_id, $other_answer[0]['id'], $other_answer[0]['procentes'], $poll_options ), $temp_string );
-							$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $poll_id, $other_answer[0]['id'], $other_answer[0]['procentes'], $poll_options ), $temp_string );
+							$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $poll_id, $other_answer[0]['id'], $other_answer[0]['procentes'], $poll_options, $unique_id ), $temp_string );
+							$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $poll_id, $other_answer[0]['id'], $other_answer[0]['procentes'], $poll_options, $unique_id ), $temp_string );
 							$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-VOTES%', self::display_poll_result_votes( $other_answer[0], $poll_options ), $temp_string );
 							$temp_string	= str_ireplace( '%POLL-OTHER-ANSWER-RESULT-VOTES%', self::display_poll_result_votes( $other_answer[0], $poll_options ), $temp_string );
 							$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-PERCENTAGES%', self::display_poll_result_percentages( $other_answer[0], $poll_options ), $temp_string );
@@ -3193,6 +3386,7 @@
 
 		public function answer_replace_callback( $m ) {
 			$poll_id			= $this->poll['id'];
+			$unique_id			= $this->unique_id;
 			$poll_options		= $this->poll_options;
 			$return_string		= '';
 			$is_voted			= $this->is_voted();
@@ -3240,7 +3434,7 @@
 				if( isset( $poll_options['allow_multiple_answers'] ) )
 					if ( 'yes' == $poll_options['allow_multiple_answers'] )
 						$multiple_answers = true;
-				if( isset( $poll_options['answers_in_select_input'] ) )
+					if( isset( $poll_options['answers_in_select_input'] ) )
 					if ( 'yes' == $poll_options['answers_in_select_input'] )
 						$answers_in_select_input = true;
 					if( count( $answers ) > 0 ) {
@@ -3280,7 +3474,7 @@
 							( 'custom-date' == $poll_options['view_results'] && self::get_mysql_curent_date() >= $poll_options['view_results_start_date'] ) ||
 							( self::get_mysql_curent_date() >= $this -> poll['end_date'] )
 						) {
-							$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $poll_id, $answer['id'], $answer['procentes'], $poll_options ), $temp_string );
+							$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $poll_id, $answer['id'], $answer['procentes'], $poll_options, $unique_id ), $temp_string );
 							$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-VOTES%', self::display_poll_result_votes( $answer, $poll_options ), $temp_string );
 							$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-PERCENTAGES%', self::display_poll_result_percentages( $answer, $poll_options ), $temp_string );
 						}
@@ -3293,18 +3487,19 @@
 
 		public function captcha_replace_callback( $m ) {
 			$poll_id			= $this->poll['id'];
+			$unique_id			= $this->unique_id;
 			$poll_options		= $this->poll_options;
 			$return_string		= '';
 			$temp_string		= '';
 
 			if ( 'yes' == $poll_options['use_captcha'] ) {
 				$sid				= md5(uniqid());
-				$temp_string		= str_ireplace( '%CAPTCHA-IMAGE%', '<img class="yop_poll_captcha_image" id="yop_poll_captcha_image_'.$poll_id.'" src="' . admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_show_captcha&poll_id=' . $poll_id . '&sid=' . $sid . '" />', $m[5] );
-				$temp_string		= str_ireplace( '%CAPTCHA-INPUT%', '<input type="text" value="" name="yop_poll_captcha_input['.$poll_id.']" id="yop-poll-captcha-input-'.$poll_id.'" />', $temp_string );
-				$temp_string		= str_ireplace( '%RELOAD-CAPTCHA-IMAGE%', '<a href="javascript:void(0)"><img src="'.YOP_POLL_URL.'/images/captcha_reload.png'.'" alt="'.__( 'Reload', 'yop_poll' ).'" onClick="yop_poll_reloadCaptcha(' . "'" . $poll_id . "'" . ')" /></a>', $temp_string );
+				$temp_string		= str_ireplace( '%CAPTCHA-IMAGE%', '<img class="yop_poll_captcha_image" id="yop_poll_captcha_image_'.$poll_id . $unique_id .'" src="' . admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_show_captcha&poll_id=' . $poll_id . '&sid=' . $sid . '&unique_id=' . $unique_id . '" />', $m[5] );
+				$temp_string		= str_ireplace( '%CAPTCHA-INPUT%', '<input type="text" value="" name="yop_poll_captcha_input['.$poll_id.']" id="yop-poll-captcha-input-'.$poll_id . $unique_id .'" />', $temp_string );
+				$temp_string		= str_ireplace( '%RELOAD-CAPTCHA-IMAGE%', '<a href="javascript:void(0)"><img src="'.YOP_POLL_URL.'/images/captcha_reload.png'.'" alt="'.__( 'Reload', 'yop_poll' ).'" onClick="yop_poll_reloadCaptcha(' . "'" . $poll_id . "', '". $unique_id ."'" . ')" /></a>', $temp_string );
 				$temp_string		= str_ireplace( '%CAPTCHA-LABEL%', 'Enter the code', $temp_string );
-				$temp_string		= str_ireplace( '%CAPTCHA-PLAY%', '<object type="application/x-shockwave-flash" data="'.YOP_POLL_URL.'/captcha/securimage_play.swf?bgcol=#ffffff&amp;icon_file='.YOP_POLL_URL.'/images/captcha-audio.gif&amp;audio_file=' . urlencode( admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_play_captcha&poll_id=' . $poll_id ) . '" height="30" width="30">
-					<param name="movie" value="'.YOP_POLL_URL.'/captcha/securimage_play.swf?bgcol=#ffffff&amp;icon_file='.YOP_POLL_URL.'/images/captcha-audio.gif&amp;audio_file=' .  urlencode( admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_play_captcha&poll_id=' . $poll_id ) . '" />
+				$temp_string		= str_ireplace( '%CAPTCHA-PLAY%', '<object type="application/x-shockwave-flash" data="'.YOP_POLL_URL.'/captcha/securimage_play.swf?bgcol=#ffffff&amp;icon_file='.YOP_POLL_URL.'/images/captcha-audio.gif&amp;audio_file=' . urlencode( admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_play_captcha&poll_id=' . $poll_id. '&unique_id=' . $unique_id ) . '" height="30" width="30">
+					<param name="movie" value="'.YOP_POLL_URL.'/captcha/securimage_play.swf?bgcol=#ffffff&amp;icon_file='.YOP_POLL_URL.'/images/captcha-audio.gif&amp;audio_file=' .  urlencode( admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_play_captcha&poll_id=' . $poll_id . '&unique_id='. $unique_id  ) . '" />
 					</object>', $temp_string );
 			}
 			$return_string	.= $temp_string;
@@ -3463,9 +3658,9 @@
 			return ( intval( $a['votes'] ) < intval( $b['votes'] ) ) ? 1 : -1;
 		}
 
-		public static function display_poll_result_bar( $poll_id = 0, $answer_id = 0, $procent = 0, $poll_options = array() ) {
+		public static function display_poll_result_bar( $poll_id = 0, $answer_id = 0, $procent = 0, $poll_options = array(), $unique_id = '' ) {
 			$result_bar	= '';
-			$result_bar	= ' <div class="yop-poll-results-bar-'.$poll_id.'" ';
+			$result_bar	= ' <div class="yop-poll-results-bar-'.$poll_id . $unique_id .'" ';
 			if ( 'no' == $poll_options['use_template_bar'] ) {
 				$result_bar	.= ' style="height:'.intval( $poll_options['bar_height'] + 2 * intval( $poll_options['bar_border_width'] ) ).'px;" ';
 			}
@@ -3482,7 +3677,7 @@
 				}
 				$result_bar	.= '" '.
 				'id="yop-poll-result-bar-div-'.$answer_id.'" '.
-				'class="yop-poll-result-bar-div-'.$poll_id.'"'.
+				'class="yop-poll-result-bar-div-'.$poll_id . $unique_id .'"'.
 				'>'.
 				'</div>';
 			}

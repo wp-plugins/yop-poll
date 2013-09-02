@@ -45,6 +45,14 @@ jQuery(document).ready(function(jQuery) {
 	jQuery( ".yop-poll-blocking-voters-show-interval" ).click( function () {
 		jQuery( '#yop-poll-blocking-voters-interval-div' ).show();
 	});
+	
+	jQuery( "#yop-poll-limit-number-of-votes-per-user-no" ).click( function () {
+		jQuery( '#yop-poll-number-of-votes-per-user-div' ).hide();
+	});
+	jQuery( "#yop-poll-limit-number-of-votes-per-user-yes" ).click( function () {
+		jQuery( '#yop-poll-number-of-votes-per-user-div' ).show();
+	});
+	
 	jQuery( "#yop-poll-view-results-link-no" ).click( function () {
 		jQuery( '#yop-poll-view-results-link-div' ).hide();
 	});

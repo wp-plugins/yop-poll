@@ -33,6 +33,7 @@
 				$wpdb->yop_pollmeta = $wpdb->prefix . 'yop_pollmeta';
 				$wpdb->yop_poll_answermeta = $wpdb->prefix . 'yop_poll_answermeta';
 				$wpdb->yop_poll_logs = $wpdb->prefix . 'yop_poll_logs';
+				$wpdb->yop_poll_voters = $wpdb->prefix . 'yop_poll_voters';
 				$wpdb->yop_poll_bans = $wpdb->prefix . 'yop_poll_bans';
 				$wpdb->yop_poll_votes_custom_fields = $wpdb->prefix . 'yop_poll_votes_custom_fields';
 				$wpdb->yop_poll_facebook_users = $wpdb->prefix . 'yop_poll_facebook_users';
@@ -44,7 +45,7 @@
 			global $wpdb;
 			$old_blog = $wpdb->blogid;
 			switch_to_blog ( $blog_id );
-			$wpdb->query ( "DROP TABLE `" . $wpdb->prefix . "yop_pollmeta`, `" . $wpdb->prefix . "yop_polls`, `" . $wpdb->prefix . "yop_poll_answermeta`, `" . $wpdb->prefix . "yop_poll_answers`, `" . $wpdb->prefix . "yop_poll_custom_fields`, `" . $wpdb->prefix . "yop_poll_logs`, `" . $wpdb->prefix . "yop_poll_bans`, `" . $wpdb->prefix . "yop_poll_templates`, `" . $wpdb->prefix . "yop_poll_votes_custom_fields`, `" . $wpdb->prefix . "yop_poll_facebook_users`" );
+			$wpdb->query ( "DROP TABLE `" . $wpdb->prefix . "yop_pollmeta`, `" . $wpdb->prefix . "yop_polls`, `" . $wpdb->prefix . "yop_poll_answermeta`, `" . $wpdb->prefix . "yop_poll_answers`, `" . $wpdb->prefix . "yop_poll_custom_fields`, `" . $wpdb->prefix . "yop_poll_logs`, `" . $wpdb->prefix . "yop_poll_voters`, `" . $wpdb->prefix . "yop_poll_bans`, `" . $wpdb->prefix . "yop_poll_templates`, `" . $wpdb->prefix . "yop_poll_votes_custom_fields`, `" . $wpdb->prefix . "yop_poll_facebook_users`" );
 			switch_to_blog ( $old_blog );
 		}
 		function yop_poll_network_propagate($pfunction, $networkwide) {
@@ -66,6 +67,7 @@
 						$wpdb->yop_pollmeta = $wpdb->prefix . 'yop_pollmeta';
 						$wpdb->yop_poll_answermeta = $wpdb->prefix . 'yop_poll_answermeta';
 						$wpdb->yop_poll_logs = $wpdb->prefix . 'yop_poll_logs';
+						$wpdb->yop_poll_voters = $wpdb->prefix . 'yop_poll_voters';
 						$wpdb->yop_poll_bans = $wpdb->prefix . 'yop_poll_bans';
 						$wpdb->yop_poll_votes_custom_fields = $wpdb->prefix . 'yop_poll_votes_custom_fields';
 						$wpdb->yop_poll_facebook_users = $wpdb->prefix . 'yop_poll_facebook_users';
@@ -332,7 +334,7 @@
 				if (! isset ( $default_options ['widget_template_width'] )) {
 					$default_options ['widget_template_width'] = '200px';
 				}
-
+				
 				$wpdb->query ( "
 					UPDATE " . $wpdb->yop_poll_templates . "
 					SET
@@ -344,6 +346,52 @@
 				update_option ( 'yop_poll_pro_options', $pro_options );
 
 				update_option ( "yop_poll_version", $wpdb->yop_poll_version );
+			}
+
+			if (version_compare ( $installed_version, '4.3', '<=' ) ) {
+				require_once (ABSPATH . 'wp-admin/includes/upgrade.php');
+				require_once (YOP_POLL_INC . '/' . 'db_schema.php');
+				Yop_Poll_DbSchema::create_poll_voters_table ();
+
+				$wpdb->query ( "
+					UPDATE " . $wpdb->yop_poll_templates . "
+					SET
+					css = CONCAT( css, '\r\n\r\n#yop-poll-container-success-%POLL-ID% {\r\n	font-size:12px;\r\n	font-style:italic;\r\n	color:green;\r\n}' )
+					WHERE 
+					css NOT LIKE '%#yop-poll-container-success-%'
+				" );
+
+				$default_options = get_option ( 'yop_poll_options' );
+
+				if (! isset ( $default_options ['limit_number_of_votes_per_user'] )) {
+					$default_options ['limit_number_of_votes_per_user'] = 'no';
+				}
+
+				if (! isset ( $default_options ['number_of_votes_per_user'] )) {
+					$default_options ['number_of_votes_per_user'] = 1;
+				}
+
+				if (! isset ( $default_options ['message_after_vote'] )) {
+					$default_options ['message_after_vote'] = 'Thank you for your vote!';
+				}
+				
+				if (! isset ( $default_options ['start_scheduler'] )) {
+					$default_options ['start_scheduler'] = 'no';
+				}
+				if (! isset ( $default_options ['schedule_reset_poll_stats'] )) {
+					$default_options ['schedule_reset_poll_stats'] = 'no';
+				}
+				if (! isset ( $default_options ['schedule_reset_poll_date'] )) {
+					$default_options ['schedule_reset_poll_date'] = current_time( 'timestamp' );
+				}
+				if (! isset ( $default_options ['schedule_reset_poll_recurring_value'] )) {
+					$default_options ['schedule_reset_poll_recurring_value'] = '9999';
+				}
+				if (! isset ( $default_options ['schedule_reset_poll_recurring_unit'] )) {
+					$default_options ['schedule_reset_poll_recurring_unit'] = 'DAY';
+				}
+
+				update_option ( 'yop_poll_options', $default_options );	
 			}
 		}
 		public function update_to_4_2() {
@@ -511,6 +559,10 @@
 			if ($poll_archive_page) {
 				$poll_archive_page_id = $poll_archive_page ['ID'];
 				wp_delete_post ( $poll_archive_page_id, true );
+			}
+			$schedule_timestamp	= wp_next_scheduled( 'yop_poll_hourly_event', array() );
+			if ( $schedule_timestamp ) {
+				wp_unschedule_event( $schedule_timestamp, 'yop_poll_hourly_event', array() );
 			}
 		}
 		public function admin_menu() {
@@ -1865,7 +1917,7 @@
 															<?php } ?>
 														<?php if ( ( $this->current_user_can( 'reset_own_polls_stats') && $yop_poll['poll_author'] == $current_user->ID ) || ($this->current_user_can( 'reset_polls_stats' ) ) ) { ?>
 															<span class="delete"><a
-																	onclick="if ( confirm( '<?php echo __( "You are about to reset votes for this poll",'yop_poll').": \'".esc_html( $yop_poll['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to reset votes', 'yop_poll'); ?>' ) ?>' ) ) { return true;}return false;"
+																	onclick="if ( confirm( '<?php echo __( "You are about to reset votes for this poll",'yop_poll').": \'".esc_html( $yop_poll['name'] )."\' \\n  \'".__("Cancel", 'yop_poll')."\' ". __('to stop', 'yop_poll'). ", \'".__('OK', 'yop_poll')."\' ".__('to reset votes', 'yop_poll'); ?>' ) ) { return true;}return false;"
 																	href="<?php echo wp_nonce_url( add_query_arg( array( 'action' => 'reset_votes', 'id' => $yop_poll['id'] ) ), 'yop-poll-reset-votes' ); ?>"
 																	class="submitresetvotes"><?php _e( 'Reset Stats', 'yop_poll' ) ?></a>
 																| </span>
@@ -3577,956 +3629,1015 @@
 			$errors = '';
 			$updated = '';
 			$message_delimiter = '<br>';
-			// allow_other_answers
-			if (isset ( $input ['allow_other_answers'] )) {
-				if (in_array ( $input ['allow_other_answers'], array (
-					'yes',
-					'no'
-				) )) {
-					if ($default_options ['allow_other_answers'] != trim ( $input ['allow_other_answers'] )) {
-						$newinput ['allow_other_answers'] = trim ( $input ['allow_other_answers'] );
-						$updated .= __ ( 'Option "Allow Other Answer" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-				} else {
-					$newinput ['allow_other_answers'] = $default_options ['allow_other_answers'];
-					$errors .= __ ( 'Option "Allow Other Answer" Not Updated! Choose "yes" or "no"!', 'yop_poll' ) . $message_delimiter;
-				}
-
-				// other_answers_label
-				if ('yes' == $input ['allow_other_answers']) {
-					if (isset ( $input ['other_answers_label'] )) {
-						if ($default_options ['other_answers_label'] != trim ( $input ['other_answers_label'] )) {
-							$newinput ['other_answers_label'] = trim ( $input ['other_answers_label'] );
-							$updated .= __ ( 'Option "Other Answer Label" Updated!', 'yop_poll' ) . $message_delimiter;
+			if ($this->current_user_can ( 'manage_polls_options' )) {
+				// allow_other_answers
+				if (isset ( $input ['allow_other_answers'] )) {
+					if (in_array ( $input ['allow_other_answers'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['allow_other_answers'] != trim ( $input ['allow_other_answers'] )) {
+							$newinput ['allow_other_answers'] = trim ( $input ['allow_other_answers'] );
+							$updated .= __ ( 'Option "Allow Other Answer" Updated!', 'yop_poll' ) . $message_delimiter;
 						}
-					}
-
-					if (isset ( $input ['display_other_answers_values'] )) {
-						if (in_array ( $input ['display_other_answers_values'], array (
-							'yes',
-							'no'
-						) )) {
-							if ($default_options ['display_other_answers_values'] != trim ( $input ['display_other_answers_values'] )) {
-								$newinput ['display_other_answers_values'] = trim ( $input ['display_other_answers_values'] );
-								$updated .= __ ( 'Option "Display Other Answers Values" Updated!', 'yop_poll' ) . $message_delimiter;
-							}
-						} else {
-							$newinput ['display_other_answers_values'] = $default_options ['display_other_answers_values'];
-							$errors .= __ ( 'Option "Display Other Answers Values" Not Updated! Choose "yes" or "no"!', 'yop_poll' ) . $message_delimiter;
-						}
-					}
-				}
-			}
-
-			// allow_multiple_answers
-			if (isset ( $input ['allow_multiple_answers'] )) {
-				if (in_array ( $input ['allow_multiple_answers'], array (
-					'yes',
-					'no'
-				) )) {
-					if ($default_options ['allow_multiple_answers'] != trim ( $input ['allow_multiple_answers'] )) {
-						$newinput ['allow_multiple_answers'] = trim ( $input ['allow_multiple_answers'] );
-						$updated .= __ ( 'Option "Allow Multiple Answers" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					// allow_multiple_answers_number
-					if ('yes' == $input ['allow_multiple_answers']) {
-						if (isset ( $input ['allow_multiple_answers_number'] )) {
-							if (ctype_digit ( $input ['allow_multiple_answers_number'] )) {
-								if ($default_options ['allow_multiple_answers_number'] != trim ( $input ['allow_multiple_answers_number'] )) {
-									$newinput ['allow_multiple_answers_number'] = trim ( $input ['allow_multiple_answers_number'] );
-									$updated .= __ ( 'Option "Max Number of allowed answers" Updated!', 'yop_poll' ) . $message_delimiter;
-								}
-							} else {
-								$newinput ['allow_multiple_answers_number'] = $default_options ['allow_multiple_answers_number'];
-								$errors .= __ ( 'Option "Max Number of allowed answers" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-						if (isset ( $input ['allow_multiple_answers_min_number'] )) {
-							if (ctype_digit ( $input ['allow_multiple_answers_min_number'] )) {
-								if ($default_options ['allow_multiple_answers_min_number'] != trim ( $input ['allow_multiple_answers_min_number'] )) {
-									$newinput ['allow_multiple_answers_min_number'] = trim ( $input ['allow_multiple_answers_min_number'] );
-									$updated .= __ ( 'Option "Min Number of allowed answers" Updated!', 'yop_poll' ) . $message_delimiter;
-								}
-							} else {
-								$newinput ['allow_multiple_answers_min_number'] = $default_options ['allow_multiple_answers_min_number'];
-								$errors .= __ ( 'Option "Min Number of allowed answers" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-					}
-				} else {
-					$newinput ['allow_multiple_answers'] = $default_options ['allow_multiple_answers'];
-					$errors .= __ ( 'Option "Allow Multiple Answers" Not Updated! Choose "yes" or "no"!', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			if (isset ( $input ['use_captcha'] )) {
-				if (in_array ( $input ['use_captcha'], array (
-					'yes',
-					'no'
-				) )) {
-					if ($default_options ['use_captcha'] != trim ( $input ['use_captcha'] )) {
-						$newinput ['use_captcha'] = trim ( $input ['use_captcha'] );
-						$updated .= __ ( 'Option "Use CAPTCHA" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-				} else {
-					$newinput ['use_captcha'] = $default_options ['use_captcha'];
-					$errors .= __ ( 'Option "Use CAPTCHA" Not Updated! Choose "yes" or "no"!', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// display_answers
-			if (isset ( $input ['display_answers'] )) {
-				if (in_array ( $input ['display_answers'], array (
-					'vertical',
-					'orizontal',
-					'tabulated'
-				) )) {
-					if ($default_options ['display_answers'] != trim ( $input ['display_answers'] )) {
-						$newinput ['display_answers'] = trim ( $input ['display_answers'] );
-						$updated .= __ ( 'Option "Display Answers" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					if ('tabulated' == $input ['display_answers']) {
-						// display_answers_tabulated_cols
-						if (isset ( $input ['display_answers_tabulated_cols'] )) {
-							if (ctype_digit ( $input ['display_answers_tabulated_cols'] )) {
-								if ($default_options ['display_answers_tabulated_cols'] != trim ( $input ['display_answers_tabulated_cols'] )) {
-									$newinput ['display_answers_tabulated_cols'] = trim ( $input ['display_answers_tabulated_cols'] );
-									$updated .= __ ( 'Option "Columns for Tabulated Display Answers" Updated!', 'yop_poll' ) . $message_delimiter;
-								}
-							} else {
-								$newinput ['display_answers_tabulated_cols'] = $default_options ['display_answers_tabulated_cols'];
-								$errors .= __ ( 'Option "Columns for Tabulated Display Answers" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-					}
-				} else {
-					$newinput ['display_answers'] = $default_options ['display_answers'];
-					$errors .= __ ( 'Option "Display Answers" Not Updated! you must choose between \'vertical\', \'orizontal\' or \'tabulated\'', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// display_results
-			if (isset ( $input ['display_results'] )) {
-				if (in_array ( $input ['display_results'], array (
-					'vertical',
-					'orizontal',
-					'tabulated'
-				) )) {
-					if ($default_options ['display_results'] != trim ( $input ['display_results'] )) {
-						$newinput ['display_results'] = trim ( $input ['display_results'] );
-						$updated .= __ ( 'Option "Display Results" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					if ('tabulated' == $input ['display_results']) {
-						// display_results_tabulated_cols
-						if (isset ( $input ['display_results_tabulated_cols'] )) {
-							if (ctype_digit ( $input ['display_results_tabulated_cols'] )) {
-								if ($default_options ['display_results_tabulated_cols'] != trim ( $input ['display_results_tabulated_cols'] )) {
-									$newinput ['display_results_tabulated_cols'] = trim ( $input ['display_results_tabulated_cols'] );
-									$updated .= __ ( 'Option "Columns for Tabulated Display Results" Updated!', 'yop_poll' ) . $message_delimiter;
-								}
-							} else {
-								$newinput ['display_results_tabulated_cols'] = $default_options ['display_results_tabulated_cols'];
-								$errors .= __ ( 'Option "Columns for Tabulated Display Results" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-					}
-				} else {
-					$newinput ['display_results'] = $default_options ['display_results'];
-					$errors .= __ ( 'Option "Display Results" Not Updated! Choose the display layout: \'vertical\', \'orizontal\' or \'tabulated\'', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-			//template_width
-			if (isset ( $input ['template_width'] )) {
-				if ('' != trim ( $input ['template_width'] )) {
-					if ($default_options ['template_width'] != trim ( $input ['template_width'] )) {
-						$newinput ['template_width'] = trim ( $input ['template_width'] );
-						$updated .= __ ( 'Option "Poll Template Width" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-				} else {
-					$newinput ['template_width'] = $default_options ['template_width'];
-					$errors .= __ ( 'Option "Poll Template Width" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			//widget_template_width
-			if (isset ( $input ['widget_template_width'] )) {
-				if ('' != trim ( $input ['widget_template_width'] )) {
-					if ($default_options ['widget_template_width'] != trim ( $input ['widget_template_width'] )) {
-						$newinput ['widget_template_width'] = trim ( $input ['widget_template_width'] );
-						$updated .= __ ( 'Option "Widget Template Width" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-				} else {
-					$newinput ['widget_template_width'] = $default_options ['widget_template_width'];
-					$errors .= __ ( 'Option "Widget Template Width" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// use_template_bar
-			if (isset ( $input ['use_template_bar'] )) {
-				if (in_array ( $input ['use_template_bar'], array (
-					'yes',
-					'no'
-				) )) {
-					if ($default_options ['use_template_bar'] != trim ( $input ['use_template_bar'] )) {
-						$newinput ['use_template_bar'] = trim ( $input ['use_template_bar'] );
-						$updated .= __ ( 'Option "Use Template Result Bar" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					if ('no' == $input ['use_template_bar']) {
-						// bar_background
-						if (isset ( $input ['bar_background'] )) {
-							if (ctype_alnum ( $input ['bar_background'] )) {
-								if ($default_options ['bar_background'] != trim ( $input ['bar_background'] )) {
-									$newinput ['bar_background'] = trim ( $input ['bar_background'] );
-									$updated .= __ ( 'Option "Result Bar Background Color" Updated!', 'yop_poll' ) . $message_delimiter;
-								}
-							} else {
-								$newinput ['bar_background'] = $default_options ['bar_background'];
-								$errors .= __ ( 'Option "Result Bar Background Color" Not Updated! Fill in an alphanumeric value!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-
-						// bar_height
-						if (isset ( $input ['bar_height'] )) {
-							if (ctype_digit ( $input ['bar_height'] )) {
-								if ($default_options ['bar_height'] != trim ( $input ['bar_height'] )) {
-									$newinput ['bar_height'] = trim ( $input ['bar_height'] );
-									$updated .= __ ( 'Option "Result Bar Height" Updated!', 'yop_poll' ) . $message_delimiter;
-								}
-							} else {
-								$newinput ['bar_height'] = $default_options ['bar_height'];
-								$errors .= __ ( 'Option "Result Bar Height" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-
-						// bar_border_color
-						if (isset ( $input ['bar_border_color'] )) {
-							if (ctype_alnum ( $input ['bar_border_color'] )) {
-								if ($default_options ['bar_border_color'] != trim ( $input ['bar_border_color'] )) {
-									$newinput ['bar_border_color'] = trim ( $input ['bar_border_color'] );
-									$updated .= __ ( 'Option "Result Bar Border Color" Updated!', 'yop_poll' ) . $message_delimiter;
-								}
-							} else {
-								$newinput ['bar_border_color'] = $default_options ['bar_border_color'];
-								$errors .= __ ( 'Option "Result Bar Border Color" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-
-						// bar_border_width
-						if (isset ( $input ['bar_border_width'] )) {
-							if (ctype_digit ( $input ['bar_border_width'] )) {
-								if ($default_options ['bar_border_width'] != trim ( $input ['bar_border_width'] )) {
-									$newinput ['bar_border_width'] = trim ( $input ['bar_border_width'] );
-									$updated .= __ ( 'Option "Result Bar Border Width" Updated!', 'yop_poll' ) . $message_delimiter;
-								}
-							} else {
-								$newinput ['bar_border_width'] = $default_options ['bar_border_width'];
-								$errors .= __ ( 'Option "Result Bar Border Width" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-
-						// bar_border_style
-						if (isset ( $input ['bar_border_style'] )) {
-							if (ctype_alpha ( $input ['bar_border_style'] )) {
-								if ($default_options ['bar_border_style'] != trim ( $input ['bar_border_style'] )) {
-									$newinput ['bar_border_style'] = trim ( $input ['bar_border_style'] );
-									$updated .= __ ( 'Option "Result Bar Border Style" Updated!', 'yop_poll' ) . $message_delimiter;
-								}
-							} else {
-								$newinput ['bar_border_style'] = $default_options ['bar_border_style'];
-								$errors .= __ ( 'Option "Result Bar Border Style" Not Updated! Fill in an alphanumeric value!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-					}
-				} else {
-					$newinput ['use_template_bar'] = $default_options ['use_template_bar'];
-					$errors .= __ ( 'Option "Use Template Result Bar" Not Updated! Choose "yes" or "no"!', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// sorting_answers
-			if (isset ( $input ['sorting_answers'] )) {
-				if (in_array ( $input ['sorting_answers'], array (
-					'exact',
-					'alphabetical',
-					'random',
-					'votes'
-				) )) {
-					if ($default_options ['sorting_answers'] != trim ( $input ['sorting_answers'] )) {
-						$newinput ['sorting_answers'] = trim ( $input ['sorting_answers'] );
-						$updated .= __ ( 'Option "Sort Answers" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					// sorting_answers_direction
-					if (isset ( $input ['sorting_answers_direction'] )) {
-						if (in_array ( $input ['sorting_answers_direction'], array (
-							'asc',
-							'desc'
-						) )) {
-							if ($default_options ['sorting_answers_direction'] != trim ( $input ['sorting_answers_direction'] )) {
-								$newinput ['sorting_answers_direction'] = trim ( $input ['sorting_answers_direction'] );
-								$updated .= __ ( 'Option "Sort Answers Direction" Updated!', 'yop_poll' ) . $message_delimiter;
-							}
-						} else {
-							$newinput ['sorting_answers_direction'] = $default_options ['sorting_answers_direction'];
-							$errors .= __ ( 'Option "Sort Answers Direction" Not Updated! Please choose between \'Ascending\' or \'Descending\'', 'yop_poll' ) . $message_delimiter;
-						}
-					}
-				} else {
-					$newinput ['sorting_answers'] = $default_options ['sorting_answers'];
-					$errors .= __ ( 'Option "Sort Answers" Not Updated! Please choose between: \'exact\', \'alphabetical\', \'random\' or \'votes\'', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// sorting_results
-			if (isset ( $input ['sorting_answers'] )) {
-				if (in_array ( $input ['sorting_results'], array (
-					'exact',
-					'alphabetical',
-					'random',
-					'votes'
-				) )) {
-					if ($default_options ['sorting_results'] != trim ( $input ['sorting_results'] )) {
-						$newinput ['sorting_results'] = trim ( $input ['sorting_results'] );
-						$updated .= __ ( 'Option "Sort Results" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					// sorting_results_direction
-					if (isset ( $input ['sorting_results_direction'] )) {
-						if (in_array ( $input ['sorting_results_direction'], array (
-							'asc',
-							'desc'
-						) )) {
-							if ($default_options ['sorting_results_direction'] != trim ( $input ['sorting_results_direction'] )) {
-								$newinput ['sorting_results_direction'] = trim ( $input ['sorting_results_direction'] );
-								$updated .= __ ( 'Option "Sort Results Direction" Updated!', 'yop_poll' ) . $message_delimiter;
-							}
-						} else {
-							$newinput ['sorting_results_direction'] = $default_options ['sorting_results_direction'];
-							$errors .= __ ( 'Option "Sort Results Direction" Not Updated! Please choose between \'Ascending\' or \'Descending\'', 'yop_poll' ) . $message_delimiter;
-						}
-					}
-				} else {
-					$newinput ['sorting_results'] = $default_options ['sorting_results'];
-					$errors .= __ ( 'Option "Sort Results" Not Updated! Please choose between: \'exact\', \'alphabetical\', \'random\' or \'votes\'', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// start_date
-			if (isset ( $input ['start_date'] )) {
-				if ('' != trim ( $input ['start_date'] )) {
-					if ($default_options ['start_date'] != trim ( $input ['start_date'] )) {
-						$newinput ['start_date'] = trim ( $input ['start_date'] );
-						$updated .= __ ( 'Option "Poll Start Date" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-				} else {
-					$newinput ['start_date'] = $default_options ['start_date'];
-					$errors .= __ ( 'Option "Poll Start Date" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// never_expire
-			if (isset ( $input ['never_expire'] )) {
-				if ('yes' == $input ['never_expire']) {
-					if ($default_options ['never_expire'] != trim ( $input ['never_expire'] )) {
-						$newinput ['never_expire'] = trim ( $input ['never_expire'] );
-						$updated .= __ ( 'Option "Poll End Date" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-				} else {
-					$newinput ['never_expire'] = $default_options ['never_expire'];
-					$errors .= __ ( 'Option "Poll End Date" Not Updated! ', 'yop_poll' ) . $message_delimiter;
-				}
-
-				// end_date
-				if ('yes' != $newinput ['never_expire']) {
-					if (isset ( $input ['end_date'] )) {
-						if ('' != $input ['end_date']) {
-							if ($default_options ['end_date'] != trim ( $input ['end_date'] )) {
-								$newinput ['end_date'] = $input ['end_date'];
-								$updated .= __ ( 'Option "Poll End Date" Updated!', 'yop_poll' ) . $message_delimiter;
-							}
-						} else {
-							$errors .= __ ( 'Option "Poll End Date" Not Updated! The field is empty! ', 'yop_poll' ) . $message_delimiter;
-						}
-					}
-				}
-			}
-
-			// view_results
-			if (isset ( $input ['view_results'] )) {
-				if (in_array ( $input ['view_results'], array (
-					'before',
-					'after',
-					'after-poll-end-date',
-					'never',
-					'custom-date'
-				) )) {
-					if ($default_options ['view_results'] != trim ( $input ['view_results'] )) {
-						$newinput ['view_results'] = trim ( $input ['view_results'] );
-						$updated .= __ ( 'Option "View Results" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					if ('custom-date' == $newinput ['view_results']) {
-						// view_results_start_date
-						if (isset ( $input ['view_results_start_date'] )) {
-							if ($default_options ['view_results_start_date'] != trim ( $input ['view_results_start_date'] )) {
-								$newinput ['view_results_start_date'] = $input ['view_results_start_date'];
-								$updated .= __ ( 'Option "View Results Custom Date" Updated!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-					}
-				} else {
-					$newinput ['view_results'] = $default_options ['view_results'];
-					$errors .= __ ( 'Option "View Results" Not Updated! Please choose between: \'Before\', \'After\', \'After Poll End Date\', \'Never\' or \'Custom Date\'', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// view_results_type
-			if (isset ( $input ['view_results_type'] )) {
-				if (in_array ( $input ['view_results_type'], array (
-					'votes-number',
-					'percentages',
-					'votes-number-and-percentages'
-				) )) {
-					if ($default_options ['view_results_type'] != trim ( $input ['view_results_type'] )) {
-						$newinput ['view_results_type'] = trim ( $input ['view_results_type'] );
-						$updated .= __ ( 'Option "View Results Type" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-				} else {
-					$newinput ['view_results_type'] = $default_options ['view_results_type'];
-					$errors .= __ ( 'Option "View Results Type" Not Updated! Please choose between: \'Votes number\', \'Percentages\' or \'Votes number and percentages\' ', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// answer_result_label
-			if (isset ( $input ['answer_result_label'] )) {
-				if ('votes-number' == $input ['view_results_type']) {
-					if (stripos ( $input ['answer_result_label'], '%POLL-ANSWER-RESULT-VOTES%' ) === false) {
-						$newinput ['answer_result_label'] = $default_options ['answer_result_label'];
-						$errors .= __ ( 'Option "Poll Answer Result Label" Not Updated! You must use %POLL-ANSWER-RESULT-VOTES%!', 'yop_poll' ) . $message_delimiter;
 					} else {
-						if ($default_options ['answer_result_label'] != trim ( $input ['answer_result_label'] )) {
-							$newinput ['answer_result_label'] = trim ( $input ['answer_result_label'] );
-							$updated .= __ ( 'Option "Poll Answer Result Label" Updated!', 'yop_poll' ) . $message_delimiter;
+						$newinput ['allow_other_answers'] = $default_options ['allow_other_answers'];
+						$errors .= __ ( 'Option "Allow Other Answer" Not Updated! Choose "yes" or "no"!', 'yop_poll' ) . $message_delimiter;
+					}
+
+					// other_answers_label
+					if ('yes' == $input ['allow_other_answers']) {
+						if (isset ( $input ['other_answers_label'] )) {
+							if ($default_options ['other_answers_label'] != trim ( $input ['other_answers_label'] )) {
+								$newinput ['other_answers_label'] = trim ( $input ['other_answers_label'] );
+								$updated .= __ ( 'Option "Other Answer Label" Updated!', 'yop_poll' ) . $message_delimiter;
+							}
+						}
+
+						if (isset ( $input ['display_other_answers_values'] )) {
+							if (in_array ( $input ['display_other_answers_values'], array (
+								'yes',
+								'no'
+							) )) {
+								if ($default_options ['display_other_answers_values'] != trim ( $input ['display_other_answers_values'] )) {
+									$newinput ['display_other_answers_values'] = trim ( $input ['display_other_answers_values'] );
+									$updated .= __ ( 'Option "Display Other Answers Values" Updated!', 'yop_poll' ) . $message_delimiter;
+								}
+							} else {
+								$newinput ['display_other_answers_values'] = $default_options ['display_other_answers_values'];
+								$errors .= __ ( 'Option "Display Other Answers Values" Not Updated! Choose "yes" or "no"!', 'yop_poll' ) . $message_delimiter;
+							}
 						}
 					}
 				}
 
-				if ('percentages' == $input ['view_results_type']) {
-					if (stripos ( $input ['answer_result_label'], '%POLL-ANSWER-RESULT-PERCENTAGES%' ) === false) {
-						$newinput ['answer_result_label'] = $default_options ['answer_result_label'];
-						$errors .= __ ( 'Option "Poll Answer Result Label" Not Updated! You must use %POLL-ANSWER-RESULT-PERCENTAGES%!', 'yop_poll' ) . $message_delimiter;
+				// allow_multiple_answers
+				if (isset ( $input ['allow_multiple_answers'] )) {
+					if (in_array ( $input ['allow_multiple_answers'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['allow_multiple_answers'] != trim ( $input ['allow_multiple_answers'] )) {
+							$newinput ['allow_multiple_answers'] = trim ( $input ['allow_multiple_answers'] );
+							$updated .= __ ( 'Option "Allow Multiple Answers" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						// allow_multiple_answers_number
+						if ('yes' == $input ['allow_multiple_answers']) {
+							if (isset ( $input ['allow_multiple_answers_number'] )) {
+								if (ctype_digit ( $input ['allow_multiple_answers_number'] )) {
+									if ($default_options ['allow_multiple_answers_number'] != trim ( $input ['allow_multiple_answers_number'] )) {
+										$newinput ['allow_multiple_answers_number'] = trim ( $input ['allow_multiple_answers_number'] );
+										$updated .= __ ( 'Option "Max Number of allowed answers" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['allow_multiple_answers_number'] = $default_options ['allow_multiple_answers_number'];
+									$errors .= __ ( 'Option "Max Number of allowed answers" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+							if (isset ( $input ['allow_multiple_answers_min_number'] )) {
+								if (ctype_digit ( $input ['allow_multiple_answers_min_number'] )) {
+									if ($default_options ['allow_multiple_answers_min_number'] != trim ( $input ['allow_multiple_answers_min_number'] )) {
+										$newinput ['allow_multiple_answers_min_number'] = trim ( $input ['allow_multiple_answers_min_number'] );
+										$updated .= __ ( 'Option "Min Number of allowed answers" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['allow_multiple_answers_min_number'] = $default_options ['allow_multiple_answers_min_number'];
+									$errors .= __ ( 'Option "Min Number of allowed answers" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+						}
 					} else {
-						if ($default_options ['answer_result_label'] != trim ( $input ['answer_result_label'] )) {
-							$newinput ['answer_result_label'] = trim ( $input ['answer_result_label'] );
-							$updated .= __ ( 'Option "Poll Answer Result Label" Updated!', 'yop_poll' ) . $message_delimiter;
-						}
+						$newinput ['allow_multiple_answers'] = $default_options ['allow_multiple_answers'];
+						$errors .= __ ( 'Option "Allow Multiple Answers" Not Updated! Choose "yes" or "no"!', 'yop_poll' ) . $message_delimiter;
 					}
 				}
 
-				if ('votes-number-and-percentages' == $input ['view_results_type']) {
-					if (stripos ( $input ['answer_result_label'], '%POLL-ANSWER-RESULT-PERCENTAGES%' ) === false) {
-						$newinput ['answer_result_label'] = $default_options ['answer_result_label'];
-						$errors .= __ ( 'Option "Poll Answer Result Label" Not Updated! You must use %POLL-ANSWER-RESULT-VOTES% and %POLL-ANSWER-RESULT-PERCENTAGES%!', 'yop_poll' ) . $message_delimiter;
-					} elseif (stripos ( $input ['answer_result_label'], '%POLL-ANSWER-RESULT-VOTES%' ) === false) {
-						$newinput ['answer_result_label'] = $default_options ['answer_result_label'];
-						$errors .= __ ( 'Option "Poll Answer Result Label" Not Updated! You must use %POLL-ANSWER-RESULT-VOTES% and %POLL-ANSWER-RESULT-PERCENTAGES%!', 'yop_poll' ) . $message_delimiter;
+				if (isset ( $input ['use_captcha'] )) {
+					if (in_array ( $input ['use_captcha'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['use_captcha'] != trim ( $input ['use_captcha'] )) {
+							$newinput ['use_captcha'] = trim ( $input ['use_captcha'] );
+							$updated .= __ ( 'Option "Use CAPTCHA" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
 					} else {
-						if ($default_options ['answer_result_label'] != trim ( $input ['answer_result_label'] )) {
-							$newinput ['answer_result_label'] = trim ( $input ['answer_result_label'] );
-							$updated .= __ ( 'Option "Poll Answer Result Label" Updated!', 'yop_poll' ) . $message_delimiter;
+						$newinput ['use_captcha'] = $default_options ['use_captcha'];
+						$errors .= __ ( 'Option "Use CAPTCHA" Not Updated! Choose "yes" or "no"!', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// display_answers
+				if (isset ( $input ['display_answers'] )) {
+					if (in_array ( $input ['display_answers'], array (
+						'vertical',
+						'orizontal',
+						'tabulated'
+					) )) {
+						if ($default_options ['display_answers'] != trim ( $input ['display_answers'] )) {
+							$newinput ['display_answers'] = trim ( $input ['display_answers'] );
+							$updated .= __ ( 'Option "Display Answers" Updated!', 'yop_poll' ) . $message_delimiter;
 						}
-					}
-				}
-			}
 
-			// singular_answer_result_votes_number_label
-			if (isset ( $input ['singular_answer_result_votes_number_label'] )) {
-				if ('' != $input ['singular_answer_result_votes_number_label']) {
-					if ($default_options ['singular_answer_result_votes_number_label'] != trim ( $input ['singular_answer_result_votes_number_label'] )) {
-						$newinput ['singular_answer_result_votes_number_label'] = trim ( $input ['singular_answer_result_votes_number_label'] );
-						$updated .= __ ( 'Option "Poll Answer Result Votes Number Singular Label" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-				} else {
-					$newinput ['singular_answer_result_votes_number_label'] = $default_options ['singular_answer_result_votes_number_label'];
-					$errors .= __ ( 'Option "Poll Answer Result Votes Number Singular Label" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// plural_answer_result_votes_number_label
-			if (isset ( $input ['plural_answer_result_votes_number_label'] )) {
-				if ('' != $input ['singular_answer_result_votes_number_label']) {
-					if ($default_options ['plural_answer_result_votes_number_label'] != trim ( $input ['plural_answer_result_votes_number_label'] )) {
-						$newinput ['plural_answer_result_votes_number_label'] = trim ( $input ['plural_answer_result_votes_number_label'] );
-						$updated .= __ ( 'Option "Poll Answer Result Votes Number Plural Label" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-				} else {
-					$newinput ['plural_answer_result_votes_number_label'] = $default_options ['plural_answer_result_votes_number_label'];
-					$errors .= __ ( 'Option "Poll Answer Result Votes Number Plural Label" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// vote_button_label
-			if (isset ( $input ['vote_button_label'] )) {
-				if ('' != $input ['vote_button_label']) {
-					if ($default_options ['vote_button_label'] != trim ( $input ['vote_button_label'] )) {
-						$newinput ['vote_button_label'] = trim ( $input ['vote_button_label'] );
-						$updated .= __ ( 'Option "Vote Button Label" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-				} else {
-					$newinput ['vote_button_label'] = $default_options ['vote_button_label'];
-					$errors .= __ ( 'Option "Vote Button Label" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// view_results_link
-			if (isset ( $input ['view_results_link'] )) {
-				if (in_array ( $input ['view_results_link'], array (
-					'yes',
-					'no'
-				) )) {
-					if ($default_options ['view_results_link'] != trim ( $input ['view_results_link'] )) {
-						$newinput ['view_results_link'] = trim ( $input ['view_results_link'] );
-						$updated .= __ ( 'Option "View Results Link" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					if ('yes' == $input ['view_results_link']) {
-						// view_results_link_label
-						if (isset ( $input ['view_results_link_label'] )) {
-							if ('' != $input ['view_results_link_label']) {
-								if ($default_options ['view_results_link_label'] != trim ( $input ['view_results_link_label'] )) {
-									$newinput ['view_results_link_label'] = trim ( $input ['view_results_link_label'] );
-									$updated .= __ ( 'Option "View Results Link Label" Updated!', 'yop_poll' ) . $message_delimiter;
-								}
-							} else {
-								$newinput ['view_results_link_label'] = $default_options ['view_results_link_label'];
-								$errors .= __ ( 'Option "View Results Link Label" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-					}
-				} else {
-					$newinput ['view_results_link'] = $default_options ['view_results_link'];
-					$errors .= __ ( 'Option "View Results Link" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// view_back_to_vote_link
-			if (isset ( $input ['view_back_to_vote_link'] )) {
-				if (in_array ( $input ['view_back_to_vote_link'], array (
-					'yes',
-					'no'
-				) )) {
-					if ($default_options ['view_back_to_vote_link'] != trim ( $input ['view_back_to_vote_link'] )) {
-						$newinput ['view_back_to_vote_link'] = trim ( $input ['view_back_to_vote_link'] );
-						$updated .= __ ( 'Option "View Back To Vote Link" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					if ('yes' == $input ['view_back_to_vote_link']) {
-						// view_results_link_label
-						if (isset ( $input ['view_back_to_vote_link_label'] )) {
-							if ('' != $input ['view_back_to_vote_link_label']) {
-								if ($default_options ['view_back_to_vote_link_label'] != trim ( $input ['view_back_to_vote_link_label'] )) {
-									$newinput ['view_back_to_vote_link_label'] = trim ( $input ['view_back_to_vote_link_label'] );
-									$updated .= __ ( 'Option "View Back to Vote Link Label" Updated!', 'yop_poll' ) . $message_delimiter;
-								}
-							} else {
-								$newinput ['view_back_to_vote_link_label'] = $default_options ['view_back_to_vote_link_label'];
-								$errors .= __ ( 'Option "View Back to Vote Link Label" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-					}
-				} else {
-					$newinput ['view_back_to_vote_link'] = $default_options ['view_back_to_vote_link'];
-					$errors .= __ ( 'Option "View Back to Vote Link" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// view_total_votes
-			if (isset ( $input ['view_total_votes'] )) {
-				if (in_array ( $input ['view_total_votes'], array (
-					'yes',
-					'no'
-				) )) {
-					if ($default_options ['view_total_votes'] != trim ( $input ['view_total_votes'] )) {
-						$newinput ['view_total_votes'] = trim ( $input ['view_total_votes'] );
-						$updated .= __ ( 'Option "View Total Votes" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					// view_total_votes
-					if ('yes' == $input ['view_total_votes']) {
-						if (isset ( $input ['view_total_votes_label'] )) {
-							if (stripos ( $input ['view_total_votes_label'], '%POLL-TOTAL-VOTES%' ) === false) {
-								$newinput ['view_total_votes_label'] = $default_options ['view_total_votes_label'];
-								$errors .= __ ( 'You must use %POLL-TOTAL-VOTES% to define your Total Votes label!', 'yop_poll' ) . $message_delimiter;
-							} else {
-								if ($default_options ['view_total_votes_label'] != trim ( $input ['view_total_votes_label'] )) {
-									$newinput ['view_total_votes_label'] = trim ( $input ['view_total_votes_label'] );
-									$updated .= __ ( 'Option "View Total Votes Label" Updated!', 'yop_poll' ) . $message_delimiter;
+						if ('tabulated' == $input ['display_answers']) {
+							// display_answers_tabulated_cols
+							if (isset ( $input ['display_answers_tabulated_cols'] )) {
+								if (ctype_digit ( $input ['display_answers_tabulated_cols'] )) {
+									if ($default_options ['display_answers_tabulated_cols'] != trim ( $input ['display_answers_tabulated_cols'] )) {
+										$newinput ['display_answers_tabulated_cols'] = trim ( $input ['display_answers_tabulated_cols'] );
+										$updated .= __ ( 'Option "Columns for Tabulated Display Answers" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['display_answers_tabulated_cols'] = $default_options ['display_answers_tabulated_cols'];
+									$errors .= __ ( 'Option "Columns for Tabulated Display Answers" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
 								}
 							}
 						}
+					} else {
+						$newinput ['display_answers'] = $default_options ['display_answers'];
+						$errors .= __ ( 'Option "Display Answers" Not Updated! you must choose between \'vertical\', \'orizontal\' or \'tabulated\'', 'yop_poll' ) . $message_delimiter;
 					}
-				} else {
-					$newinput ['view_total_votes'] = $default_options ['view_total_votes'];
-					$errors .= __ ( 'Option "View Total Votes" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
 				}
-			}
 
-			// view_total_answers
-			if (isset ( $input ['view_total_answers'] )) {
-				if (in_array ( $input ['view_total_answers'], array (
-					'yes',
-					'no'
-				) )) {
-					if ($default_options ['view_total_answers'] != trim ( $input ['view_total_answers'] )) {
-						$newinput ['view_total_answers'] = trim ( $input ['view_total_answers'] );
-						$updated .= __ ( 'Option "View Total Answers" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
+				// display_results
+				if (isset ( $input ['display_results'] )) {
+					if (in_array ( $input ['display_results'], array (
+						'vertical',
+						'orizontal',
+						'tabulated'
+					) )) {
+						if ($default_options ['display_results'] != trim ( $input ['display_results'] )) {
+							$newinput ['display_results'] = trim ( $input ['display_results'] );
+							$updated .= __ ( 'Option "Display Results" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
 
-					// view_total_answers
-					if ('yes' == $input ['view_total_answers']) {
-						if (isset ( $input ['view_total_answers_label'] )) {
-							if (stripos ( $input ['view_total_answers_label'], '%POLL-TOTAL-ANSWERS%' ) === false) {
-								$newinput ['view_total_answers_label'] = $default_options ['view_total_answers_label'];
-								$errors .= __ ( 'You must use %POLL-TOTAL-ANSWERS% to define your Total Answers label!', 'yop_poll' ) . $message_delimiter;
-							} else {
-								if ($default_options ['view_total_answers_label'] != trim ( $input ['view_total_answers_label'] )) {
-									$newinput ['view_total_answers_label'] = trim ( $input ['view_total_answers_label'] );
-									$updated .= __ ( 'Option "View Total Answers Label" Updated!', 'yop_poll' ) . $message_delimiter;
+						if ('tabulated' == $input ['display_results']) {
+							// display_results_tabulated_cols
+							if (isset ( $input ['display_results_tabulated_cols'] )) {
+								if (ctype_digit ( $input ['display_results_tabulated_cols'] )) {
+									if ($default_options ['display_results_tabulated_cols'] != trim ( $input ['display_results_tabulated_cols'] )) {
+										$newinput ['display_results_tabulated_cols'] = trim ( $input ['display_results_tabulated_cols'] );
+										$updated .= __ ( 'Option "Columns for Tabulated Display Results" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['display_results_tabulated_cols'] = $default_options ['display_results_tabulated_cols'];
+									$errors .= __ ( 'Option "Columns for Tabulated Display Results" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
 								}
 							}
 						}
+					} else {
+						$newinput ['display_results'] = $default_options ['display_results'];
+						$errors .= __ ( 'Option "Display Results" Not Updated! Choose the display layout: \'vertical\', \'orizontal\' or \'tabulated\'', 'yop_poll' ) . $message_delimiter;
 					}
-				} else {
-					$newinput ['view_total_answers'] = $default_options ['view_total_answers'];
-					$errors .= __ ( 'Option "View Total Answers" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
 				}
-			}
-
-			// use_default_loading_image
-			if (isset ( $input ['use_default_loading_image'] )) {
-				if (in_array ( $input ['use_default_loading_image'], array (
-					'yes',
-					'no'
-				) )) {
-					if ($default_options ['use_default_loading_image'] != trim ( $input ['use_default_loading_image'] )) {
-						$newinput ['use_default_loading_image'] = trim ( $input ['use_default_loading_image'] );
-						$updated .= __ ( 'Option "Use Default Loading Image" Updated!', 'yop_poll' ) . $message_delimiter;
+				//template_width
+				if (isset ( $input ['template_width'] )) {
+					if ('' != trim ( $input ['template_width'] )) {
+						if ($default_options ['template_width'] != trim ( $input ['template_width'] )) {
+							$newinput ['template_width'] = trim ( $input ['template_width'] );
+							$updated .= __ ( 'Option "Poll Template Width" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+					} else {
+						$newinput ['template_width'] = $default_options ['template_width'];
+						$errors .= __ ( 'Option "Poll Template Width" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
 					}
+				}
 
-					if ('no' == $input ['use_default_loading_image']) {
-						if (isset ( $input ['loading_image_url'] )) {
-							if (stripos ( $input ['loading_image_url'], 'http' ) === false) {
-								$newinput ['loading_image_url'] = $default_options ['loading_image_url'];
-								$errors .= __ ( 'You must use a url like "http://.." to define your Loading Image Url!', 'yop_poll' ) . $message_delimiter;
-							} else {
-								if ($default_options ['loading_image_url'] != trim ( $input ['loading_image_url'] )) {
-									$newinput ['loading_image_url'] = trim ( $input ['loading_image_url'] );
-									$updated .= __ ( 'Option "Loading Image Url" Updated!', 'yop_poll' ) . $message_delimiter;
+				//widget_template_width
+				if (isset ( $input ['widget_template_width'] )) {
+					if ('' != trim ( $input ['widget_template_width'] )) {
+						if ($default_options ['widget_template_width'] != trim ( $input ['widget_template_width'] )) {
+							$newinput ['widget_template_width'] = trim ( $input ['widget_template_width'] );
+							$updated .= __ ( 'Option "Widget Template Width" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+					} else {
+						$newinput ['widget_template_width'] = $default_options ['widget_template_width'];
+						$errors .= __ ( 'Option "Widget Template Width" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// use_template_bar
+				if (isset ( $input ['use_template_bar'] )) {
+					if (in_array ( $input ['use_template_bar'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['use_template_bar'] != trim ( $input ['use_template_bar'] )) {
+							$newinput ['use_template_bar'] = trim ( $input ['use_template_bar'] );
+							$updated .= __ ( 'Option "Use Template Result Bar" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						if ('no' == $input ['use_template_bar']) {
+							// bar_background
+							if (isset ( $input ['bar_background'] )) {
+								if (ctype_alnum ( $input ['bar_background'] )) {
+									if ($default_options ['bar_background'] != trim ( $input ['bar_background'] )) {
+										$newinput ['bar_background'] = trim ( $input ['bar_background'] );
+										$updated .= __ ( 'Option "Result Bar Background Color" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['bar_background'] = $default_options ['bar_background'];
+									$errors .= __ ( 'Option "Result Bar Background Color" Not Updated! Fill in an alphanumeric value!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+
+							// bar_height
+							if (isset ( $input ['bar_height'] )) {
+								if (ctype_digit ( $input ['bar_height'] )) {
+									if ($default_options ['bar_height'] != trim ( $input ['bar_height'] )) {
+										$newinput ['bar_height'] = trim ( $input ['bar_height'] );
+										$updated .= __ ( 'Option "Result Bar Height" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['bar_height'] = $default_options ['bar_height'];
+									$errors .= __ ( 'Option "Result Bar Height" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+
+							// bar_border_color
+							if (isset ( $input ['bar_border_color'] )) {
+								if (ctype_alnum ( $input ['bar_border_color'] )) {
+									if ($default_options ['bar_border_color'] != trim ( $input ['bar_border_color'] )) {
+										$newinput ['bar_border_color'] = trim ( $input ['bar_border_color'] );
+										$updated .= __ ( 'Option "Result Bar Border Color" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['bar_border_color'] = $default_options ['bar_border_color'];
+									$errors .= __ ( 'Option "Result Bar Border Color" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+
+							// bar_border_width
+							if (isset ( $input ['bar_border_width'] )) {
+								if (ctype_digit ( $input ['bar_border_width'] )) {
+									if ($default_options ['bar_border_width'] != trim ( $input ['bar_border_width'] )) {
+										$newinput ['bar_border_width'] = trim ( $input ['bar_border_width'] );
+										$updated .= __ ( 'Option "Result Bar Border Width" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['bar_border_width'] = $default_options ['bar_border_width'];
+									$errors .= __ ( 'Option "Result Bar Border Width" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+
+							// bar_border_style
+							if (isset ( $input ['bar_border_style'] )) {
+								if (ctype_alpha ( $input ['bar_border_style'] )) {
+									if ($default_options ['bar_border_style'] != trim ( $input ['bar_border_style'] )) {
+										$newinput ['bar_border_style'] = trim ( $input ['bar_border_style'] );
+										$updated .= __ ( 'Option "Result Bar Border Style" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['bar_border_style'] = $default_options ['bar_border_style'];
+									$errors .= __ ( 'Option "Result Bar Border Style" Not Updated! Fill in an alphanumeric value!', 'yop_poll' ) . $message_delimiter;
 								}
 							}
 						}
+					} else {
+						$newinput ['use_template_bar'] = $default_options ['use_template_bar'];
+						$errors .= __ ( 'Option "Use Template Result Bar" Not Updated! Choose "yes" or "no"!', 'yop_poll' ) . $message_delimiter;
 					}
-				} else {
-					$newinput ['use_default_loading_image'] = $default_options ['use_default_loading_image'];
-					$errors .= __ ( 'Option "Use Default Loading Image" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
 				}
-			}
 
-			// vote_permisions
-			if (isset ( $input ['vote_permisions'] )) {
-				if (in_array ( $input ['vote_permisions'], array (
-					'quest-only',
-					'registered-only',
-					'guest-registered'
-				) )) {
-					if ($default_options ['vote_permisions'] != trim ( $input ['vote_permisions'] )) {
-						$newinput ['vote_permisions'] = trim ( $input ['vote_permisions'] );
-						$updated .= __ ( 'Option "Vote Permisions" Updated!', 'yop_poll' ) . $message_delimiter;
+				// sorting_answers
+				if (isset ( $input ['sorting_answers'] )) {
+					if (in_array ( $input ['sorting_answers'], array (
+						'exact',
+						'alphabetical',
+						'random',
+						'votes'
+					) )) {
+						if ($default_options ['sorting_answers'] != trim ( $input ['sorting_answers'] )) {
+							$newinput ['sorting_answers'] = trim ( $input ['sorting_answers'] );
+							$updated .= __ ( 'Option "Sort Answers" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						// sorting_answers_direction
+						if (isset ( $input ['sorting_answers_direction'] )) {
+							if (in_array ( $input ['sorting_answers_direction'], array (
+								'asc',
+								'desc'
+							) )) {
+								if ($default_options ['sorting_answers_direction'] != trim ( $input ['sorting_answers_direction'] )) {
+									$newinput ['sorting_answers_direction'] = trim ( $input ['sorting_answers_direction'] );
+									$updated .= __ ( 'Option "Sort Answers Direction" Updated!', 'yop_poll' ) . $message_delimiter;
+								}
+							} else {
+								$newinput ['sorting_answers_direction'] = $default_options ['sorting_answers_direction'];
+								$errors .= __ ( 'Option "Sort Answers Direction" Not Updated! Please choose between \'Ascending\' or \'Descending\'', 'yop_poll' ) . $message_delimiter;
+							}
+						}
+					} else {
+						$newinput ['sorting_answers'] = $default_options ['sorting_answers'];
+						$errors .= __ ( 'Option "Sort Answers" Not Updated! Please choose between: \'exact\', \'alphabetical\', \'random\' or \'votes\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// sorting_results
+				if (isset ( $input ['sorting_answers'] )) {
+					if (in_array ( $input ['sorting_results'], array (
+						'exact',
+						'alphabetical',
+						'random',
+						'votes'
+					) )) {
+						if ($default_options ['sorting_results'] != trim ( $input ['sorting_results'] )) {
+							$newinput ['sorting_results'] = trim ( $input ['sorting_results'] );
+							$updated .= __ ( 'Option "Sort Results" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						// sorting_results_direction
+						if (isset ( $input ['sorting_results_direction'] )) {
+							if (in_array ( $input ['sorting_results_direction'], array (
+								'asc',
+								'desc'
+							) )) {
+								if ($default_options ['sorting_results_direction'] != trim ( $input ['sorting_results_direction'] )) {
+									$newinput ['sorting_results_direction'] = trim ( $input ['sorting_results_direction'] );
+									$updated .= __ ( 'Option "Sort Results Direction" Updated!', 'yop_poll' ) . $message_delimiter;
+								}
+							} else {
+								$newinput ['sorting_results_direction'] = $default_options ['sorting_results_direction'];
+								$errors .= __ ( 'Option "Sort Results Direction" Not Updated! Please choose between \'Ascending\' or \'Descending\'', 'yop_poll' ) . $message_delimiter;
+							}
+						}
+					} else {
+						$newinput ['sorting_results'] = $default_options ['sorting_results'];
+						$errors .= __ ( 'Option "Sort Results" Not Updated! Please choose between: \'exact\', \'alphabetical\', \'random\' or \'votes\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// start_date
+				if (isset ( $input ['start_date'] )) {
+					if ('' != trim ( $input ['start_date'] )) {
+						if ($default_options ['start_date'] != trim ( $input ['start_date'] )) {
+							$newinput ['start_date'] = trim ( $input ['start_date'] );
+							$updated .= __ ( 'Option "Poll Start Date" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+					} else {
+						$newinput ['start_date'] = $default_options ['start_date'];
+						$errors .= __ ( 'Option "Poll Start Date" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// never_expire
+				if (isset ( $input ['never_expire'] )) {
+					if ('yes' == $input ['never_expire']) {
+						if ($default_options ['never_expire'] != trim ( $input ['never_expire'] )) {
+							$newinput ['never_expire'] = trim ( $input ['never_expire'] );
+							$updated .= __ ( 'Option "Poll End Date" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+					} else {
+						$newinput ['never_expire'] = $default_options ['never_expire'];
+						$errors .= __ ( 'Option "Poll End Date" Not Updated! ', 'yop_poll' ) . $message_delimiter;
 					}
 
+					// end_date
+					if ('yes' != $newinput ['never_expire']) {
+						if (isset ( $input ['end_date'] )) {
+							if ('' != $input ['end_date']) {
+								if ($default_options ['end_date'] != trim ( $input ['end_date'] )) {
+									$newinput ['end_date'] = $input ['end_date'];
+									$updated .= __ ( 'Option "Poll End Date" Updated!', 'yop_poll' ) . $message_delimiter;
+								}
+							} else {
+								$errors .= __ ( 'Option "Poll End Date" Not Updated! The field is empty! ', 'yop_poll' ) . $message_delimiter;
+							}
+						}
+					}
+				}
+
+				// view_results
+				if (isset ( $input ['view_results'] )) {
+					if (in_array ( $input ['view_results'], array (
+						'before',
+						'after',
+						'after-poll-end-date',
+						'never',
+						'custom-date'
+					) )) {
+						if ($default_options ['view_results'] != trim ( $input ['view_results'] )) {
+							$newinput ['view_results'] = trim ( $input ['view_results'] );
+							$updated .= __ ( 'Option "View Results" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						if ('custom-date' == $newinput ['view_results']) {
+							// view_results_start_date
+							if (isset ( $input ['view_results_start_date'] )) {
+								if ($default_options ['view_results_start_date'] != trim ( $input ['view_results_start_date'] )) {
+									$newinput ['view_results_start_date'] = $input ['view_results_start_date'];
+									$updated .= __ ( 'Option "View Results Custom Date" Updated!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+						}
+					} else {
+						$newinput ['view_results'] = $default_options ['view_results'];
+						$errors .= __ ( 'Option "View Results" Not Updated! Please choose between: \'Before\', \'After\', \'After Poll End Date\', \'Never\' or \'Custom Date\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// view_results_type
+				if (isset ( $input ['view_results_type'] )) {
+					if (in_array ( $input ['view_results_type'], array (
+						'votes-number',
+						'percentages',
+						'votes-number-and-percentages'
+					) )) {
+						if ($default_options ['view_results_type'] != trim ( $input ['view_results_type'] )) {
+							$newinput ['view_results_type'] = trim ( $input ['view_results_type'] );
+							$updated .= __ ( 'Option "View Results Type" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+					} else {
+						$newinput ['view_results_type'] = $default_options ['view_results_type'];
+						$errors .= __ ( 'Option "View Results Type" Not Updated! Please choose between: \'Votes number\', \'Percentages\' or \'Votes number and percentages\' ', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// answer_result_label
+				if (isset ( $input ['answer_result_label'] )) {
+					if ('votes-number' == $input ['view_results_type']) {
+						if (stripos ( $input ['answer_result_label'], '%POLL-ANSWER-RESULT-VOTES%' ) === false) {
+							$newinput ['answer_result_label'] = $default_options ['answer_result_label'];
+							$errors .= __ ( 'Option "Poll Answer Result Label" Not Updated! You must use %POLL-ANSWER-RESULT-VOTES%!', 'yop_poll' ) . $message_delimiter;
+						} else {
+							if ($default_options ['answer_result_label'] != trim ( $input ['answer_result_label'] )) {
+								$newinput ['answer_result_label'] = trim ( $input ['answer_result_label'] );
+								$updated .= __ ( 'Option "Poll Answer Result Label" Updated!', 'yop_poll' ) . $message_delimiter;
+							}
+						}
+					}
+
+					if ('percentages' == $input ['view_results_type']) {
+						if (stripos ( $input ['answer_result_label'], '%POLL-ANSWER-RESULT-PERCENTAGES%' ) === false) {
+							$newinput ['answer_result_label'] = $default_options ['answer_result_label'];
+							$errors .= __ ( 'Option "Poll Answer Result Label" Not Updated! You must use %POLL-ANSWER-RESULT-PERCENTAGES%!', 'yop_poll' ) . $message_delimiter;
+						} else {
+							if ($default_options ['answer_result_label'] != trim ( $input ['answer_result_label'] )) {
+								$newinput ['answer_result_label'] = trim ( $input ['answer_result_label'] );
+								$updated .= __ ( 'Option "Poll Answer Result Label" Updated!', 'yop_poll' ) . $message_delimiter;
+							}
+						}
+					}
+
+					if ('votes-number-and-percentages' == $input ['view_results_type']) {
+						if (stripos ( $input ['answer_result_label'], '%POLL-ANSWER-RESULT-PERCENTAGES%' ) === false) {
+							$newinput ['answer_result_label'] = $default_options ['answer_result_label'];
+							$errors .= __ ( 'Option "Poll Answer Result Label" Not Updated! You must use %POLL-ANSWER-RESULT-VOTES% and %POLL-ANSWER-RESULT-PERCENTAGES%!', 'yop_poll' ) . $message_delimiter;
+						} elseif (stripos ( $input ['answer_result_label'], '%POLL-ANSWER-RESULT-VOTES%' ) === false) {
+							$newinput ['answer_result_label'] = $default_options ['answer_result_label'];
+							$errors .= __ ( 'Option "Poll Answer Result Label" Not Updated! You must use %POLL-ANSWER-RESULT-VOTES% and %POLL-ANSWER-RESULT-PERCENTAGES%!', 'yop_poll' ) . $message_delimiter;
+						} else {
+							if ($default_options ['answer_result_label'] != trim ( $input ['answer_result_label'] )) {
+								$newinput ['answer_result_label'] = trim ( $input ['answer_result_label'] );
+								$updated .= __ ( 'Option "Poll Answer Result Label" Updated!', 'yop_poll' ) . $message_delimiter;
+							}
+						}
+					}
+				}
+
+				// singular_answer_result_votes_number_label
+				if (isset ( $input ['singular_answer_result_votes_number_label'] )) {
+					if ('' != $input ['singular_answer_result_votes_number_label']) {
+						if ($default_options ['singular_answer_result_votes_number_label'] != trim ( $input ['singular_answer_result_votes_number_label'] )) {
+							$newinput ['singular_answer_result_votes_number_label'] = trim ( $input ['singular_answer_result_votes_number_label'] );
+							$updated .= __ ( 'Option "Poll Answer Result Votes Number Singular Label" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+					} else {
+						$newinput ['singular_answer_result_votes_number_label'] = $default_options ['singular_answer_result_votes_number_label'];
+						$errors .= __ ( 'Option "Poll Answer Result Votes Number Singular Label" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// plural_answer_result_votes_number_label
+				if (isset ( $input ['plural_answer_result_votes_number_label'] )) {
+					if ('' != $input ['singular_answer_result_votes_number_label']) {
+						if ($default_options ['plural_answer_result_votes_number_label'] != trim ( $input ['plural_answer_result_votes_number_label'] )) {
+							$newinput ['plural_answer_result_votes_number_label'] = trim ( $input ['plural_answer_result_votes_number_label'] );
+							$updated .= __ ( 'Option "Poll Answer Result Votes Number Plural Label" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+					} else {
+						$newinput ['plural_answer_result_votes_number_label'] = $default_options ['plural_answer_result_votes_number_label'];
+						$errors .= __ ( 'Option "Poll Answer Result Votes Number Plural Label" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// vote_button_label
+				if (isset ( $input ['vote_button_label'] )) {
+					if ('' != $input ['vote_button_label']) {
+						if ($default_options ['vote_button_label'] != trim ( $input ['vote_button_label'] )) {
+							$newinput ['vote_button_label'] = trim ( $input ['vote_button_label'] );
+							$updated .= __ ( 'Option "Vote Button Label" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+					} else {
+						$newinput ['vote_button_label'] = $default_options ['vote_button_label'];
+						$errors .= __ ( 'Option "Vote Button Label" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// view_results_link
+				if (isset ( $input ['view_results_link'] )) {
+					if (in_array ( $input ['view_results_link'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['view_results_link'] != trim ( $input ['view_results_link'] )) {
+							$newinput ['view_results_link'] = trim ( $input ['view_results_link'] );
+							$updated .= __ ( 'Option "View Results Link" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						if ('yes' == $input ['view_results_link']) {
+							// view_results_link_label
+							if (isset ( $input ['view_results_link_label'] )) {
+								if ('' != $input ['view_results_link_label']) {
+									if ($default_options ['view_results_link_label'] != trim ( $input ['view_results_link_label'] )) {
+										$newinput ['view_results_link_label'] = trim ( $input ['view_results_link_label'] );
+										$updated .= __ ( 'Option "View Results Link Label" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['view_results_link_label'] = $default_options ['view_results_link_label'];
+									$errors .= __ ( 'Option "View Results Link Label" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+						}
+					} else {
+						$newinput ['view_results_link'] = $default_options ['view_results_link'];
+						$errors .= __ ( 'Option "View Results Link" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// view_back_to_vote_link
+				if (isset ( $input ['view_back_to_vote_link'] )) {
+					if (in_array ( $input ['view_back_to_vote_link'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['view_back_to_vote_link'] != trim ( $input ['view_back_to_vote_link'] )) {
+							$newinput ['view_back_to_vote_link'] = trim ( $input ['view_back_to_vote_link'] );
+							$updated .= __ ( 'Option "View Back To Vote Link" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						if ('yes' == $input ['view_back_to_vote_link']) {
+							// view_results_link_label
+							if (isset ( $input ['view_back_to_vote_link_label'] )) {
+								if ('' != $input ['view_back_to_vote_link_label']) {
+									if ($default_options ['view_back_to_vote_link_label'] != trim ( $input ['view_back_to_vote_link_label'] )) {
+										$newinput ['view_back_to_vote_link_label'] = trim ( $input ['view_back_to_vote_link_label'] );
+										$updated .= __ ( 'Option "View Back to Vote Link Label" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['view_back_to_vote_link_label'] = $default_options ['view_back_to_vote_link_label'];
+									$errors .= __ ( 'Option "View Back to Vote Link Label" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+						}
+					} else {
+						$newinput ['view_back_to_vote_link'] = $default_options ['view_back_to_vote_link'];
+						$errors .= __ ( 'Option "View Back to Vote Link" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// view_total_votes
+				if (isset ( $input ['view_total_votes'] )) {
+					if (in_array ( $input ['view_total_votes'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['view_total_votes'] != trim ( $input ['view_total_votes'] )) {
+							$newinput ['view_total_votes'] = trim ( $input ['view_total_votes'] );
+							$updated .= __ ( 'Option "View Total Votes" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						// view_total_votes
+						if ('yes' == $input ['view_total_votes']) {
+							if (isset ( $input ['view_total_votes_label'] )) {
+								if (stripos ( $input ['view_total_votes_label'], '%POLL-TOTAL-VOTES%' ) === false) {
+									$newinput ['view_total_votes_label'] = $default_options ['view_total_votes_label'];
+									$errors .= __ ( 'You must use %POLL-TOTAL-VOTES% to define your Total Votes label!', 'yop_poll' ) . $message_delimiter;
+								} else {
+									if ($default_options ['view_total_votes_label'] != trim ( $input ['view_total_votes_label'] )) {
+										$newinput ['view_total_votes_label'] = trim ( $input ['view_total_votes_label'] );
+										$updated .= __ ( 'Option "View Total Votes Label" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								}
+							}
+						}
+					} else {
+						$newinput ['view_total_votes'] = $default_options ['view_total_votes'];
+						$errors .= __ ( 'Option "View Total Votes" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// view_total_answers
+				if (isset ( $input ['view_total_answers'] )) {
+					if (in_array ( $input ['view_total_answers'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['view_total_answers'] != trim ( $input ['view_total_answers'] )) {
+							$newinput ['view_total_answers'] = trim ( $input ['view_total_answers'] );
+							$updated .= __ ( 'Option "View Total Answers" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						// view_total_answers
+						if ('yes' == $input ['view_total_answers']) {
+							if (isset ( $input ['view_total_answers_label'] )) {
+								if (stripos ( $input ['view_total_answers_label'], '%POLL-TOTAL-ANSWERS%' ) === false) {
+									$newinput ['view_total_answers_label'] = $default_options ['view_total_answers_label'];
+									$errors .= __ ( 'You must use %POLL-TOTAL-ANSWERS% to define your Total Answers label!', 'yop_poll' ) . $message_delimiter;
+								} else {
+									if ($default_options ['view_total_answers_label'] != trim ( $input ['view_total_answers_label'] )) {
+										$newinput ['view_total_answers_label'] = trim ( $input ['view_total_answers_label'] );
+										$updated .= __ ( 'Option "View Total Answers Label" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								}
+							}
+						}
+					} else {
+						$newinput ['view_total_answers'] = $default_options ['view_total_answers'];
+						$errors .= __ ( 'Option "View Total Answers" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				if (isset ( $input ['message_after_vote'] )) {
+					if ($default_options ['message_after_vote'] != trim ( $input ['message_after_vote'] )) {
+						$newinput ['message_after_vote'] = trim ( $input ['message_after_vote'] );
+						$updated .= __ ( 'Option "Message After Vote" Updated!', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// use_default_loading_image
+				if (isset ( $input ['use_default_loading_image'] )) {
+					if (in_array ( $input ['use_default_loading_image'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['use_default_loading_image'] != trim ( $input ['use_default_loading_image'] )) {
+							$newinput ['use_default_loading_image'] = trim ( $input ['use_default_loading_image'] );
+							$updated .= __ ( 'Option "Use Default Loading Image" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						if ('no' == $input ['use_default_loading_image']) {
+							if (isset ( $input ['loading_image_url'] )) {
+								if (stripos ( $input ['loading_image_url'], 'http' ) === false) {
+									$newinput ['loading_image_url'] = $default_options ['loading_image_url'];
+									$errors .= __ ( 'You must use a url like "http://.." to define your Loading Image Url!', 'yop_poll' ) . $message_delimiter;
+								} else {
+									if ($default_options ['loading_image_url'] != trim ( $input ['loading_image_url'] )) {
+										$newinput ['loading_image_url'] = trim ( $input ['loading_image_url'] );
+										$updated .= __ ( 'Option "Loading Image Url" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								}
+							}
+						}
+					} else {
+						$newinput ['use_default_loading_image'] = $default_options ['use_default_loading_image'];
+						$errors .= __ ( 'Option "Use Default Loading Image" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// vote_permisions
+				if (isset ( $input ['vote_permisions'] )) {
 					if (in_array ( $input ['vote_permisions'], array (
+						'quest-only',
 						'registered-only',
 						'guest-registered'
 					) )) {
-
-						if ( in_array( $input['vote_permisions_facebook'], array( 'yes', 'no' ) ) ) {
-							if ( $default_options ['vote_permisions_facebook'] != trim ( $input ['vote_permisions_facebook'] ) ) {
-								$newinput ['vote_permisions_facebook'] = trim ( $input ['vote_permisions_facebook'] );
-								$updated .= __ ( 'Option "Vote as Facebook User" Updated!', 'yop_poll' ) . $message_delimiter;
-							}
-							if ( 'yes' == $input['vote_permisions_facebook'] ) {
-								if ( $default_options ['vote_permisions_facebook_label'] != trim ( $input ['vote_permisions_facebook_label'] ) ) {
-									$newinput ['vote_permisions_facebook_label'] = trim ( $input ['vote_permisions_facebook_label'] );
-									$updated .= __ ( 'Option "Vote as Facebook User Buton Label" Updated!', 'yop_poll' ) . $message_delimiter;
-								}	
-							}
+						if ($default_options ['vote_permisions'] != trim ( $input ['vote_permisions'] )) {
+							$newinput ['vote_permisions'] = trim ( $input ['vote_permisions'] );
+							$updated .= __ ( 'Option "Vote Permisions" Updated!', 'yop_poll' ) . $message_delimiter;
 						}
-						if ( in_array( $input['vote_permisions_wordpress'], array( 'yes', 'no' ) ) ) {
-							if ( $default_options ['vote_permisions_wordpress'] != trim ( $input ['vote_permisions_wordpress'] ) ) {
-								$newinput ['vote_permisions_wordpress'] = trim ( $input ['vote_permisions_wordpress'] );
-								$updated .= __ ( 'Option "Vote as Wordpress User" Updated!', 'yop_poll' ) . $message_delimiter;
-							}
 
-							if ( 'yes' == $input['vote_permisions_wordpress'] ) {
-								if ( $default_options ['vote_permisions_wordpress_label'] != trim ( $input ['vote_permisions_wordpress_label'] ) ) {
-									$newinput ['vote_permisions_wordpress_label'] = trim ( $input ['vote_permisions_wordpress_label'] );
-									$updated .= __ ( 'Option "Vote as Wordpress User Buton Label" Updated!', 'yop_poll' ) . $message_delimiter;
-								}	
-							}
-						}
-						if ( in_array( $input['vote_permisions_anonymous'], array( 'yes', 'no' ) ) ) {
-							if ( $default_options ['vote_permisions_anonymous'] != trim ( $input ['vote_permisions_anonymous'] ) ) {
-								$newinput ['vote_permisions_anonymous'] = trim ( $input ['vote_permisions_anonymous'] );
-								$updated .= __ ( 'Option "Vote With Anonymous User" Updated!', 'yop_poll' ) . $message_delimiter;
-							}
+						if (in_array ( $input ['vote_permisions'], array (
+							'registered-only',
+							'guest-registered'
+						) )) {
 
-							if ( 'yes' == $input['vote_permisions_anonymous'] ) {
-								if ( $default_options ['vote_permisions_anonymous_label'] != trim ( $input ['vote_permisions_anonymous_label'] ) ) {
-									$newinput ['vote_permisions_anonymous_label'] = trim ( $input ['vote_permisions_anonymous_label'] );
-									$updated .= __ ( 'Option "Vote as Anonymous User Buton Label" Updated!', 'yop_poll' ) . $message_delimiter;
-								}	
-							}
-						}
-					}
-				} else {
-					$newinput ['vote_permisions'] = $default_options ['vote_permisions'];
-					$errors .= __ ( 'Option "Vote Permisions" Not Updated! Please choose between \'Quest Only\', \'Registered Only\', \'Guest & Registered Users\'', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// blocking_voters
-			if (isset ( $input ['blocking_voters'] )) {
-				if (in_array ( $input ['blocking_voters'], array (
-					'dont-block',
-					'cookie',
-					'ip',
-					'username',
-					'cookie-ip'
-				) )) {
-					if ($default_options ['blocking_voters'] != trim ( $input ['blocking_voters'] )) {
-						$newinput ['blocking_voters'] = trim ( $input ['blocking_voters'] );
-						$updated .= __ ( 'Option "Blocking Voters" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					if ('dont-block' != $newinput ['blocking_voters']) {
-						// blocking_voters_interval_value
-						if (isset ( $input ['blocking_voters_interval_value'] )) {
-							if (ctype_digit ( $input ['blocking_voters_interval_value'] )) {
-								if ($default_options ['blocking_voters_interval_value'] != trim ( $input ['blocking_voters_interval_value'] )) {
-									$newinput ['blocking_voters_interval_value'] = trim ( $input ['blocking_voters_interval_value'] );
-									$updated .= __ ( 'Option "Blocking Voters Interval Value" Updated!', 'yop_poll' ) . $message_delimiter;
+							if ( in_array( $input['vote_permisions_facebook'], array( 'yes', 'no' ) ) ) {
+								if ( $default_options ['vote_permisions_facebook'] != trim ( $input ['vote_permisions_facebook'] ) ) {
+									$newinput ['vote_permisions_facebook'] = trim ( $input ['vote_permisions_facebook'] );
+									$updated .= __ ( 'Option "Vote as Facebook User" Updated!', 'yop_poll' ) . $message_delimiter;
 								}
-							} else {
-								$newinput ['blocking_voters_interval_value'] = $default_options ['blocking_voters_interval_value'];
-								$errors .= __ ( 'Option "Blocking Voters Interval Value" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-
-						// blocking_voters_interval_unit
-						if (isset ( $input ['blocking_voters_interval_unit'] )) {
-							if (in_array ( $input ['blocking_voters_interval_unit'], array (
-								'seconds',
-								'minutes',
-								'hours',
-								'days'
-							) )) {
-								if ($default_options ['blocking_voters_interval_unit'] != trim ( $input ['blocking_voters_interval_unit'] )) {
-									$newinput ['blocking_voters_interval_unit'] = trim ( $input ['blocking_voters_interval_unit'] );
-									$updated .= __ ( 'Option "Blocking Voters Interval Unit" Updated!', 'yop_poll' ) . $message_delimiter;
+								if ( 'yes' == $input['vote_permisions_facebook'] ) {
+									if ( $default_options ['vote_permisions_facebook_label'] != trim ( $input ['vote_permisions_facebook_label'] ) ) {
+										$newinput ['vote_permisions_facebook_label'] = trim ( $input ['vote_permisions_facebook_label'] );
+										$updated .= __ ( 'Option "Vote as Facebook User Buton Label" Updated!', 'yop_poll' ) . $message_delimiter;
+									}	
 								}
-							} else {
-								$newinput ['blocking_voters_interval_unit'] = $default_options ['blocking_voters_interval_unit'];
-								$errors .= __ ( 'Option "Blocking Voters Interval Unit" Not Updated! Please choose between \'Seconds\', \'Minutes\', \'Hours\' or \'Days\'', 'yop_poll' ) . $message_delimiter;
 							}
-						}
-					}
-				} else {
-					$newinput ['blocking_voters'] = $default_options ['blocking_voters'];
-					$errors .= __ ( 'Option "Blocking Voters" Not Updated! Please choose between: \'Don`t Block\', \'Cookie\', \'Ip\', \'Username\', \'Cookie and Ip\'', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// percentages_decimals
-			if (isset ( $input ['percentages_decimals'] )) {
-				if (ctype_digit ( $input ['percentages_decimals'] )) {
-					if ($default_options ['percentages_decimals'] != trim ( $input ['percentages_decimals'] )) {
-						$newinput ['percentages_decimals'] = trim ( $input ['percentages_decimals'] );
-						$updated .= __ ( 'Option "Percentages Decimals" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-				} else {
-					$newinput ['percentages_decimals'] = $default_options ['percentages_decimals'];
-					$errors .= __ ( 'Option "Percentages Decimals" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
-				}
-			}
-
-			// redirect_after_vote
-			if (isset ( $input ['redirect_after_vote'] )) {
-				if (in_array ( $input ['redirect_after_vote'], array (
-					'yes',
-					'no'
-				) )) {
-					if ($default_options ['redirect_after_vote'] != trim ( $input ['redirect_after_vote'] )) {
-						$newinput ['redirect_after_vote'] = trim ( $input ['redirect_after_vote'] );
-						$updated .= __ ( 'Option "Redirect After Vote" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					if ('yes' == $input ['redirect_after_vote']) {
-						// archive_order
-						if (isset ( $input ['redirect_after_vote_url'] )) {
-							if ( '' !=  $input ['redirect_after_vote_url'] ) {
-								if ($default_options ['redirect_after_vote_url'] != trim ( $input ['redirect_after_vote_url'] )) {
-									$newinput ['redirect_after_vote_url'] = trim ( $input ['redirect_after_vote_url'] );
-									$updated .= __ ( 'Option "Redirect After Vote Url" Updated!', 'yop_poll' ) . $message_delimiter;
+							if ( in_array( $input['vote_permisions_wordpress'], array( 'yes', 'no' ) ) ) {
+								if ( $default_options ['vote_permisions_wordpress'] != trim ( $input ['vote_permisions_wordpress'] ) ) {
+									$newinput ['vote_permisions_wordpress'] = trim ( $input ['vote_permisions_wordpress'] );
+									$updated .= __ ( 'Option "Vote as Wordpress User" Updated!', 'yop_poll' ) . $message_delimiter;
 								}
-							} else {
-								$newinput ['redirect_after_vote_url'] = $default_options ['redirect_after_vote_url'];
-								$errors .= __ ( 'Option "Redirect After Vote Url" Not Updated! Please fill in an url!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-					}
-				} else {
-					$newinput ['redirect_after_vote'] = $default_options ['redirect_after_vote'];
-					$errors .= __ ( 'Option ""Redirect After Vote" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
-				}
-			}
 
-			// view_poll_archive_link
-			if (isset ( $input ['view_poll_archive_link'] )) {
-				if (in_array ( $input ['view_poll_archive_link'], array (
-					'yes',
-					'no'
-				) )) {
-					if ($default_options ['view_poll_archive_link'] != trim ( $input ['view_poll_archive_link'] )) {
-						$newinput ['view_poll_archive_link'] = trim ( $input ['view_poll_archive_link'] );
-						$updated .= __ ( 'Option "View Poll Archive Link" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					if ('yes' == $input ['view_poll_archive_link']) {
-						// view_results_link_label
-						if (isset ( $input ['view_poll_archive_link_label'] )) {
-							if ('' != $input ['view_poll_archive_link_label']) {
-								if ($default_options ['view_poll_archive_link_label'] != trim ( $input ['view_poll_archive_link_label'] )) {
-									$newinput ['view_poll_archive_link_label'] = trim ( $input ['view_poll_archive_link_label'] );
-									$updated .= __ ( 'Option "View Poll Archive Link Label" Updated!', 'yop_poll' ) . $message_delimiter;
+								if ( 'yes' == $input['vote_permisions_wordpress'] ) {
+									if ( $default_options ['vote_permisions_wordpress_label'] != trim ( $input ['vote_permisions_wordpress_label'] ) ) {
+										$newinput ['vote_permisions_wordpress_label'] = trim ( $input ['vote_permisions_wordpress_label'] );
+										$updated .= __ ( 'Option "Vote as Wordpress User Buton Label" Updated!', 'yop_poll' ) . $message_delimiter;
+									}	
 								}
-							} else {
-								$newinput ['view_poll_archive_link_label'] = $default_options ['view_poll_archive_link_label'];
-								$errors .= __ ( 'Option "View Poll Archive Link Label" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
 							}
-						}
-
-						if (isset ( $input ['poll_archive_url'] )) {
-							if ('' != $input ['poll_archive_url']) {
-								if ($default_options ['poll_archive_url'] != trim ( $input ['poll_archive_url'] )) {
-									$newinput ['poll_archive_url'] = trim ( $input ['poll_archive_url'] );
-									$updated .= __ ( 'Option "Poll Archive URL" Updated!', 'yop_poll' ) . $message_delimiter;
+							if ( in_array( $input['vote_permisions_anonymous'], array( 'yes', 'no' ) ) ) {
+								if ( $default_options ['vote_permisions_anonymous'] != trim ( $input ['vote_permisions_anonymous'] ) ) {
+									$newinput ['vote_permisions_anonymous'] = trim ( $input ['vote_permisions_anonymous'] );
+									$updated .= __ ( 'Option "Vote With Anonymous User" Updated!', 'yop_poll' ) . $message_delimiter;
 								}
-							} else {
-								$newinput ['poll_archive_url'] = $default_options ['poll_archive_url'];
-								$errors .= __ ( 'Option "Poll Archive URL" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
-							}
-						}
-					}
-				} else {
-					$newinput ['view_poll_archive_link'] = $default_options ['view_poll_archive_link'];
-					$errors .= __ ( 'Option "View Poll Archive Link" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
-				}
-			}
 
-			// show_in_archive
-			if (isset ( $input ['show_in_archive'] )) {
-				if (in_array ( $input ['show_in_archive'], array (
-					'yes',
-					'no'
-				) )) {
-					if ($default_options ['show_in_archive'] != trim ( $input ['show_in_archive'] )) {
-						$newinput ['show_in_archive'] = trim ( $input ['show_in_archive'] );
-						$updated .= __ ( 'Option "Show Poll in Arhive" Updated!', 'yop_poll' ) . $message_delimiter;
-					}
-
-					if ('yes' == $input ['show_in_archive']) {
-						// archive_order
-						if (isset ( $input ['archive_order'] )) {
-							if (ctype_digit ( $input ['archive_order'] )) {
-								if ($default_options ['archive_order'] != trim ( $input ['archive_order'] )) {
-									$newinput ['archive_order'] = trim ( $input ['archive_order'] );
-									$updated .= __ ( 'Option "Archive Order" Updated!', 'yop_poll' ) . $message_delimiter;
+								if ( 'yes' == $input['vote_permisions_anonymous'] ) {
+									if ( $default_options ['vote_permisions_anonymous_label'] != trim ( $input ['vote_permisions_anonymous_label'] ) ) {
+										$newinput ['vote_permisions_anonymous_label'] = trim ( $input ['vote_permisions_anonymous_label'] );
+										$updated .= __ ( 'Option "Vote as Anonymous User Buton Label" Updated!', 'yop_poll' ) . $message_delimiter;
+									}	
 								}
-							} else {
-								$newinput ['archive_order'] = $default_options ['archive_order'];
-								$errors .= __ ( 'Option "Archive Order" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
 							}
 						}
+					} else {
+						$newinput ['vote_permisions'] = $default_options ['vote_permisions'];
+						$errors .= __ ( 'Option "Vote Permisions" Not Updated! Please choose between \'Quest Only\', \'Registered Only\', \'Guest & Registered Users\'', 'yop_poll' ) . $message_delimiter;
 					}
-				} else {
-					$newinput ['show_in_archive'] = $default_options ['show_in_archive'];
-					$errors .= __ ( 'Option "Show Poll in Archive" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
 				}
-			}
 
-			// archive_polls_per_page
-			if (isset ( $input ['archive_polls_per_page'] )) {
-				if (ctype_digit ( $input ['archive_polls_per_page'] )) {
-					if ($default_options ['archive_polls_per_page'] != trim ( $input ['archive_polls_per_page'] )) {
-						$newinput ['archive_polls_per_page'] = trim ( $input ['archive_polls_per_page'] );
-						$updated .= __ ( 'Option "Archive Polls Per Page', 'yop_poll' ) . $message_delimiter;
+				// blocking_voters
+				if (isset ( $input ['blocking_voters'] )) {
+					if (in_array ( $input ['blocking_voters'], array (
+						'dont-block',
+						'cookie',
+						'ip',
+						'username',
+						'cookie-ip'
+					) )) {
+						if ($default_options ['blocking_voters'] != trim ( $input ['blocking_voters'] )) {
+							$newinput ['blocking_voters'] = trim ( $input ['blocking_voters'] );
+							$updated .= __ ( 'Option "Blocking Voters" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						if ('dont-block' != $newinput ['blocking_voters']) {
+							// blocking_voters_interval_value
+							if (isset ( $input ['blocking_voters_interval_value'] )) {
+								if (ctype_digit ( $input ['blocking_voters_interval_value'] )) {
+									if ($default_options ['blocking_voters_interval_value'] != trim ( $input ['blocking_voters_interval_value'] )) {
+										$newinput ['blocking_voters_interval_value'] = trim ( $input ['blocking_voters_interval_value'] );
+										$updated .= __ ( 'Option "Blocking Voters Interval Value" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['blocking_voters_interval_value'] = $default_options ['blocking_voters_interval_value'];
+									$errors .= __ ( 'Option "Blocking Voters Interval Value" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+
+							// blocking_voters_interval_unit
+							if (isset ( $input ['blocking_voters_interval_unit'] )) {
+								if (in_array ( $input ['blocking_voters_interval_unit'], array (
+									'seconds',
+									'minutes',
+									'hours',
+									'days'
+								) )) {
+									if ($default_options ['blocking_voters_interval_unit'] != trim ( $input ['blocking_voters_interval_unit'] )) {
+										$newinput ['blocking_voters_interval_unit'] = trim ( $input ['blocking_voters_interval_unit'] );
+										$updated .= __ ( 'Option "Blocking Voters Interval Unit" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['blocking_voters_interval_unit'] = $default_options ['blocking_voters_interval_unit'];
+									$errors .= __ ( 'Option "Blocking Voters Interval Unit" Not Updated! Please choose between \'Seconds\', \'Minutes\', \'Hours\' or \'Days\'', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+						}
+					} else {
+						$newinput ['blocking_voters'] = $default_options ['blocking_voters'];
+						$errors .= __ ( 'Option "Blocking Voters" Not Updated! Please choose between: \'Don`t Block\', \'Cookie\', \'Ip\', \'Username\', \'Cookie and Ip\'', 'yop_poll' ) . $message_delimiter;
 					}
-				} else {
-					$newinput ['archive_polls_per_page'] = $default_options ['archive_polls_per_page'];
-					$errors .= __ ( 'Option "Archive Polls Per Page" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
 				}
-			}
 
-			//share after vote
-			if ( isset ( $input ['share_after_vote'] ) ) {
-				if (in_array ( $input ['share_after_vote'], array (
-					'yes',
-					'no'
-				) )) {
-					if ($default_options ['share_after_vote'] != trim ( $input ['share_after_vote'] )) {
-						$newinput ['share_after_vote'] = trim ( $input ['share_after_vote'] );
-						$updated .= __ ( 'Option "Share After Vote" Updated!', 'yop_poll' ) . $message_delimiter;
+				// limit_number_of_votes_per_user
+				if (isset ( $input ['limit_number_of_votes_per_user'] )) {
+					if (in_array ( $input ['limit_number_of_votes_per_user'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['limit_number_of_votes_per_user'] != trim ( $input ['limit_number_of_votes_per_user'] )) {
+							$newinput ['limit_number_of_votes_per_user'] = trim ( $input ['limit_number_of_votes_per_user'] );
+							$updated .= __ ( 'Option "Limit Number of Votes per User" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						if ('yes' == $input ['limit_number_of_votes_per_user']) {
+							if (isset ( $input ['number_of_votes_per_user'] )) {
+								if (intval ( $input ['number_of_votes_per_user'] ) <= 0 ) {
+									$newinput ['number_of_votes_per_user'] = $default_options ['number_of_votes_per_user'];
+									$errors .= __ ( '"Number of Votes per User" must be a number > 0 !', 'yop_poll' ) . $message_delimiter;
+								} else {
+									if ($default_options ['number_of_votes_per_user'] != $input ['number_of_votes_per_user'] ) {
+										$newinput ['number_of_votes_per_user'] = trim ( $input ['number_of_votes_per_user'] );
+										$updated .= __ ( 'Option "Number of Votes per User" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								}
+							}
+						}
+					} else {
+						$newinput ['use_default_loading_image'] = $default_options ['use_default_loading_image'];
+						$errors .= __ ( 'Option "Use Default Loading Image" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
 					}
+				}
 
-					if ('yes' == $input ['share_after_vote']) {
-						// share_name
-						if (isset ( $input ['share_name'] ) ) {
-							if ($default_options ['share_name'] != trim ( $input ['share_name'] )) {
-								$newinput ['share_name'] = trim ( $input ['share_name'] );
-								$updated .= __ ( 'Option "Share Name" Updated!', 'yop_poll' ) . $message_delimiter;
+				// percentages_decimals
+				if (isset ( $input ['percentages_decimals'] )) {
+					if (ctype_digit ( $input ['percentages_decimals'] )) {
+						if ($default_options ['percentages_decimals'] != trim ( $input ['percentages_decimals'] )) {
+							$newinput ['percentages_decimals'] = trim ( $input ['percentages_decimals'] );
+							$updated .= __ ( 'Option "Percentages Decimals" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+					} else {
+						$newinput ['percentages_decimals'] = $default_options ['percentages_decimals'];
+						$errors .= __ ( 'Option "Percentages Decimals" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// redirect_after_vote
+				if (isset ( $input ['redirect_after_vote'] )) {
+					if (in_array ( $input ['redirect_after_vote'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['redirect_after_vote'] != trim ( $input ['redirect_after_vote'] )) {
+							$newinput ['redirect_after_vote'] = trim ( $input ['redirect_after_vote'] );
+							$updated .= __ ( 'Option "Redirect After Vote" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						if ('yes' == $input ['redirect_after_vote']) {
+							// archive_order
+							if (isset ( $input ['redirect_after_vote_url'] )) {
+								if ( '' !=  $input ['redirect_after_vote_url'] ) {
+									if ($default_options ['redirect_after_vote_url'] != trim ( $input ['redirect_after_vote_url'] )) {
+										$newinput ['redirect_after_vote_url'] = trim ( $input ['redirect_after_vote_url'] );
+										$updated .= __ ( 'Option "Redirect After Vote Url" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['redirect_after_vote_url'] = $default_options ['redirect_after_vote_url'];
+									$errors .= __ ( 'Option "Redirect After Vote Url" Not Updated! Please fill in an url!', 'yop_poll' ) . $message_delimiter;
+								}
 							}
 						}
-						// share_caption
-						if (isset ( $input ['share_caption'] ) ) {
-							if ($default_options ['share_caption'] != trim ( $input ['share_caption'] )) {
-								$newinput ['share_caption'] = trim ( $input ['share_caption'] );
-								$updated .= __ ( 'Option "Share Caption" Updated!', 'yop_poll' ) . $message_delimiter;
+					} else {
+						$newinput ['redirect_after_vote'] = $default_options ['redirect_after_vote'];
+						$errors .= __ ( 'Option ""Redirect After Vote" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// view_poll_archive_link
+				if (isset ( $input ['view_poll_archive_link'] )) {
+					if (in_array ( $input ['view_poll_archive_link'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['view_poll_archive_link'] != trim ( $input ['view_poll_archive_link'] )) {
+							$newinput ['view_poll_archive_link'] = trim ( $input ['view_poll_archive_link'] );
+							$updated .= __ ( 'Option "View Poll Archive Link" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						if ('yes' == $input ['view_poll_archive_link']) {
+							// view_results_link_label
+							if (isset ( $input ['view_poll_archive_link_label'] )) {
+								if ('' != $input ['view_poll_archive_link_label']) {
+									if ($default_options ['view_poll_archive_link_label'] != trim ( $input ['view_poll_archive_link_label'] )) {
+										$newinput ['view_poll_archive_link_label'] = trim ( $input ['view_poll_archive_link_label'] );
+										$updated .= __ ( 'Option "View Poll Archive Link Label" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['view_poll_archive_link_label'] = $default_options ['view_poll_archive_link_label'];
+									$errors .= __ ( 'Option "View Poll Archive Link Label" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+
+							if (isset ( $input ['poll_archive_url'] )) {
+								if ('' != $input ['poll_archive_url']) {
+									if ($default_options ['poll_archive_url'] != trim ( $input ['poll_archive_url'] )) {
+										$newinput ['poll_archive_url'] = trim ( $input ['poll_archive_url'] );
+										$updated .= __ ( 'Option "Poll Archive URL" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['poll_archive_url'] = $default_options ['poll_archive_url'];
+									$errors .= __ ( 'Option "Poll Archive URL" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+								}
 							}
 						}
-						// share_description
-						if (isset ( $input ['share_description'] ) ) {
-							if ($default_options ['share_description'] != trim ( $input ['share_description'] )) {
-								$newinput ['share_description'] = trim ( $input ['share_description'] );
-								$updated .= __ ( 'Option "Share Description" Updated!', 'yop_poll' ) . $message_delimiter;
+					} else {
+						$newinput ['view_poll_archive_link'] = $default_options ['view_poll_archive_link'];
+						$errors .= __ ( 'Option "View Poll Archive Link" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// show_in_archive
+				if (isset ( $input ['show_in_archive'] )) {
+					if (in_array ( $input ['show_in_archive'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['show_in_archive'] != trim ( $input ['show_in_archive'] )) {
+							$newinput ['show_in_archive'] = trim ( $input ['show_in_archive'] );
+							$updated .= __ ( 'Option "Show Poll in Arhive" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						if ('yes' == $input ['show_in_archive']) {
+							// archive_order
+							if (isset ( $input ['archive_order'] )) {
+								if (ctype_digit ( $input ['archive_order'] )) {
+									if ($default_options ['archive_order'] != trim ( $input ['archive_order'] )) {
+										$newinput ['archive_order'] = trim ( $input ['archive_order'] );
+										$updated .= __ ( 'Option "Archive Order" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['archive_order'] = $default_options ['archive_order'];
+									$errors .= __ ( 'Option "Archive Order" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
+								}
 							}
 						}
-						// share_picture
-						if (isset ( $input ['share_picture'] ) ) {
-							if ($default_options ['share_picture'] != trim ( $input ['share_picture'] )) {
-								$newinput ['share_picture'] = trim ( $input ['share_picture'] );
-								$updated .= __ ( 'Option "Share Picture" Updated!', 'yop_poll' ) . $message_delimiter;
-							}
+					} else {
+						$newinput ['show_in_archive'] = $default_options ['show_in_archive'];
+						$errors .= __ ( 'Option "Show Poll in Archive" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// archive_polls_per_page
+				if (isset ( $input ['archive_polls_per_page'] )) {
+					if (ctype_digit ( $input ['archive_polls_per_page'] )) {
+						if ($default_options ['archive_polls_per_page'] != trim ( $input ['archive_polls_per_page'] )) {
+							$newinput ['archive_polls_per_page'] = trim ( $input ['archive_polls_per_page'] );
+							$updated .= __ ( 'Option "Archive Polls Per Page', 'yop_poll' ) . $message_delimiter;
 						}
+					} else {
+						$newinput ['archive_polls_per_page'] = $default_options ['archive_polls_per_page'];
+						$errors .= __ ( 'Option "Archive Polls Per Page" Not Updated! Please fill in a number!', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				//share after vote
+				if ( isset ( $input ['share_after_vote'] ) ) {
+					if (in_array ( $input ['share_after_vote'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['share_after_vote'] != trim ( $input ['share_after_vote'] )) {
+							$newinput ['share_after_vote'] = trim ( $input ['share_after_vote'] );
+							$updated .= __ ( 'Option "Share After Vote" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						if ('yes' == $input ['share_after_vote']) {
+							// share_name
+							if (isset ( $input ['share_name'] ) ) {
+								if ($default_options ['share_name'] != trim ( $input ['share_name'] )) {
+									$newinput ['share_name'] = trim ( $input ['share_name'] );
+									$updated .= __ ( 'Option "Share Name" Updated!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+							// share_caption
+							if (isset ( $input ['share_caption'] ) ) {
+								if ($default_options ['share_caption'] != trim ( $input ['share_caption'] )) {
+									$newinput ['share_caption'] = trim ( $input ['share_caption'] );
+									$updated .= __ ( 'Option "Share Caption" Updated!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+							// share_description
+							if (isset ( $input ['share_description'] ) ) {
+								if ($default_options ['share_description'] != trim ( $input ['share_description'] )) {
+									$newinput ['share_description'] = trim ( $input ['share_description'] );
+									$updated .= __ ( 'Option "Share Description" Updated!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+							// share_picture
+							if (isset ( $input ['share_picture'] ) ) {
+								if ($default_options ['share_picture'] != trim ( $input ['share_picture'] )) {
+									$newinput ['share_picture'] = trim ( $input ['share_picture'] );
+									$updated .= __ ( 'Option "Share Picture" Updated!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+						}	
+					}
+					else {
+						$newinput ['share_after_vote'] = $default_options ['share_after_vote'];
+						$errors .= __ ( 'Option "Share After Vote" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
 					}	
 				}
-				else {
-					$newinput ['share_after_vote'] = $default_options ['share_after_vote'];
-					$errors .= __ ( 'Option "Share After Vote" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
-				}	
+				
+				//start_scheduler
+				if ( isset ( $input ['start_scheduler'] ) ) {
+					if (in_array ( $input ['start_scheduler'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['start_scheduler'] != trim ( $input ['start_scheduler'] )) {
+							$newinput ['start_scheduler'] = trim ( $input ['start_scheduler'] );
+							$updated .= __ ( 'Option "Start Scheduler" Updated!', 'yop_poll' ) . $message_delimiter;
+						}	
+					}
+					else {
+						$newinput ['start_scheduler'] = $default_options ['start_scheduler'];
+						$errors .= __ ( 'Option "Start Scheduler" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
+					}	
+				}
+			}
+			else {
+				$errors .= __ ( 'Bad Request!', 'yop_poll' ) . $message_delimiter;	
 			}
 
 			if ('' != $errors)
@@ -4582,7 +4693,7 @@
 																type="radio" name="yop_poll_options[allow_other_answers]"
 															value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label></td>
 												</tr>
-												<tr id="yop-poll-other-answers-label-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-other-answers-label-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Other Answer Label', 'yop_poll' ); ?>:
 													</th>
@@ -4594,7 +4705,7 @@
 															value="<?php echo isset( $other_answer[0]['id'] ) ? $other_answer[0]['id'] : '' ?>" />
 													</td>
 												</tr>
-												<tr id="yop-poll-display-other-answers-values-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-display-other-answers-values-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Display Other Answers Values', 'yop_poll' ); ?>:
 													</th>
@@ -4628,7 +4739,7 @@
 
 													</td>
 												</tr>
-												<tr id="yop-poll-allow-multiple-answers-div" style="<?php echo $default_options['allow_multiple_answers'] == 'no' ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-allow-multiple-answers-div" style="<?php echo $default_options['allow_multiple_answers'] == 'no' ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Max Number of allowed answers', 'yop_poll' ); ?>:
 													</th>
@@ -4638,7 +4749,7 @@
 														value="<?php echo $default_options['allow_multiple_answers_number']; ?>" />
 													</td>
 												</tr>
-												<tr id="yop-poll-allow-multiple-answers-div1" style="<?php echo $default_options['allow_multiple_answers'] == 'no' ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-allow-multiple-answers-div1" style="<?php echo $default_options['allow_multiple_answers'] == 'no' ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Min Number of allowed answers', 'yop_poll' ); ?>:
 													</th>
@@ -4698,7 +4809,7 @@
 															value="tabulated" /> <?php _e( 'Tabulated', 'yop_poll' ); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-display-answers-tabulated-div" style="<?php echo $default_options['display_answers'] != 'tabulated' ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-display-answers-tabulated-div" style="<?php echo $default_options['display_answers'] != 'tabulated' ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Columns', 'yop_poll' ); ?>:
 													</th>
@@ -4729,7 +4840,7 @@
 															value="tabulated"> <?php _e( 'Tabulated', 'yop_poll' ); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-display-results-tabulated-div" style="<?php echo $default_options['display_results'] != 'tabulated' ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-display-results-tabulated-div" style="<?php echo $default_options['display_results'] != 'tabulated' ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Columns', 'yop_poll' ); ?>:
 													</th>
@@ -4788,8 +4899,8 @@
 																type="radio" name="yop_poll_options[use_template_bar]"
 															value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label></td>
 												</tr>
-												<tr class="yop-poll-custom-result-bar-table" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
-													<th><label for="yop-poll-bar-background"><?php echo $yop_poll_add_new_config['text_poll_bar_style']['poll_bar_style_background_label']; ?></label>
+												<tr class="yop-poll-custom-result-bar-table yop_poll_suboption" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
+													<th><label for="yop-poll-bar-background"><?php _e ( 'Background Color', 'yop_poll' ); ?></label>
 													</th>
 													<td>#<input class="yop-small-input"
 														id="yop-poll-bar-background"
@@ -4798,16 +4909,16 @@
 														type="text" name="yop_poll_options[bar_background]" />
 													</td>
 												</tr>
-												<tr class="yop-poll-custom-result-bar-table" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
-													<th><label for="yop-poll-bar-height"><?php echo $yop_poll_add_new_config['text_poll_bar_style']['poll_bar_style_height_label']; ?></label>
+												<tr class="yop-poll-custom-result-bar-table yop_poll_suboption" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
+													<th><label for="yop-poll-bar-height"><?php _e ( 'Height', 'yop_poll' ); ?></label>
 													</th>
 													<td><input class="yop-small-input" id="yop-poll-bar-height"
 														value="<?php echo $default_options['bar_height']; ?>"
 														onblur="yop_poll_update_bar_style('#yop-poll-bar-preview', 'height', this.value + 'px')"
 														type="text" name="yop_poll_options[bar_height]" /> px</td>
 												</tr>
-												<tr class="yop-poll-custom-result-bar-table" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
-													<th><label for="yop-poll-bar-border-color"><?php echo $yop_poll_add_new_config['text_poll_bar_style']['poll_bar_style_border_color_label']; ?></label>
+												<tr class="yop-poll-custom-result-bar-table yop_poll_suboption" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
+													<th><label for="yop-poll-bar-border-color"><?php _e ( 'Border Color', 'yop_poll' ) ?></label>
 													</th>
 													<td>#<input class="yop-small-input"
 														id="yop-poll-bar-border-color"
@@ -4816,8 +4927,8 @@
 														type="text" name="yop_poll_options[bar_border_color]" />
 													</td>
 												</tr>
-												<tr class="yop-poll-custom-result-bar-table" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
-													<th><label for="yop-poll-bar-border-width"><?php echo $yop_poll_add_new_config['text_poll_bar_style']['poll_bar_style_border_width_label']; ?></label>
+												<tr class="yop-poll-custom-result-bar-table yop_poll_suboption" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
+													<th><label for="yop-poll-bar-border-width"><?php _e ( 'Border Width', 'yop_poll' ); ?></label>
 													</th>
 													<td><input class="yop-small-input"
 														id="yop-poll-bar-border-width"
@@ -4826,8 +4937,8 @@
 														type="text" name="yop_poll_options[bar_border_width]" /> px
 													</td>
 												</tr>
-												<tr class="yop-poll-custom-result-bar-table" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
-													<th><label for="yop-poll-bar-border-style"><?php echo $yop_poll_add_new_config['text_poll_bar_style']['poll_bar_style_border_style_label']; ?></label>
+												<tr class="yop-poll-custom-result-bar-table yop_poll_suboption" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
+													<th><label for="yop-poll-bar-border-style"><?php _e ( 'Border Style', 'yop_poll' );  ?></label>
 													</th>
 													<td><select id="yop-poll-bar-border-style"
 															onchange="yop_poll_update_bar_style('#yop-poll-bar-preview', 'border-style', this.value)"
@@ -4843,8 +4954,8 @@
 																value="dotted">Dotted</option>
 														</select></td>
 												</tr>
-												<tr class="yop-poll-custom-result-bar-table" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
-													<th><label><?php echo $yop_poll_add_new_config['text_poll_bar_style']['poll_bar_preview_label']; ?></label>
+												<tr class="yop-poll-custom-result-bar-table yop_poll_suboption" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
+													<th><label><?php _e ( 'Yop Poll Bar Preview', 'yop_poll' ); ?></label>
 													</th>
 													<td>
 														<div id="yop-poll-bar-preview"; style="width: 100px; height: <?php echo $default_options['bar_height']; ?>px; background-color:#<?php
@@ -5112,7 +5223,7 @@
 															name="yop_poll_options[view_results_link]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-view-results-link-div" style="<?php echo 'yes' != $default_options['view_results_link'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-view-results-link-div" style="<?php echo 'yes' != $default_options['view_results_link'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'View Results Link Label', 'yop_poll' ); ?>:
 													</th>
@@ -5135,7 +5246,7 @@
 															value="no" name="yop_poll_options[view_back_to_vote_link]" /><?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-view-back-to-vote-link-div" style="<?php echo 'yes' != $default_options['view_back_to_vote_link'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-view-back-to-vote-link-div" style="<?php echo 'yes' != $default_options['view_back_to_vote_link'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'View Back To Vote Link Label', 'yop_poll' ); ?>:
 													</th>
@@ -5159,7 +5270,7 @@
 															name="yop_poll_options[view_total_votes]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-view-total-votes-div" style="<?php echo 'yes' != $default_options['view_total_votes'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-view-total-votes-div" style="<?php echo 'yes' != $default_options['view_total_votes'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'View Total Votes Label', 'yop_poll' ); ?>:
 													</th>
@@ -5182,13 +5293,22 @@
 															name="yop_poll_options[view_total_answers]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-view-total-answers-div" style="<?php echo 'yes' != $default_options['view_total_answers'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-view-total-answers-div" style="<?php echo 'yes' != $default_options['view_total_answers'] ? 'display: none;' : '';  ?>">
 													<th>
-														<?php _e( 'View Total answers Label', 'yop_poll' ); ?>:
+														<?php _e( 'View Total Answers Label', 'yop_poll' ); ?>:
 													</th>
 													<td><input id="yop-poll-view-total-answers-label" type="text"
 														name="yop_poll_options[view_total_answers_label]"
 														value="<?php echo esc_html( stripslashes( $default_options['view_total_answers_label'] ) ); ?>" />
+													</td>
+												</tr>
+												<tr>
+													<th>
+														<?php _e( 'Message After Vote', 'yop_poll' ); ?>:
+													</th>
+													<td><input id="yop-poll-message-after-vote" type="text"
+														name="yop_poll_options[message_after_vote]"
+														value="<?php echo esc_html( stripslashes( $default_options['message_after_vote'] ) ); ?>" />
 													</td>
 												</tr>
 												<tr>
@@ -5253,7 +5373,7 @@
 														</td>
 													</tr>
 
-													<tr class="yop-poll-vote-as-div" id="yop-poll-vote-permisions-facebook-div" style="<?php echo 'yes' != $default_options['vote_permisions_facebook'] ? 'display: none;' : 'quest-only' == $default_options['vote_permisions'] ? 'display: none;' : '';  ?>">
+													<tr class="yop-poll-vote-as-div yop_poll_suboption" id="yop-poll-vote-permisions-facebook-div" style="<?php echo 'yes' != $default_options['vote_permisions_facebook'] ? 'display: none;' : 'quest-only' == $default_options['vote_permisions'] ? 'display: none;' : '';  ?>">
 														<th>
 															<?php _e( '"Vote as Facebook User" Button Label', 'yop_poll' ); ?>:
 														</th>
@@ -5278,7 +5398,7 @@
 															name="yop_poll_options[vote_permisions_wordpress]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr class="yop-poll-vote-as-div" id="yop-poll-vote-permisions-wordpress-div" style="<?php echo 'yes' != $default_options['vote_permisions_wordpress'] ? 'display: none;' : 'quest-only' == $default_options['vote_permisions'] ? 'display: none;' : '';  ?>">
+												<tr class="yop-poll-vote-as-div yop_poll_suboption" id="yop-poll-vote-permisions-wordpress-div" style="<?php echo 'yes' != $default_options['vote_permisions_wordpress'] ? 'display: none;' : 'quest-only' == $default_options['vote_permisions'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( '"Vote as Wordpress User" Button Label', 'yop_poll' ); ?>:
 													</th>
@@ -5302,7 +5422,7 @@
 															name="yop_poll_options[vote_permisions_anonymous]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>												
-												<tr class="yop-poll-vote-as-div" id="yop-poll-vote-permisions-anonymous-div" style="<?php echo 'yes' != $default_options['vote_permisions_anonymous'] ? 'display: none;' : 'quest-only' == $default_options['vote_permisions'] ? 'display: none;' : '';  ?>">
+												<tr class="yop-poll-vote-as-div yop_poll_suboption" id="yop-poll-vote-permisions-anonymous-div" style="<?php echo 'yes' != $default_options['vote_permisions_anonymous'] ? 'display: none;' : 'quest-only' == $default_options['vote_permisions'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( '"Vote as Anonymous User" Button Label', 'yop_poll' ); ?>:
 													</th>
@@ -5314,7 +5434,7 @@
 
 												<tr>
 													<th>
-														<?php _e( 'Blocking Voters ', 'yop_poll' ); ?>:
+														<?php _e( 'Blocking Voters', 'yop_poll' ); ?>:
 													</th>
 													<td><label for="yop-poll-blocking-voters-dont-block"><input
 																class="yop-poll-blocking-voters-hide-interval"
@@ -5343,7 +5463,7 @@
 															value="cookie-ip" name="yop_poll_options[blocking_voters]" /> <?php _e( 'By Cookie &amp; Ip' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-blocking-voters-interval-div" style="<?php echo 'dont-block' == $default_options['blocking_voters'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-blocking-voters-interval-div" style="<?php echo 'dont-block' == $default_options['blocking_voters'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Blocking voters interval', 'yop_poll' ); ?>:
 													</th>
@@ -5366,6 +5486,29 @@
 																<?php echo 'days' == $default_options['blocking_voters_interval_unit'] ? 'selected="selected"' : '';  ?>
 																value="days"><?php _e( 'Days', 'yop_poll' ); ?></option>
 														</select></td>
+												</tr>
+												<tr class="yop-poll-limit-number-of-votes-per-user-div">
+													<th>
+														<?php _e( 'Limit Number of Votes per User', 'yop_poll' ); ?>:<br><font size="0">(<?php _e('Only for logged users', 'yop_poll'); ?>)</font>
+													</th>
+													<td><label for="yop-poll-limit-number-of-votes-per-user-yes"><input
+																<?php echo 'yes' == $default_options['limit_number_of_votes_per_user'] ? 'checked="checked"' : '';  ?>
+																id="yop-poll-limit-number-of-votes-per-user-yes" type="radio"
+															value="yes" name="yop_poll_options[limit_number_of_votes_per_user]" /> <?php _e( 'Yes' , 'yop_poll'); ?></label>
+														<label for="yop-poll-limit-number-of-votes-per-user-no"><input
+																<?php echo 'no' == $default_options['limit_number_of_votes_per_user'] ? 'checked="checked"' : '';  ?>
+																id="yop-poll-limit-number-of-votes-per-user-no" type="radio" value="no"
+															name="yop_poll_options[limit_number_of_votes_per_user]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
+													</td>
+												</tr>
+												<tr class="yop-poll-limit-number-of-votes-per-user-divs yop_poll_suboption" id="yop-poll-number-of-votes-per-user-div" style="<?php echo 'yes' != $default_options['limit_number_of_votes_per_user'] ? 'display: none;' : '' ?>">
+													<th>
+														<?php _e( 'Number of Votes per User', 'yop_poll' ); ?>:
+													</th>
+													<td><input id="yop-poll-number-of-votes-per-user" type="text"
+														name="yop_poll_options[number_of_votes_per_user]"
+														value="<?php echo esc_html( stripslashes( $default_options['number_of_votes_per_user'] ) ); ?>" />
+													</td>
 												</tr>
 												<tr>
 													<th>
@@ -5392,7 +5535,7 @@
 															name="yop_poll_options[use_default_loading_image]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-use-default-loading-image-div" style="<?php echo 'yes' == $default_options['use_default_loading_image'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-use-default-loading-image-div" style="<?php echo 'yes' == $default_options['use_default_loading_image'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Loading Image Url', 'yop_poll' ); ?>:
 													</th>
@@ -5418,7 +5561,7 @@
 															name="yop_poll_options[redirect_after_vote]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-redirect-after-vote-url-div" style="<?php echo 'no' == $default_options['redirect_after_vote'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-redirect-after-vote-url-div" style="<?php echo 'no' == $default_options['redirect_after_vote'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Redirect After Vote Url', 'yop_poll' ); ?>:
 													</th>
@@ -5457,7 +5600,7 @@
 														for="yop-poll-view-poll-archive-link-no"><?php _e( 'No' , 'yop_poll'); ?></label>
 												</td>
 											</tr>
-											<tr id="yop-poll-view-poll-archive-link-div" style="<?php echo 'yes' != $default_options['view_poll_archive_link'] ? 'display: none;' : '';  ?>">
+											<tr class="yop_poll_suboption" id="yop-poll-view-poll-archive-link-div" style="<?php echo 'yes' != $default_options['view_poll_archive_link'] ? 'display: none;' : '';  ?>">
 												<th>
 													<?php _e( 'View Poll Archive Link Label', 'yop_poll' ); ?>:
 												</th>
@@ -5490,7 +5633,7 @@
 														name="yop_poll_options[show_in_archive]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 												</td>
 											</tr>
-											<tr id="yop-poll-show-in-archive-div" style="<?php echo 'yes' != $default_options['show_in_archive'] ? 'display: none;' : '';  ?>">
+											<tr class="yop_poll_suboption" id="yop-poll-show-in-archive-div" style="<?php echo 'yes' != $default_options['show_in_archive'] ? 'display: none;' : '';  ?>">
 												<th>
 													<?php _e( 'Archive Order', 'yop_poll' ); ?>:
 												</th>
@@ -5543,7 +5686,7 @@
 															for="yop-poll-share-after-vote-no"><?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-share-after-vote-name-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-share-after-vote-name-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Share Name', 'yop_poll' ); ?>:
 													</th>
@@ -5553,7 +5696,7 @@
 														value="<?php echo esc_html( stripslashes( $default_options['share_name'] ) ); ?>" />
 													</td>
 												</tr>											
-												<tr id="yop-poll-share-after-vote-caption-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-share-after-vote-caption-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Share Caption', 'yop_poll' ); ?>:
 													</th>
@@ -5563,7 +5706,7 @@
 														value="<?php echo esc_html( stripslashes( $default_options['share_caption'] ) ); ?>" />
 													</td>
 												</tr>
-												<tr id="yop-poll-share-after-vote-description-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-share-after-vote-description-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Share Description', 'yop_poll' ); ?>:
 													</th>
@@ -5573,7 +5716,7 @@
 														value="<?php echo esc_html( stripslashes( $default_options['share_description'] ) ); ?>" />
 													</td>
 												</tr> 											
-												<tr id="yop-poll-share-after-vote-picture-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-share-after-vote-picture-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Share Picture', 'yop_poll' ); ?>:
 													</th>
@@ -5927,7 +6070,7 @@
 														<?php } ?>
 												</td>
 											</tr>
-											<tr id="yop-poll-other-answers-label-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
+											<tr class="yop_poll_suboption" id="yop-poll-other-answers-label-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
 												<th>
 													<?php _e( 'Other Answer Label', 'yop_poll' ); ?>:
 												</th>
@@ -5939,7 +6082,7 @@
 														value="<?php echo isset( $other_answer[0]['id'] ) ? $other_answer[0]['id'] : '' ?>" />
 												</td>
 											</tr>
-											<tr id="yop-poll-display-other-answers-values-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
+											<tr class="yop_poll_suboption" id="yop-poll-display-other-answers-values-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
 												<th>
 													<?php _e( 'Display Other Answers Values', 'yop_poll' ); ?>:
 												</th>
@@ -5956,7 +6099,7 @@
 															name="yop_poll_options[display_other_answers_values]"
 														value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label></td>
 											</tr>
-											<tr id="yop-poll-is-default-other-answers-values-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
+											<tr class="yop_poll_suboption" id="yop-poll-is-default-other-answers-values-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
 												<th>
 													<?php _e( 'Make "Other answer" default answer ', 'yop_poll' ); ?>:
 												</th>
@@ -5986,7 +6129,7 @@
 															type="radio" name="yop_poll_options[allow_multiple_answers]"
 														value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label></td>
 											</tr>
-											<tr id="yop-poll-allow-multiple-answers-div" style="<?php echo $default_options['allow_multiple_answers'] == 'no' ? 'display: none;' : '';  ?>">
+											<tr class="yop_poll_suboption" id="yop-poll-allow-multiple-answers-div" style="<?php echo $default_options['allow_multiple_answers'] == 'no' ? 'display: none;' : '';  ?>">
 												<th>
 													<?php _e( 'Number of allowed answers', 'yop_poll' ); ?>:
 												</th>
@@ -5996,7 +6139,7 @@
 													value="<?php echo $default_options['allow_multiple_answers_number']; ?>" />
 												</td>
 											</tr>
-											<tr id="yop-poll-allow-multiple-answers-div1" style="<?php echo $default_options['allow_multiple_answers'] == 'no' ? 'display: none;' : '';  ?>">
+											<tr class="yop_poll_suboption" id="yop-poll-allow-multiple-answers-div1" style="<?php echo $default_options['allow_multiple_answers'] == 'no' ? 'display: none;' : '';  ?>">
 												<th>
 													<?php _e( 'Min Number of allowed answers', 'yop_poll' ); ?>:
 												</th>
@@ -6027,7 +6170,7 @@
 														value="tabulated" /> <?php _e( 'Tabulated', 'yop_poll' ); ?></label>
 												</td>
 											</tr>
-											<tr id="yop-poll-display-answers-tabulated-div" style="<?php echo $default_options['display_answers'] != 'tabulated' ? 'display: none;' : '';  ?>">
+											<tr class="yop_poll_suboption" id="yop-poll-display-answers-tabulated-div" style="<?php echo $default_options['display_answers'] != 'tabulated' ? 'display: none;' : '';  ?>">
 												<th>
 													<?php _e( 'Columns', 'yop_poll' ); ?>:
 												</th>
@@ -6058,7 +6201,7 @@
 														value="tabulated"> <?php _e( 'Tabulated', 'yop_poll' ); ?></label>
 												</td>
 											</tr>
-											<tr id="yop-poll-display-results-tabulated-div" style="<?php echo $default_options['display_results'] != 'tabulated' ? 'display: none;' : '';  ?>">
+											<tr class="yop_poll_suboption" id="yop-poll-display-results-tabulated-div" style="<?php echo $default_options['display_results'] != 'tabulated' ? 'display: none;' : '';  ?>">
 												<th>
 													<?php _e( 'Columns', 'yop_poll' ); ?>:
 												</th>
@@ -6083,7 +6226,7 @@
 															type="radio" name="yop_poll_options[use_template_bar]"
 														value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label></td>
 											</tr>
-											<tr class="yop-poll-custom-result-bar-table" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
+											<tr class="yop-poll-custom-result-bar-table yop_poll_suboption" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
 												<th><label for="yop-poll-bar-background"><?php echo $yop_poll_add_new_config['text_poll_bar_style']['poll_bar_style_background_label']; ?></label>
 												</th>
 												<td>#<input class="yop-small-input"
@@ -6093,7 +6236,7 @@
 													type="text" name="yop_poll_options[bar_background]" />
 												</td>
 											</tr>
-											<tr class="yop-poll-custom-result-bar-table" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
+											<tr class="yop-poll-custom-result-bar-table yop_poll_suboption" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
 												<th><label for="yop-poll-bar-height"><?php echo $yop_poll_add_new_config['text_poll_bar_style']['poll_bar_style_height_label']; ?></label>
 												</th>
 												<td><input class="yop-small-input" id="yop-poll-bar-height"
@@ -6101,7 +6244,7 @@
 													onblur="yop_poll_update_bar_style('#yop-poll-bar-preview', 'height', this.value + 'px')"
 													type="text" name="yop_poll_options[bar_height]" /> px</td>
 											</tr>
-											<tr class="yop-poll-custom-result-bar-table" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
+											<tr class="yop-poll-custom-result-bar-table yop_poll_suboption" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
 												<th><label for="yop-poll-bar-border-color"><?php echo $yop_poll_add_new_config['text_poll_bar_style']['poll_bar_style_border_color_label']; ?></label>
 												</th>
 												<td>#<input class="yop-small-input"
@@ -6111,7 +6254,7 @@
 													type="text" name="yop_poll_options[bar_border_color]" />
 												</td>
 											</tr>
-											<tr class="yop-poll-custom-result-bar-table" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
+											<tr class="yop-poll-custom-result-bar-table yop_poll_suboption" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
 												<th><label for="yop-poll-bar-border-width"><?php echo $yop_poll_add_new_config['text_poll_bar_style']['poll_bar_style_border_width_label']; ?></label>
 												</th>
 												<td><input class="yop-small-input"
@@ -6120,7 +6263,7 @@
 													onblur="yop_poll_update_bar_style('#yop-poll-bar-preview', 'border-width', this.value + 'px')"
 													type="text" name="yop_poll_options[bar_border_width]" /> px</td>
 											</tr>
-											<tr class="yop-poll-custom-result-bar-table" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
+											<tr class="yop-poll-custom-result-bar-table yop_poll_suboption" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
 												<th><label for="yop-poll-bar-border-style"><?php echo $yop_poll_add_new_config['text_poll_bar_style']['poll_bar_style_border_style_label']; ?></label>
 												</th>
 												<td><select id="yop-poll-bar-border-style"
@@ -6137,7 +6280,7 @@
 															value="dotted">Dotted</option>
 													</select></td>
 											</tr>
-											<tr class="yop-poll-custom-result-bar-table" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
+											<tr class="yop-poll-custom-result-bar-table yop_poll_suboption" style="<?php echo $default_options['use_template_bar'] == 'yes' ? 'display: none;' : '';  ?>">
 												<th><label><?php echo $yop_poll_add_new_config['text_poll_bar_style']['poll_bar_preview_label']; ?></label>
 												</th>
 												<td>
@@ -6443,7 +6586,7 @@
 															name="yop_poll_options[view_results_link]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-view-results-link-div" style="<?php echo 'yes' != $default_options['view_results_link'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-view-results-link-div" style="<?php echo 'yes' != $default_options['view_results_link'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'View Results Link Label', 'yop_poll' ); ?>:
 													</th>
@@ -6466,7 +6609,7 @@
 															value="no" name="yop_poll_options[view_back_to_vote_link]" /><?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-view-back-to-vote-link-div" style="<?php echo 'yes' != $default_options['view_back_to_vote_link'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-view-back-to-vote-link-div" style="<?php echo 'yes' != $default_options['view_back_to_vote_link'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'View Back To Vote Link Label', 'yop_poll' ); ?>:
 													</th>
@@ -6490,7 +6633,7 @@
 															name="yop_poll_options[view_total_votes]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-view-total-votes-div" style="<?php echo 'yes' != $default_options['view_total_votes'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-view-total-votes-div" style="<?php echo 'yes' != $default_options['view_total_votes'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'View Total Votes Label', 'yop_poll' ); ?>:
 													</th>
@@ -6513,13 +6656,22 @@
 															name="yop_poll_options[view_total_answers]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-view-total-answers-div" style="<?php echo 'yes' != $default_options['view_total_answers'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-view-total-answers-div" style="<?php echo 'yes' != $default_options['view_total_answers'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'View Total Answers Label', 'yop_poll' ); ?>:
 													</th>
 													<td><input id="yop-poll-view-total-answers-label" type="text"
 														name="yop_poll_options[view_total_answers_label]"
 														value="<?php echo esc_html( stripslashes( $default_options['view_total_answers_label'] ) ); ?>" />
+													</td>
+												</tr>
+												<tr>
+													<th>
+														<?php _e( 'Message After Vote', 'yop_poll' ); ?>:
+													</th>
+													<td><input id="yop-poll-message-after-vote" type="text"
+														name="yop_poll_options[message_after_vote]"
+														value="<?php echo esc_html( stripslashes( $default_options['message_after_vote'] ) ); ?>" />
 													</td>
 												</tr>
 												<?php if( 'no' ==  $default_options['has_auto_generate_poll_page'] ) { ?>
@@ -6616,7 +6768,7 @@
 																name="yop_poll_options[vote_permisions_facebook]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 														</td>
 													</tr>
-													<tr class="yop-poll-vote-as-div" id="yop-poll-vote-permisions-facebook-div" style="<?php echo 'yes' != $default_options['vote_permisions_facebook'] ? 'display: none;' : 'quest-only' == $default_options['vote_permisions'] ? 'display: none;' : '';  ?>">
+													<tr class="yop-poll-vote-as-div yop_poll_suboption" id="yop-poll-vote-permisions-facebook-div" style="<?php echo 'yes' != $default_options['vote_permisions_facebook'] ? 'display: none;' : 'quest-only' == $default_options['vote_permisions'] ? 'display: none;' : '';  ?>">
 														<th>
 															<?php _e( '"Vote as Facebook User" Button Label', 'yop_poll' ); ?>:
 														</th>
@@ -6641,7 +6793,7 @@
 															name="yop_poll_options[vote_permisions_wordpress]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr class="yop-poll-vote-as-div" id="yop-poll-vote-permisions-wordpress-div" style="<?php echo 'yes' != $default_options['vote_permisions_wordpress'] ? 'display: none;' : 'quest-only' == $default_options['vote_permisions'] ? 'display: none;' : '';  ?>">
+												<tr class="yop-poll-vote-as-div yop_poll_suboption" id="yop-poll-vote-permisions-wordpress-div" style="<?php echo 'yes' != $default_options['vote_permisions_wordpress'] ? 'display: none;' : 'quest-only' == $default_options['vote_permisions'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( '"Vote as Wordpress User" Button Label', 'yop_poll' ); ?>:
 													</th>
@@ -6665,7 +6817,7 @@
 															name="yop_poll_options[vote_permisions_anonymous]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>												
-												<tr class="yop-poll-vote-as-div" id="yop-poll-vote-permisions-anonymous-div" style="<?php echo 'yes' != $default_options['vote_permisions_anonymous'] ? 'display: none;' : 'quest-only' == $default_options['vote_permisions'] ? 'display: none;' : '';  ?>">
+												<tr class="yop-poll-vote-as-div yop_poll_suboption" id="yop-poll-vote-permisions-anonymous-div" style="<?php echo 'yes' != $default_options['vote_permisions_anonymous'] ? 'display: none;' : 'quest-only' == $default_options['vote_permisions'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( '"Vote as Anonymous User" Button Label', 'yop_poll' ); ?>:
 													</th>
@@ -6706,7 +6858,7 @@
 															value="cookie-ip" name="yop_poll_options[blocking_voters]" /> <?php _e( 'By Cookie &amp; Ip' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-blocking-voters-interval-div" style="<?php echo 'dont-block' == $default_options['blocking_voters'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-blocking-voters-interval-div" style="<?php echo 'dont-block' == $default_options['blocking_voters'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Blocking voters interval', 'yop_poll' ); ?>:
 													</th>
@@ -6729,6 +6881,29 @@
 																<?php echo 'days' == $default_options['blocking_voters_interval_unit'] ? 'selected="selected"' : '';  ?>
 																value="days"><?php _e( 'Days', 'yop_poll' ); ?></option>
 														</select></td>
+												</tr>
+												<tr class="yop-poll-limit-number-of-votes-per-user-div">
+													<th>
+														<?php _e( 'Limit Number of Votes per User', 'yop_poll' ); ?>:<br><font size="0">(<?php _e('Only for logged users', 'yop_poll'); ?>)</font>
+													</th>
+													<td><label for="yop-poll-limit-number-of-votes-per-user-yes"><input
+																<?php echo 'yes' == $default_options['limit_number_of_votes_per_user'] ? 'checked="checked"' : '';  ?>
+																id="yop-poll-limit-number-of-votes-per-user-yes" type="radio"
+															value="yes" name="yop_poll_options[limit_number_of_votes_per_user]" /> <?php _e( 'Yes' , 'yop_poll'); ?></label>
+														<label for="yop-poll-limit-number-of-votes-per-user-no"><input
+																<?php echo 'no' == $default_options['limit_number_of_votes_per_user'] ? 'checked="checked"' : '';  ?>
+																id="yop-poll-limit-number-of-votes-per-user-no" type="radio" value="no"
+															name="yop_poll_options[limit_number_of_votes_per_user]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
+													</td>
+												</tr>
+												<tr class="yop-poll-limit-number-of-votes-per-user-divs yop_poll_suboption" id="yop-poll-number-of-votes-per-user-div" style="<?php echo 'yes' != $default_options['limit_number_of_votes_per_user'] ? 'display: none;' : '' ?>">
+													<th>
+														<?php _e( 'Number of Votes per User', 'yop_poll' ); ?>:
+													</th>
+													<td><input id="yop-poll-number-of-votes-per-user" type="text"
+														name="yop_poll_options[number_of_votes_per_user]"
+														value="<?php echo esc_html( stripslashes( $default_options['number_of_votes_per_user'] ) ); ?>" />
+													</td>
 												</tr>
 												<tr>
 													<th><?php _e( 'Poll Template ', 'yop_poll' ); ?>:</th>
@@ -6753,7 +6928,7 @@
 														</select>
 													</td>
 												</tr>
-												<tr>
+												<tr class="yop_poll_suboption">
 													<th>
 														<?php _e( 'Poll Template Width', 'yop_poll' ); ?>:
 													</th>
@@ -6786,7 +6961,7 @@
 														</select>
 													</td>
 												</tr>
-												<tr>
+												<tr class="yop_poll_suboption">
 													<th>
 														<?php _e( 'Widget Template Width', 'yop_poll' ); ?>:
 													</th>
@@ -6821,7 +6996,7 @@
 															name="yop_poll_options[use_default_loading_image]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-use-default-loading-image-div" style="<?php echo 'yes' == $default_options['use_default_loading_image'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-use-default-loading-image-div" style="<?php echo 'yes' == $default_options['use_default_loading_image'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Loading Image Url', 'yop_poll' ); ?>:
 													</th>
@@ -6847,13 +7022,52 @@
 															name="yop_poll_options[redirect_after_vote]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-redirect-after-vote-url-div" style="<?php echo 'no' == $default_options['redirect_after_vote'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-redirect-after-vote-url-div" style="<?php echo 'no' == $default_options['redirect_after_vote'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Redirect After Vote Url', 'yop_poll' ); ?>:
 													</th>
 													<td><input id="yop-poll-redirect-after-vote-url" type="text"
 														name="yop_poll_options[redirect_after_vote_url]"
 														value="<?php echo esc_html( stripslashes( $default_options['redirect_after_vote_url'] ) ); ?>" />
+													</td>
+												</tr>
+												
+												<tr>
+													<th>
+														<?php _e( 'Reset Poll Stats Automatically', 'yop_poll' ); ?>:
+													</th>
+													<td><label for="yop-poll-schedule-reset-poll-stats-yes"><input
+																<?php echo 'yes' == $default_options['schedule_reset_poll_stats'] ? 'checked="checked"' : '';  ?>
+																id="yop-poll-schedule-reset-poll-stats-yes" type="radio"
+																value="yes"
+															name="yop_poll_options[schedule_reset_poll_stats]" /> <?php _e( 'Yes' , 'yop_poll'); ?></label>
+														<label for="yop-poll-schedule-reset-poll-stats-no"><input
+																<?php echo 'no' == $default_options['schedule_reset_poll_stats'] ? 'checked="checked"' : '';  ?>
+																id="yop-poll-schedule-reset-poll-stats-no" type="radio"
+																value="no"
+															name="yop_poll_options[schedule_reset_poll_stats]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
+													</td>
+												</tr>
+												<tr class="yop-poll-schedule-reset-poll-stats-options-div yop_poll_suboption" style="<?php echo 'no' == $default_options['schedule_reset_poll_stats'] ? 'display: none;' : '';  ?>">
+													<th>
+														<?php _e( 'Reset Stats Date', 'yop_poll' ); ?>:<br><font size="0">(<?php _e('Current Server Time', 'yop_poll'); echo ': '.date( 'Y-m-d H:i:s', current_time( 'timestamp' ) );  ?>)</font>
+													</th>
+													<td><input id="yop-poll-schedule-reset-poll-stats-date" type="text"
+														name="yop_poll_options[schedule_reset_poll_date]"
+														value="<?php echo date( 'Y-m-d H:i:s', $default_options['schedule_reset_poll_date'] ); ?>" />
+													</td>
+												</tr>
+												<tr class="yop-poll-schedule-reset-poll-stats-options-div yop_poll_suboption" style="<?php echo 'no' == $default_options['schedule_reset_poll_stats'] ? 'display: none;' : '';  ?>">
+													<th>
+														<?php _e( 'Reset Stats Every', 'yop_poll' ); ?>:
+													</th>
+													<td><input style="width:20%" id="yop-poll-schedule-reset-poll-stats-recurring-value" type="text"
+														name="yop_poll_options[schedule_reset_poll_recurring_value]"
+														value="<?php echo esc_html( stripslashes( $default_options['schedule_reset_poll_recurring_value'] ) ); ?>" />
+														<select name="yop_poll_options[schedule_reset_poll_recurring_unit]">
+															<option value="hour" <?php echo selected( 'hour', $default_options['schedule_reset_poll_recurring_unit'] ) ?>>HOURS</option>
+															<option value="day" <?php echo selected( 'day', $default_options['schedule_reset_poll_recurring_unit'] ) ?>>DAYS</option>
+														</select>
 													</td>
 												</tr>
 											</tbody>
@@ -6886,7 +7100,7 @@
 														for="yop-poll-view-poll-archive-link-no"><?php _e( 'No' , 'yop_poll'); ?></label>
 												</td>
 											</tr>
-											<tr id="yop-poll-view-poll-archive-link-div" style="<?php echo 'yes' != $default_options['view_poll_archive_link'] ? 'display: none;' : '';  ?>">
+											<tr class="yop_poll_suboption" id="yop-poll-view-poll-archive-link-div" style="<?php echo 'yes' != $default_options['view_poll_archive_link'] ? 'display: none;' : '';  ?>">
 												<th>
 													<?php _e( 'View Poll Archive Link Label', 'yop_poll' ); ?>:
 												</th>
@@ -6919,7 +7133,7 @@
 														name="yop_poll_options[show_in_archive]" /> <?php _e( 'No' , 'yop_poll'); ?></label>
 												</td>
 											</tr>
-											<tr id="yop-poll-show-in-archive-div" style="<?php echo 'yes' != $default_options['show_in_archive'] ? 'display: none;' : '';  ?>">
+											<tr class="yop_poll_suboption" id="yop-poll-show-in-archive-div" style="<?php echo 'yes' != $default_options['show_in_archive'] ? 'display: none;' : '';  ?>">
 												<th>
 													<?php _e( 'Archive Order', 'yop_poll' ); ?>:
 												</th>
@@ -6963,7 +7177,7 @@
 															for="yop-poll-share-after-vote-no"><?php _e( 'No' , 'yop_poll'); ?></label>
 													</td>
 												</tr>
-												<tr id="yop-poll-share-after-vote-name-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-share-after-vote-name-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Share Name', 'yop_poll' ); ?>:
 													</th>
@@ -6973,7 +7187,7 @@
 														value="<?php echo esc_html( stripslashes( $default_options['share_name'] ) ); ?>" />
 													</td>
 												</tr>											
-												<tr id="yop-poll-share-after-vote-caption-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-share-after-vote-caption-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Share Caption', 'yop_poll' ); ?>:
 													</th>
@@ -6983,7 +7197,7 @@
 														value="<?php echo esc_html( stripslashes( $default_options['share_caption'] ) ); ?>" />
 													</td>
 												</tr>
-												<tr id="yop-poll-share-after-vote-description-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-share-after-vote-description-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Share Description', 'yop_poll' ); ?>:
 													</th>
@@ -6993,7 +7207,7 @@
 														value="<?php echo esc_html( stripslashes( $default_options['share_description'] ) ); ?>" />
 													</td>
 												</tr> 											
-												<tr id="yop-poll-share-after-vote-picture-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
+												<tr class="yop_poll_suboption" id="yop-poll-share-after-vote-picture-tr" style="<?php echo 'yes' != $default_options['share_after_vote'] ? 'display: none;' : '';  ?>">
 													<th>
 														<?php _e( 'Share Picture', 'yop_poll' ); ?>:
 													</th>
@@ -7316,25 +7530,34 @@
 		*/
 		function ajax_edit_add_new_poll() {
 			if (is_admin ()) {
-				global $wpdb;
+				global $wpdb, $current_user;
 				check_ajax_referer ( 'yop-poll-edit-add-new' );
 				require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 				$yop_poll_model = new Yop_Poll_Model ();
 				if ('add-new' == $_REQUEST ['action_type']) {
-					$yop_poll_id = $yop_poll_model->add_poll_to_database ( $_REQUEST, $this->_config );
-					if ($yop_poll_id) {
-						_e ( 'Poll successfully added!', 'yop_poll' );
-					} else {
-						echo $yop_poll_model->error;
+					if ((! $this->current_user_can ( 'edit_own_polls' )) && (! $this->current_user_can ( 'edit_polls' )))
+						wp_die ( __ ( 'You are not allowed to edit this item.', 'yop_poll' ) );
+					else {
+						$yop_poll_id = $yop_poll_model->add_poll_to_database ( $_REQUEST, $this->_config );
+						if ($yop_poll_id) {
+							_e ( 'Poll successfully added!', 'yop_poll' );
+						} else {
+							echo $yop_poll_model->error;
+						}
 					}
 				}
 				if ('edit' == $_REQUEST ['action_type']) {
 					if (ctype_digit ( $_REQUEST ['yop_poll_id'] )) {
-						$yop_poll_id = $yop_poll_model->edit_poll_in_database ( $_REQUEST, $this->_config );
-						if ($yop_poll_id)
-							_e ( 'Poll successfully Edited!', 'yop_poll' );
-						else
-							echo $yop_poll_model->error;
+						$poll_details	= Yop_Poll_Model::get_poll_from_database_by_id( $_REQUEST ['yop_poll_id'] );
+						if ((! $this->current_user_can ( 'edit_own_polls' ) || $poll_details['poll_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls' )))
+							wp_die ( __ ( 'You are not allowed to edit this item.', 'yop_poll' ) );
+						else {
+							$yop_poll_id = $yop_poll_model->edit_poll_in_database ( $_REQUEST, $this->_config );
+							if ($yop_poll_id)
+								_e ( 'Poll successfully Edited!', 'yop_poll' );
+							else
+								echo $yop_poll_model->error;
+						}
 					} else
 						_e ( 'We\'re unable to update your poll!', 'yop_poll' );
 				}
@@ -7344,28 +7567,37 @@
 		}
 		function ajax_edit_add_new_poll_template() {
 			if (is_admin ()) {
-				global $wpdb;
+				global $wpdb, $current_user;
 				check_ajax_referer ( 'yop-poll-edit-add-new-template' );
 				require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 				$yop_poll_model = new Yop_Poll_Model ();
 				if ('add-new' == $_REQUEST ['action_type']) {
-					$yop_poll_template_id = $yop_poll_model->add_poll_template_to_database ( $_REQUEST, $this->_config );
-					if ($yop_poll_template_id) {
-						_e ( 'Poll template successfully added!', 'yop_poll' );
-					} else {
-						echo $yop_poll_model->error;
-					}
-				}
-				if ('edit' == $_REQUEST ['action_type']) {
-					if (ctype_digit ( $_REQUEST ['template_id'] )) {
-						$yop_poll_template_id = $yop_poll_model->edit_poll_template_in_database ( $_REQUEST, $this->_config );
+					if ((! $this->current_user_can ( 'edit_own_polls_templates' )) && (! $this->current_user_can ( 'edit_polls_templates' )))
+						wp_die ( __ ( 'You are not allowed to edit this item.', 'yop_poll' ) );
+					else {
+						$yop_poll_template_id = $yop_poll_model->add_poll_template_to_database ( $_REQUEST, $this->_config );
 						if ($yop_poll_template_id) {
-							_e ( 'Poll Template successfully Edited!', 'yop_poll' );
+							_e ( 'Poll template successfully added!', 'yop_poll' );
 						} else {
 							echo $yop_poll_model->error;
 						}
-					} else
-						_e ( 'We\'re unable to update your poll template!', 'yop_poll' );
+					}
+				}
+				if ('edit' == $_REQUEST ['action_type']) {
+						if (ctype_digit ( $_REQUEST ['template_id'] )) {
+							$template_details	= Yop_Poll_Model::get_poll_template_from_database_by_id( $_REQUEST ['template_id'] );
+							if ((! $this->current_user_can ( 'edit_own_polls_templates' ) || $template_details['template_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls_templates' )))
+								wp_die ( __ ( 'You are not allowed to edit this item.', 'yop_poll' ) );
+							else {
+									$yop_poll_template_id = $yop_poll_model->edit_poll_template_in_database ( $_REQUEST, $this->_config );
+									if ($yop_poll_template_id) {
+										_e ( 'Poll Template successfully Edited!', 'yop_poll' );
+									} else {
+										echo $yop_poll_model->error;
+									}
+							}
+						} else
+							_e ( 'We\'re unable to update your poll template!', 'yop_poll' );
 				}
 				unset ( $yop_poll_model );
 			}
@@ -7379,11 +7611,16 @@
 				$yop_poll_model = new Yop_Poll_Model ();
 				if ('edit' == $_REQUEST ['action_type']) {
 					if (ctype_digit ( $_REQUEST ['template_id'] )) {
-						$yop_poll_template_id = $yop_poll_model->reset_poll_template ( $_REQUEST, $this->_config );
-						if ($yop_poll_template_id) {
-							_e ( 'Poll Template Successfully Reseted!', 'yop_poll' );
-						} else {
-							echo $yop_poll_model->error;
+						$template_details	= Yop_Poll_Model::get_poll_template_from_database_by_id( $_REQUEST ['template_id'] );
+						if ((! $this->current_user_can ( 'edit_own_polls_templates' ) || $template_details['template_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls_templates' )))
+							wp_die ( __ ( 'You are not allowed to edit this item.', 'yop_poll' ) );
+						else {
+							$yop_poll_template_id = $yop_poll_model->reset_poll_template ( $_REQUEST, $this->_config );
+							if ($yop_poll_template_id) {
+								_e ( 'Poll Template Successfully Reseted!', 'yop_poll' );
+							} else {
+								echo $yop_poll_model->error;
+							}
 						}
 					} else
 						_e ( 'We\'re unable to reset your poll template!', 'yop_poll' );
@@ -7394,15 +7631,20 @@
 		}
 		public function yop_poll_do_vote() {
 			$error = '';
+			$success = '';
 			$message = '';
 			if (is_admin ()) {
-				$poll_id = isset ( $_REQUEST ['poll_id'] ) ? $_REQUEST ['poll_id'] : NULL;
+				$poll_id 	= isset ( $_REQUEST ['poll_id'] ) ? $_REQUEST ['poll_id'] : NULL;
+				$unique_id 	= isset ( $_REQUEST ['unique_id'] ) ? $_REQUEST ['unique_id'] : NULL;
+				$location 	= isset ( $_REQUEST ['location'] ) ? $_REQUEST ['location'] : NULL;
 				if ($poll_id) {
 					require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 					$yop_poll_model = new YOP_POLL_MODEL ( $poll_id );
+					$yop_poll_model->set_unique_id( $unique_id );
 					$poll_html = $yop_poll_model->register_vote ( $_REQUEST );
 					if ($poll_html) {
 						$message = $poll_html;
+						$success = $yop_poll_model->success; 
 					} else {
 						$error = $yop_poll_model->error;
 					}
@@ -7413,22 +7655,29 @@
 			}
 			print '[ajax-response]' . json_encode ( array (
 				'error' => $error,
+				'success' => $success,
 				'message' => $message
 			) ) . '[/ajax-response]';
 			die ();
 		}
 		public function yop_poll_view_results() {
 			$error = '';
+			$success = '';
 			$message = '';
 			if (is_admin ()) {
-				$poll_id = isset ( $_REQUEST ['poll_id'] ) ? $_REQUEST ['poll_id'] : NULL;
+				$poll_id = isset ( $_REQUEST ['poll_id'] ) ? $_REQUEST ['poll_id'] : 0;
+				$unique_id = isset ( $_REQUEST ['unique_id'] ) ? $_REQUEST ['unique_id'] : '';
+				$location = isset ( $_REQUEST ['location'] ) ? $_REQUEST ['location'] : 'page';
+				$tr_id 		= isset ( $_REQUEST ['tr_id'] ) ? $_REQUEST ['tr_id'] : '';
 				if ($poll_id) {
 					require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 					$yop_poll_model = new YOP_POLL_MODEL ( $poll_id );
+					$yop_poll_model->set_unique_id( $unique_id );
 					$yop_poll_model->vote = true;
-					$poll_html = do_shortcode ( $yop_poll_model->return_poll_html () );
+					$poll_html = do_shortcode ( $yop_poll_model->return_poll_html ( array( 'tr_id' => $tr_id, 'location' => $location )) );
 					if ($poll_html) {
 						$message = $poll_html;
+						$success = $yop_poll_model->success;
 					} else {
 						$error = $yop_poll_model->error;
 					}
@@ -7440,21 +7689,28 @@
 			// print json_encode( array( 'error' => $error, 'message' => $message ) );
 			print '[ajax-response]' . json_encode ( array (
 				'error' => $error,
+				'success' => $success,
 				'message' => $message
 			) ) . '[/ajax-response]';
 			die ();
 		}
 		public function yop_poll_back_to_vote() {
 			$error = '';
+			$success = '';
 			$message = '';
 			if (is_admin ()) {
-				$poll_id = isset ( $_REQUEST ['poll_id'] ) ? $_REQUEST ['poll_id'] : NULL;
+				$poll_id 	= isset ( $_REQUEST ['poll_id'] ) ? $_REQUEST ['poll_id'] : 0;
+				$unique_id 	= isset ( $_REQUEST ['unique_id'] ) ? $_REQUEST ['unique_id'] : '';
+				$location 	= isset ( $_REQUEST ['location'] ) ? $_REQUEST ['location'] : 'page';
+				$tr_id 		= isset ( $_REQUEST ['tr_id'] ) ? $_REQUEST ['tr_id'] : '';
 				if ($poll_id) {
 					require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 					$yop_poll_model = new YOP_POLL_MODEL ( $poll_id );
-					$poll_html = do_shortcode ( $yop_poll_model->return_poll_html () );
+					$yop_poll_model->set_unique_id( $unique_id );
+					$poll_html = do_shortcode ( $yop_poll_model->return_poll_html ( array( 'tr_id' => $tr_id, 'location' => $location ) ) );
 					if ($poll_html) {
 						$message = $poll_html;
+						$success = $yop_poll_model->success;
 					} else {
 						$error = $yop_poll_model->error;
 					}
@@ -7466,6 +7722,7 @@
 			// print json_encode( array( 'error' => $error, 'message' => $message ) );
 			print '[ajax-response]' . json_encode ( array (
 				'error' => $error,
+				'success' => $success,
 				'message' => $message
 			) ) . '[/ajax-response]';
 			die ();
@@ -7476,10 +7733,12 @@
 			if (is_admin ()) {
 				$poll_id = isset ( $_REQUEST ['id'] ) ? $_REQUEST ['id'] : NULL;
 				$location = isset ( $_REQUEST ['location'] ) ? $_REQUEST ['location'] : NULL;
+				$unique_id = isset ( $_REQUEST ['unique_id'] ) ? $_REQUEST ['unique_id'] : NULL;
 				if ($poll_id) {
 					require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 					$yop_poll_model = new YOP_POLL_MODEL ( $poll_id );
-					$poll_css = $yop_poll_model->return_poll_css ( $location );
+					$yop_poll_model->set_unique_id( $unique_id );
+					$poll_css = $yop_poll_model->return_poll_css ( array( 'location' => $location ) );
 					print $poll_css;
 					unset ( $yop_poll_model );
 				}
@@ -7492,10 +7751,12 @@
 			if (is_admin ()) {
 				$poll_id = isset ( $_REQUEST ['id'] ) ? $_REQUEST ['id'] : NULL;
 				$location = isset ( $_REQUEST ['location'] ) ? $_REQUEST ['location'] : NULL;
+				$unique_id = isset ( $_REQUEST ['unique_id'] ) ? $_REQUEST ['unique_id'] : NULL;
 				if ($poll_id) {
 					require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 					$yop_poll_model = new YOP_POLL_MODEL ( $poll_id );
-					$poll_css = $yop_poll_model->return_poll_js ( $location );
+					$yop_poll_model->set_unique_id( $unique_id );
+					$poll_css = $yop_poll_model->return_poll_js ( array( 'location' => $location ) );
 					print $poll_css;
 					unset ( $yop_poll_model );
 				}
@@ -7616,15 +7877,17 @@
 		public function ajax_show_captcha() {
 			if (is_admin ()) {
 				$poll_id = isset ( $_REQUEST ['poll_id'] ) ? $_REQUEST ['poll_id'] : NULL;
+				$unique_id = isset ( $_REQUEST ['unique_id'] ) ? $_REQUEST ['unique_id'] : NULL;
 				if ($poll_id) {
 					require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 					$yop_poll_model = new YOP_POLL_MODEL ( $poll_id );
+					$yop_poll_model->set_unique_id( $unique_id );
 					$poll_options = $yop_poll_model->poll_options;
 					if ('yes' == $poll_options ['use_captcha']) {
 						require_once ($this->_config->plugin_inc_dir . '/securimage.php');
 						$img = new Yop_Poll_Securimage ();
 						$img->ttf_file = $this->_config->plugin_path . 'captcha/AHGBold.ttf';
-						$img->namespace = 'yop_poll_' . $poll_id;
+						$img->namespace = 'yop_poll_' . $poll_id . $unique_id;
 						$img->image_height = 60;
 						$img->image_width = intval ( $img->image_height * M_E );
 						$img->text_color = new Yop_Poll_Securimage_Color ( rand ( 0, 255 ), rand ( 0, 255 ), rand ( 0, 255 ) );
@@ -7639,6 +7902,7 @@
 		public function ajax_play_captcha() {
 			if (is_admin ()) {
 				$poll_id = isset ( $_REQUEST ['poll_id'] ) ? $_REQUEST ['poll_id'] : NULL;
+				$unique_id = isset ( $_REQUEST ['unique_id'] ) ? $_REQUEST ['unique_id'] : NULL;
 				if ($poll_id) {
 					require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 					$yop_poll_model = new YOP_POLL_MODEL ( $poll_id );
@@ -7648,7 +7912,7 @@
 						$img = new Yop_Poll_Securimage ();
 						$img->audio_path = $this->_config->plugin_path . 'captcha/audio/';
 						$img->audio_noise_path = $this->_config->plugin_path . 'captcha/audio/noise/';
-						$img->namespace = 'yop_poll_' . $poll_id;
+						$img->namespace = 'yop_poll_' . $poll_id . $unique_id;
 
 						$img->outputAudioFile ();
 					}
@@ -7712,6 +7976,7 @@
 		public function ajax_set_wordpress_vote() {
 
 			$poll_id	= self::base64_decode( $_GET['poll_id'] );
+			$unique_id	= self::base64_decode( $_GET['unique_id'] );
 			require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 			$yop_poll_model = new YOP_POLL_MODEL ( $poll_id );
 
@@ -7750,6 +8015,8 @@
 					function close_window() {
 						var yop_poll_various_config 						= new Object();
 						yop_poll_various_config.poll_id						= '<?php echo self::base64_decode( $_GET['poll_id'] ) ?>';
+						yop_poll_various_config.unique_id					= '<?php echo self::base64_decode( $_GET['unique_id'] ) ?>';
+						yop_poll_various_config.poll_location				= '<?php echo self::base64_decode( $_GET['poll_location'] ) ?>';
 						yop_poll_various_config.is_modal					= <?php echo self::base64_decode( $_GET['is_modal'] ) == 'true' ? 'true' : 'false'; ?>;
 						yop_poll_various_config.vote_loading_image_target	=  '<?php echo self::base64_decode( $_GET['vote_loading_image_target'] ) ?>';
 						yop_poll_various_config.vote_loading_image_id		=  '<?php echo self::base64_decode( $_GET['vote_loading_image_id'] ) ?>';
@@ -7757,6 +8024,7 @@
 						yop_poll_various_config.facebook_user_details		=  '<?php echo isset( $_GET['facebook_user_details'] ) ? $_GET['facebook_user_details'] : '' ?>';
 						yop_poll_various_config.facebook_error				=  '<?php echo isset( $_GET['facebook_error'] ) ? $_GET['facebook_error'] : '' ?>';
 						yop_poll_various_config.public_config				=  <?php echo json_encode( $public_config ); ?>;
+						window.opener.jQuery('#yop-poll-nonce-' + yop_poll_various_config.poll_id + yop_poll_various_config.unique_id ). val( '<?php echo wp_create_nonce( 'yop_poll-'.$poll_id.$unique_id.'-user-actions' ) ?>' );
 						result = window.opener.yop_poll_do_vote( yop_poll_various_config );
 						if ( result )
 							window.close();
@@ -7772,6 +8040,7 @@
 			die();
 		}
 		public function ajax_do_change_votes_number_answer() {
+			global $current_user;
 			$answer_id			= intval( $_POST['yop_poll_answer_id'] );
 			$votes_number		= intval( $_POST['yop_poll_answer_votes'] );
 			$change_to_all		= $_POST['yop_poll_change_to_all_poll_answers'];
@@ -7780,37 +8049,51 @@
 
 			require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 			$answer_details	= YOP_POLL_MODEL::get_poll_answer_by_id( $answer_id );
-
-			if ( 'yes' == $according_to_logs ) {
-				if ( 'yes' == $change_to_all ) {
-					$poll_answers = YOP_POLL_MODEL::get_poll_answers ( $answer_details['poll_id'], array (
-						'default',
-						'other'
-					) );
-					if ( count( $poll_answers) > 0 )
-						foreach( $poll_answers as $answer ) {
-							Yop_Poll_Model::update_answer_field( $answer['id'], array( 'name' => 'votes', 'value' => YOP_POLL_MODEL::get_answer_votes_from_logs( $answer['id'] ), 'type' => '%d' ) );
-					}
-				}
-				else
-					Yop_Poll_Model::update_answer_field( $answer_id, array( 'name' => 'votes', 'value' => YOP_POLL_MODEL::get_answer_votes_from_logs( $answer_id ), 'type' => '%d' ) );
-				$response	= __( 'Success', 'yop_poll' );
+			
+			$yop_poll_model = new Yop_Poll_Model ( $answer_details['poll_id'] );
+			$poll_details	= $yop_poll_model->get_current_poll ();
+			
+            if ((! $this->current_user_can ( 'edit_own_polls' ) || $poll_details ['poll_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls' ))) {
+				$response	= __ ( 'You are not allowed to edit this item.', 'yop_poll' );
 			}
 			else {
-				if ( intval( $votes_number ) < 0 )
-					$response	= __('Invalid Number Of Votes','yop_poll').'!';
+				if ( ! wp_verify_nonce( $_POST[ 'yop-poll-nonce-change-votes-number-answer-'.$answer_id ], 'yop_poll-change-votes-number-answer-action-'.$answer_id ) ) {
+					$response	= __ ( 'Bad Request!', 'yop_poll' );
+				}
 				else {
-					if ( 'yes' == $change_to_all )
-						Yop_Poll_Model::update_all_poll_answers_field( $answer_details['poll_id'], array( 'name' => 'votes', 'value' => $votes_number, 'type' => '%d' ) );
-					else
-						Yop_Poll_Model::update_answer_field( $answer_id, array( 'name' => 'votes', 'value' => $votes_number, 'type' => '%d' ) );
-					$response	= __( 'Success', 'yop_poll' );
+					if ( 'yes' == $according_to_logs ) {
+						if ( 'yes' == $change_to_all ) {
+							$poll_answers = YOP_POLL_MODEL::get_poll_answers ( $answer_details['poll_id'], array (
+								'default',
+								'other'
+							) );
+							if ( count( $poll_answers) > 0 )
+								foreach( $poll_answers as $answer ) {
+									Yop_Poll_Model::update_answer_field( $answer['id'], array( 'name' => 'votes', 'value' => YOP_POLL_MODEL::get_answer_votes_from_logs( $answer['id'] ), 'type' => '%d' ) );
+							}
+						}
+						else
+							Yop_Poll_Model::update_answer_field( $answer_id, array( 'name' => 'votes', 'value' => YOP_POLL_MODEL::get_answer_votes_from_logs( $answer_id ), 'type' => '%d' ) );
+						$response	= __( 'Success', 'yop_poll' );
+					}
+					else {
+						if ( intval( $votes_number ) < 0 )
+							$response	= __('Invalid Number Of Votes','yop_poll').'!';
+						else {
+							if ( 'yes' == $change_to_all )
+								Yop_Poll_Model::update_all_poll_answers_field( $answer_details['poll_id'], array( 'name' => 'votes', 'value' => $votes_number, 'type' => '%d' ) );
+							else
+								Yop_Poll_Model::update_answer_field( $answer_id, array( 'name' => 'votes', 'value' => $votes_number, 'type' => '%d' ) );
+							$response	= __( 'Success', 'yop_poll' );
+						}
+					}
 				}
 			}
 			print '[response]'.$response.'[/response]';
 			die();
 		}
 		public function ajax_do_change_total_number_poll() {
+			global $current_user;
 			$poll_id				= intval( $_POST['yop_poll_id'] );
 			$total_votes			= intval( $_POST['yop_poll_total_votes'] );
 			$total_answers			= intval( $_POST['yop_poll_total_answers'] );
@@ -7819,106 +8102,151 @@
 			$according_to_logs		= $_POST['yop_poll_update_poll_with_logs'];
 			$according_to_answers	= $_POST['yop_poll_update_poll_with_answers'];
 			$response				= NULL;
-
-			if ( 'yes' == $according_to_logs ) {
-				if ( 'votes' == $type ) {
-					if ( 'yes' == $change_to_all ) {
-						$all_polls	= YOP_POLL_MODEL::get_yop_polls_filter_search();
-						if ( count( $all_polls ) > 0 ) {
-							foreach( $all_polls as $poll )
-								Yop_Poll_Model::update_poll_field( $poll['id'], array( 'name' => 'total_votes', 'value' => YOP_POLL_MODEL::get_poll_total_votes_from_logs( $poll['id'] ), 'type' => '%d' ) );	
-						}
-					}
-					else {
-						Yop_Poll_Model::update_poll_field( $poll_id, array( 'name' => 'total_votes', 'value' => YOP_POLL_MODEL::get_poll_total_votes_from_logs( $poll_id ), 'type' => '%d' ) );
-					}
-				}
-				if ( 'answers' == $type ) {
-					if ( 'yes' == $change_to_all ) {
-						$all_polls	= YOP_POLL_MODEL::get_yop_polls_filter_search();
-						if ( count( $all_polls ) > 0 ) {
-							foreach( $all_polls as $poll )
-								Yop_Poll_Model::update_poll_field( $poll['id'], array( 'name' => 'total_answers', 'value' => YOP_POLL_MODEL::get_poll_total_answers_from_logs( $poll['id'] ), 'type' => '%d' ) );	
-						}
-					}
-					else {
-						Yop_Poll_Model::update_poll_field( $poll_id, array( 'name' => 'total_answers', 'value' => YOP_POLL_MODEL::get_poll_total_answers_from_logs( $poll_id ), 'type' => '%d' ) );
-					}
-				}
-				$response	= __( 'Success', 'yop_poll' );
-			}
-			elseif ( 'yes' == $according_to_answers ) {
-				if ( 'votes' == $type ) {
-					if ( 'yes' == $change_to_all ) {
-						$all_polls	= YOP_POLL_MODEL::get_yop_polls_filter_search();
-						if ( count( $all_polls ) > 0 ) {
-							foreach( $all_polls as $poll )
-								Yop_Poll_Model::update_poll_field( $poll['id'], array( 'name' => 'total_votes', 'value' => YOP_POLL_MODEL::get_poll_total_votes_from_answers( $poll['id'] ), 'type' => '%d' ) );	
-						}
-					}
-					else {
-						Yop_Poll_Model::update_poll_field( $poll_id, array( 'name' => 'total_votes', 'value' => YOP_POLL_MODEL::get_poll_total_votes_from_answers( $poll_id ), 'type' => '%d' ) );
-					}
-				}
-				$response	= __( 'Success', 'yop_poll' );	
+			
+			$yop_poll_model = new Yop_Poll_Model ( $poll_id );
+			$poll_details	= $yop_poll_model->get_current_poll ();
+			
+            if ((! $this->current_user_can ( 'edit_own_polls' ) || $poll_details ['poll_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls' ))) {
+				$response	= __ ( 'You are not allowed to edit this item.', 'yop_poll' );
 			}
 			else {
-				if ( intval( $total_votes ) < 0 && $type == 'votes' )
-					$response	= __('Invalid Number Of Total Votes','yop_poll').'!';
-				if ( intval( $total_answers ) < 0 && $type == 'answers' )
-					$response	= __('Invalid Number Of Total Answers','yop_poll').'!';
+				if ( ! wp_verify_nonce( $_POST[ 'yop-poll-nonce-change-total-number-poll-'.$poll_id ], 'yop_poll-change-total-number-poll-action-'.$poll_id ) ) {
+					$response	= __ ( 'Bad Request!', 'yop_poll' );
+				}
 				else {
-					if ( 'votes' == $type ) {
-						if ( 'yes' == $change_to_all )
-							Yop_Poll_Model::update_all_polls_field( array( 'name' => 'total_votes', 'value' => $total_votes, 'type' => '%d' ) );
-						else
-							Yop_Poll_Model::update_poll_field( $poll_id, array( 'name' => 'total_votes', 'value' => $total_votes, 'type' => '%d' ) );
+					if ( 'yes' == $according_to_logs ) {
+						if ( 'votes' == $type ) {
+							if ( 'yes' == $change_to_all ) {
+								$all_polls	= YOP_POLL_MODEL::get_yop_polls_filter_search();
+								if ( count( $all_polls ) > 0 ) {
+									foreach( $all_polls as $poll )
+										Yop_Poll_Model::update_poll_field( $poll['id'], array( 'name' => 'total_votes', 'value' => YOP_POLL_MODEL::get_poll_total_votes_from_logs( $poll['id'] ), 'type' => '%d' ) );	
+								}
+							}
+							else {
+								Yop_Poll_Model::update_poll_field( $poll_id, array( 'name' => 'total_votes', 'value' => YOP_POLL_MODEL::get_poll_total_votes_from_logs( $poll_id ), 'type' => '%d' ) );
+							}
+						}
+						if ( 'answers' == $type ) {
+							if ( 'yes' == $change_to_all ) {
+								$all_polls	= YOP_POLL_MODEL::get_yop_polls_filter_search();
+								if ( count( $all_polls ) > 0 ) {
+									foreach( $all_polls as $poll )
+										Yop_Poll_Model::update_poll_field( $poll['id'], array( 'name' => 'total_answers', 'value' => YOP_POLL_MODEL::get_poll_total_answers_from_logs( $poll['id'] ), 'type' => '%d' ) );	
+								}
+							}
+							else {
+								Yop_Poll_Model::update_poll_field( $poll_id, array( 'name' => 'total_answers', 'value' => YOP_POLL_MODEL::get_poll_total_answers_from_logs( $poll_id ), 'type' => '%d' ) );
+							}
+						}
+						$response	= __( 'Success', 'yop_poll' );
 					}
-					if ( 'answers' == $type ) {
-						if ( 'yes' == $change_to_all )
-							Yop_Poll_Model::update_all_polls_field( array( 'name' => 'total_answers', 'value' => $total_answers, 'type' => '%d' ) );
-						else
-							Yop_Poll_Model::update_poll_field( $poll_id, array( 'name' => 'total_answers', 'value' => $total_answers, 'type' => '%d' ) );
+					elseif ( 'yes' == $according_to_answers ) {
+						if ( 'votes' == $type ) {
+							if ( 'yes' == $change_to_all ) {
+								$all_polls	= YOP_POLL_MODEL::get_yop_polls_filter_search();
+								if ( count( $all_polls ) > 0 ) {
+									foreach( $all_polls as $poll )
+										Yop_Poll_Model::update_poll_field( $poll['id'], array( 'name' => 'total_votes', 'value' => YOP_POLL_MODEL::get_poll_total_votes_from_answers( $poll['id'] ), 'type' => '%d' ) );	
+								}
+							}
+							else {
+								Yop_Poll_Model::update_poll_field( $poll_id, array( 'name' => 'total_votes', 'value' => YOP_POLL_MODEL::get_poll_total_votes_from_answers( $poll_id ), 'type' => '%d' ) );
+							}
+						}
+						$response	= __( 'Success', 'yop_poll' );	
 					}
-					$response	= __( 'Success', 'yop_poll' );
+					else {
+						if ( intval( $total_votes ) < 0 && $type == 'votes' )
+							$response	= __('Invalid Number Of Total Votes','yop_poll').'!';
+						if ( intval( $total_answers ) < 0 && $type == 'answers' )
+							$response	= __('Invalid Number Of Total Answers','yop_poll').'!';
+						else {
+							if ( 'votes' == $type ) {
+								if ( 'yes' == $change_to_all )
+									Yop_Poll_Model::update_all_polls_field( array( 'name' => 'total_votes', 'value' => $total_votes, 'type' => '%d' ) );
+								else
+									Yop_Poll_Model::update_poll_field( $poll_id, array( 'name' => 'total_votes', 'value' => $total_votes, 'type' => '%d' ) );
+							}
+							if ( 'answers' == $type ) {
+								if ( 'yes' == $change_to_all )
+									Yop_Poll_Model::update_all_polls_field( array( 'name' => 'total_answers', 'value' => $total_answers, 'type' => '%d' ) );
+								else
+									Yop_Poll_Model::update_poll_field( $poll_id, array( 'name' => 'total_answers', 'value' => $total_answers, 'type' => '%d' ) );
+							}
+							$response	= __( 'Success', 'yop_poll' );
+						}
+					}
 				}
 			}
 			print '[response]'.$response.'[/response]';
 			die();
 		}
 		public function ajax_do_change_poll_author() {
+			global $current_user;
 			$poll_id				= intval( $_POST['yop_poll_id'] );
 			$poll_author			= intval( $_POST['yop_poll_author'] );
 			$response				= NULL;
-
-			if ( intval( $poll_author ) <= 0 )
-				$response	= __('Invalid Poll Author','yop_poll').'!';
+			
+			$yop_poll_model = new Yop_Poll_Model ( $poll_id );
+			$poll_details	= $yop_poll_model->get_current_poll ();
+			
+            if ((! $this->current_user_can ( 'edit_own_polls' ) || $poll_details ['poll_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls' ))) {
+				$response	= __ ( 'You are not allowed to edit this item.', 'yop_poll' );
+			}
 			else {
-				Yop_Poll_Model::update_poll_field( $poll_id, array( 'name' => 'poll_author', 'value' => $poll_author, 'type' => '%d' ) );
-				$response	= __( 'Success', 'yop_poll' );
+				if ( ! wp_verify_nonce( $_POST[ 'yop-poll-nonce-change-poll-author-'.$poll_id ], 'yop_poll-change-poll-author-action-'.$poll_id ) ) {
+					$response	= __ ( 'Bad Request!', 'yop_poll' );
+				}
+				else {
+					if ( intval( $poll_author ) <= 0 )
+						$response	= __('Invalid Poll Author','yop_poll').'!';
+					else {
+						Yop_Poll_Model::update_poll_field( $poll_id, array( 'name' => 'poll_author', 'value' => $poll_author, 'type' => '%d' ) );
+						$response	= __( 'Success', 'yop_poll' );
+					}
+				}
 			}
 			print '[response]'.$response.'[/response]';
 			die();
 		}
 		public function ajax_do_change_template_author() {
+			global $current_user;
 			$template_id				= intval( $_POST['yop_poll_template_id'] );
 			$template_author			= intval( $_POST['yop_poll_template_author'] );
 			$response				= NULL;
+			
+			$template_details	= Yop_Poll_Model::get_poll_template_from_database_by_id( $template_id );
 
-			if ( intval( $template_author ) <= 0 )
-				$response	= __('Invalid Template Author','yop_poll').'!';
+			if ((! $this->current_user_can ( 'edit_own_polls_templates' ) || $template_details ['template_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls_templates' ))) {
+				$response	= __ ( 'You are not allowed to edit this item.', 'yop_poll' );
+			}
 			else {
-				Yop_Poll_Model::update_template_field( $template_id, array( 'name' => 'template_author', 'value' => $template_author, 'type' => '%d' ) );
-				$response	= __( 'Success', 'yop_poll' );
+				if ( ! wp_verify_nonce( $_POST[ 'yop-poll-nonce-change-poll-template-author-'.$template_id ], 'yop_poll-change-poll-template-author-action-'.$template_id ) ) {
+					$response	= __ ( 'Bad Request!', 'yop_poll' );
+				}
+				else {
+					if ( intval( $template_author ) <= 0 )
+						$response	= __('Invalid Template Author','yop_poll').'!';
+					else {
+						Yop_Poll_Model::update_template_field( $template_id, array( 'name' => 'template_author', 'value' => $template_author, 'type' => '%d' ) );
+						$response	= __( 'Success', 'yop_poll' );
+					}
+				}
 			}
 			print '[response]'.$response.'[/response]';
 			die();
 		}
 		public function ajax_show_change_votes_number_answer() {
+			global $current_user;
 			$answer_id	= intval( $_GET['answer_id'] );
 
 			require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 			$answer_details	= YOP_POLL_MODEL::get_poll_answer_by_id( $answer_id );
+			$yop_poll_model = new Yop_Poll_Model ( $answer_details['poll_id'] );
+			$poll_details	= $yop_poll_model->get_current_poll ();
+			if ((! $this->current_user_can ( 'edit_own_polls' ) || $poll_details ['poll_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls' )))
+				wp_die ( __ ( 'You are not allowed to edit this item.', 'yop_poll' ) );
 		?>
 		<div id="yop-poll-change-votes">
 			<form id="yop-poll-change-answer-no-votes-form">
@@ -7953,18 +8281,22 @@
 						</tr>
 					</tbody>
 				</table>
+				<?php wp_nonce_field( 'yop_poll-change-votes-number-answer-action-'.$answer_id, 'yop-poll-nonce-change-votes-number-answer-'.$answer_id, false ); ?>
 			</form>
 		</div>
 		<?php
 			die();
 		}
 		public function ajax_show_change_total_number_poll() {
+			global $current_user;
 			$poll_id	= intval( $_GET['poll_id'] );
 			$type		= $_GET['type'];
 
 			require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 			$yop_poll_model = new Yop_Poll_Model ( $poll_id );
 			$poll_details	= $yop_poll_model->get_current_poll ();
+			if ((! $this->current_user_can ( 'edit_own_polls' ) || $poll_details ['poll_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls' )))
+				wp_die ( __ ( 'You are not allowed to edit this item.', 'yop_poll' ) );
 		?>
 		<div id="yop-poll-change-total">
 			<form id="yop-poll-change-poll-total-no-form">
@@ -8019,18 +8351,22 @@
 						</tr>
 					</tbody>
 				</table>
+				<?php wp_nonce_field( 'yop_poll-change-total-number-poll-action-'.$poll_id, 'yop-poll-nonce-change-total-number-poll-'.$poll_id, false ); ?>
 			</form>
 		</div>
 		<?php
 			die();
 		}
 		public function ajax_show_change_poll_author() {
+			global $current_user;
 			$poll_id	= intval( $_GET['poll_id'] );
 
 			require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 			$yop_poll_model = new Yop_Poll_Model ( $poll_id );
 			$poll_details	= $yop_poll_model->get_current_poll ();
 			$poll_author = get_user_by( 'id', $poll_details ['poll_author'] );
+			if ((! $this->current_user_can ( 'edit_own_polls' ) || $poll_author->ID != $current_user->ID) && (! $this->current_user_can ( 'edit_polls' )))
+				wp_die ( __ ( 'You are not allowed to edit this item.', 'yop_poll' ) );
 		?>
 		<div id="yop-poll-change-poll-author">
 			<form id="yop-poll-change-poll-author-form">
@@ -8062,17 +8398,21 @@
 						</tr>
 					</tbody>
 				</table>
+				<?php wp_nonce_field( 'yop_poll-change-poll-author-action-'.$poll_id, 'yop-poll-nonce-change-poll-author-'.$poll_id, false ); ?>
 			</form>
 		</div>
 		<?php
 			die();
 		}
 		public function ajax_show_change_template_author() {
+			global $current_user;
 			$template_id	= intval( $_GET['template_id'] );
 
 			require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 			$template_details	= YOP_POLL_MODEL::get_poll_template_from_database_by_id ( $template_id );
 			$template_author = get_user_by( 'id', $template_details ['template_author'] );
+			if ((! $this->current_user_can ( 'edit_own_polls_templates' ) || $template_author->ID != $current_user->ID) && (! $this->current_user_can ( 'edit_polls_templates' )))
+				wp_die ( __ ( 'You are not allowed to edit this item.', 'yop_poll' ) );
 		?>
 		<div id="yop-poll-change-template-author">
 			<form id="yop-poll-change-template-author-form">
@@ -8104,6 +8444,7 @@
 						</tr>
 					</tbody>
 				</table>
+				<?php wp_nonce_field( 'yop_poll-change-poll-template-author-action-'.$template_id, 'yop-poll-nonce-change-poll-template-author-'.$template_id, false ); ?>
 			</form>
 		</div>
 		<?php
@@ -8213,8 +8554,9 @@
 
 				<?php
 					include_once (ABSPATH . WPINC . '/feed.php');
-					$feed = fetch_feed ( 'http://yourownprogrammer.com/wordpress/feed' );
-					$feeditems = $feed->get_items ( 0, $feed->get_item_quantity ( 5 ) );
+					$feed = fetch_feed ( 'http://yop-poll.com/feed/' );
+					if ( ! is_wp_error( $feed ) )
+						$feeditems = $feed->get_items ( 0, $feed->get_item_quantity ( 5 ) );
 				?>
 				<?php
 					if ($feeditems) {

@@ -5,11 +5,12 @@
  * Description: Use a full option polling functionality to get the answers you need. YOP Poll is the perfect, easy to use plugin for your WordPress website. 
  * Author: yourownprogrammer 
  * Author URL: http://www.yourownprogrammer.com 
- * Version: 4.3 
+ * Version: 4.4 
  * Network: true
  */
+
 define ( 'YOP_POLL_WP_VERSION', '3.3' );
-define ( 'YOP_POLL_VERSION', '4.3' );
+define ( 'YOP_POLL_VERSION', '4.4' );
 define ( 'YOP_POLL_PATH', plugin_dir_path ( __FILE__ ) );
 define ( 'YOP_POLL_URL', plugins_url ( '', __FILE__ ) );
 define ( 'YOP_POLL_PLUGIN_FILE', plugin_basename ( __FILE__ ) );
@@ -34,6 +35,7 @@ $wpdb->yop_poll_custom_fields = $wpdb->prefix . 'yop_poll_custom_fields';
 $wpdb->yop_pollmeta = $wpdb->prefix . 'yop_pollmeta';
 $wpdb->yop_poll_answermeta = $wpdb->prefix . 'yop_poll_answermeta';
 $wpdb->yop_poll_logs = $wpdb->prefix . 'yop_poll_logs';
+$wpdb->yop_poll_voters = $wpdb->prefix . 'yop_poll_voters';
 $wpdb->yop_poll_bans = $wpdb->prefix . 'yop_poll_bans';
 $wpdb->yop_poll_votes_custom_fields = $wpdb->prefix . 'yop_poll_votes_custom_fields';
 $wpdb->yop_poll_facebook_users = $wpdb->prefix . 'yop_poll_facebook_users';
@@ -74,7 +76,7 @@ function yop_poll_uninstall() {
 			delete_option ( 'yop_poll_admin_notices_donate' );
 			delete_option ( 'yop_poll_optin_box_modal_options' );
 			delete_option ( 'yop_poll_pro_options' );
-			$wpdb->query ( "DROP TABLE `" . $wpdb->prefix . "yop_pollmeta`, `" . $wpdb->prefix . "yop_polls`, `" . $wpdb->prefix . "yop_poll_answermeta`, `" . $wpdb->prefix . "yop_poll_answers`, `" . $wpdb->prefix . "yop_poll_custom_fields`, `" . $wpdb->prefix . "yop_poll_logs`, `" . $wpdb->prefix . "yop_poll_bans`, `" . $wpdb->prefix . "yop_poll_templates`, `" . $wpdb->prefix . "yop_poll_votes_custom_fields`, `" . $wpdb->prefix . "yop_poll_facebook_users`" );
+			$wpdb->query ( "DROP TABLE `" . $wpdb->prefix . "yop_pollmeta`, `" . $wpdb->prefix . "yop_polls`, `" . $wpdb->prefix . "yop_poll_answermeta`, `" . $wpdb->prefix . "yop_poll_answers`, `" . $wpdb->prefix . "yop_poll_custom_fields`, `" . $wpdb->prefix . "yop_poll_logs`, `" . $wpdb->prefix . "yop_poll_voters`, `" . $wpdb->prefix . "yop_poll_bans`, `" . $wpdb->prefix . "yop_poll_templates`, `" . $wpdb->prefix . "yop_poll_votes_custom_fields`, `" . $wpdb->prefix . "yop_poll_facebook_users`" );
 			$poll_archive_page = get_page_by_path ( 'yop-poll-archive', ARRAY_A );
 			if ($poll_archive_page) {
 				$poll_archive_page_id = $poll_archive_page ['ID'];
@@ -90,7 +92,7 @@ function yop_poll_uninstall() {
 	delete_option ( 'yop_poll_admin_notices_donate' );
 	delete_option ( 'yop_poll_optin_box_modal_options' );
 	delete_option ( 'yop_poll_pro_options' );
-	$wpdb->query ( "DROP TABLE `" . $wpdb->prefix . "yop_pollmeta`, `" . $wpdb->prefix . "yop_polls`, `" . $wpdb->prefix . "yop_poll_answermeta`, `" . $wpdb->prefix . "yop_poll_answers`, `" . $wpdb->prefix . "yop_poll_custom_fields`, `" . $wpdb->prefix . "yop_poll_logs`, `" . $wpdb->prefix . "yop_poll_bans`, `" . $wpdb->prefix . "yop_poll_templates`, `" . $wpdb->prefix . "yop_poll_votes_custom_fields`, `" . $wpdb->prefix . "yop_poll_facebook_users`" );
+	$wpdb->query ( "DROP TABLE `" . $wpdb->prefix . "yop_pollmeta`, `" . $wpdb->prefix . "yop_polls`, `" . $wpdb->prefix . "yop_poll_answermeta`, `" . $wpdb->prefix . "yop_poll_answers`, `" . $wpdb->prefix . "yop_poll_custom_fields`, `" . $wpdb->prefix . "yop_poll_logs`, `" . $wpdb->prefix . "yop_poll_voters`, `" . $wpdb->prefix . "yop_poll_bans`, `" . $wpdb->prefix . "yop_poll_templates`, `" . $wpdb->prefix . "yop_poll_votes_custom_fields`, `" . $wpdb->prefix . "yop_poll_facebook_users`" );
 	$poll_archive_page = get_page_by_path ( 'yop-poll-archive', ARRAY_A );
 	if ($poll_archive_page) {
 		$poll_archive_page_id = $poll_archive_page ['ID'];

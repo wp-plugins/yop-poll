@@ -55,6 +55,21 @@ jQuery(document).ready(function(jQuery) {
 	jQuery( ".yop-poll-blocking-voters-show-interval" ).click( function () {
 		jQuery( '#yop-poll-blocking-voters-interval-div' ).show();
 	});
+	
+	jQuery( "#yop-poll-limit-number-of-votes-per-user-no" ).click( function () {
+		jQuery( '#yop-poll-number-of-votes-per-user-div' ).hide();
+	});
+	jQuery( "#yop-poll-limit-number-of-votes-per-user-yes" ).click( function () {
+		jQuery( '#yop-poll-number-of-votes-per-user-div' ).show();
+	});
+	
+	jQuery( "#yop-poll-schedule-reset-poll-stats-no" ).click( function () {
+		jQuery( '.yop-poll-schedule-reset-poll-stats-options-div' ).hide();
+	});
+	jQuery( "#yop-poll-schedule-reset-poll-stats-yes" ).click( function () {
+		jQuery( '.yop-poll-schedule-reset-poll-stats-options-div' ).show();
+	});
+	
 	jQuery( "#yop-poll-view-results-link-no" ).click( function () {
 		jQuery( '#yop-poll-view-results-link-div' ).hide();
 	});
@@ -217,6 +232,14 @@ jQuery(document).ready(function(jQuery) {
 	var yopPollViewResultStartDateTextBox = jQuery('#yop-poll-view-results-start-date').datetimepicker({
 		showSecond: true,
 		timeFormat: 'hh:mm:ss',
+		dateFormat: 'yy-mm-dd'}
+	);
+	
+	var yopPollResetPollDateTextBox	= jQuery('#yop-poll-schedule-reset-poll-stats-date').datetimepicker({
+		showSecond: false,
+		showMinute: false,
+		showHour: true,
+		timeFormat: 'hh:00:00',
 		dateFormat: 'yy-mm-dd'}
 	);
 
