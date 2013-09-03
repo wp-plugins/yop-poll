@@ -3756,7 +3756,7 @@
 						}
 					} else {
 						$newinput ['display_answers'] = $default_options ['display_answers'];
-						$errors .= __ ( 'Option "Display Answers" Not Updated! you must choose between \'vertical\', \'orizontal\' or \'tabulated\'', 'yop_poll' ) . $message_delimiter;
+						$errors .= __ ( 'Option "Display Answers" Not Updated! you must choose between \'vertical\', \'horizontal\' or \'tabulated\'', 'yop_poll' ) . $message_delimiter;
 					}
 				}
 
@@ -3788,7 +3788,7 @@
 						}
 					} else {
 						$newinput ['display_results'] = $default_options ['display_results'];
-						$errors .= __ ( 'Option "Display Results" Not Updated! Choose the display layout: \'vertical\', \'orizontal\' or \'tabulated\'', 'yop_poll' ) . $message_delimiter;
+						$errors .= __ ( 'Option "Display Results" Not Updated! Choose the display layout: \'vertical\', \'horizontal\' or \'tabulated\'', 'yop_poll' ) . $message_delimiter;
 					}
 				}
 				//template_width
@@ -4801,7 +4801,7 @@
 																id="yop-poll-display-answers-orizontal"
 																<?php echo $default_options['display_answers'] == 'orizontal' ? 'checked="checked"' : '';  ?>
 																type="radio" name="yop_poll_options[display_answers]"
-															value="orizontal" /> <?php _e( 'Orizontal', 'yop_poll' ); ?></label>
+															value="orizontal" /> <?php _e( 'Horizontal', 'yop_poll' ); ?></label>
 														<label for="yop-poll-display-answers-tabulated"><input
 																id="yop-poll-display-answers-tabulated"
 																<?php echo $default_options['display_answers'] == 'tabulated' ? 'checked="checked"' : '';  ?>
@@ -4832,7 +4832,7 @@
 																id="yop-poll-display-results-orizontal"
 																<?php echo $default_options['display_results'] == 'orizontal' ? 'checked="checked"' : '';  ?>
 																type="radio" name="yop_poll_options[display_results]"
-															value="orizontal"> <?php _e( 'Orizontal', 'yop_poll' ); ?></label>
+															value="orizontal"> <?php _e( 'Horizontal', 'yop_poll' ); ?></label>
 														<label for="yop-poll-display-results-tabulated"><input
 																id="yop-poll-display-results-tabulated"
 																<?php echo $default_options['display_results'] == 'tabulated' ? 'checked="checked"' : '';  ?>
@@ -6162,7 +6162,7 @@
 															id="yop-poll-display-answers-orizontal"
 															<?php echo $default_options['display_answers'] == 'orizontal' ? 'checked="checked"' : '';  ?>
 															type="radio" name="yop_poll_options[display_answers]"
-														value="orizontal" /> <?php _e( 'Orizontal', 'yop_poll' ); ?></label>
+														value="orizontal" /> <?php _e( 'Horizontal', 'yop_poll' ); ?></label>
 													<label for="yop-poll-display-answers-tabulated"><input
 															id="yop-poll-display-answers-tabulated"
 															<?php echo $default_options['display_answers'] == 'tabulated' ? 'checked="checked"' : '';  ?>
@@ -6193,7 +6193,7 @@
 															id="yop-poll-display-results-orizontal"
 															<?php echo $default_options['display_results'] == 'orizontal' ? 'checked="checked"' : '';  ?>
 															type="radio" name="yop_poll_options[display_results]"
-														value="orizontal"> <?php _e( 'Orizontal', 'yop_poll' ); ?></label>
+														value="orizontal"> <?php _e( 'Horizontal', 'yop_poll' ); ?></label>
 													<label for="yop-poll-display-results-tabulated"><input
 															id="yop-poll-display-results-tabulated"
 															<?php echo $default_options['display_results'] == 'tabulated' ? 'checked="checked"' : '';  ?>
