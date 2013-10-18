@@ -16,17 +16,17 @@ YOP Poll is the perfect, easy to use poll plugin for your WP site.
 
 YOP Poll is a truly professional and complete tool for your online polls. 
 
-It offers all the basic features included in any other poll plugin but the improvements we’ve added and the fact that it’s fully customizable really make it special. 
+It offers all the basic features included in any other poll plugin but the improvements we've added and the fact that it's fully customizable really make it special. 
 
-The concept of the plugin revolves around user experience – it’s very intuitive and easy to use and it was designed with the user in mind. We wanted to offer you the best and make sure that every detail was considered.
+The concept of the plugin revolves around user experience – it's very intuitive and easy to use and it was designed with the user in mind. We wanted to offer you the best and make sure that every detail was considered.
 
 Over the past months we have constantly improved it and we added many of the suggestions received from our users just to make sure that they really get the plugin they need.
 
-It is easy to use, even for someone who doesn’t have any experience as a programmer or developer. However, if you have any questions or suggestions don’t hesitate to contact us. We’re here to help. We want to ensure that you get the best out of this plugin and any feedback is welcomed.
+It is easy to use, even for someone who doesn't have any experience as a programmer or developer. However, if you have any questions or suggestions don't hesitate to contact us. We're here to help. We want to ensure that you get the best out of this plugin and any feedback is welcomed.
 
 Some of the features included that you can customize are: poll scheduling, displaying polls, poll answers, poll results, new custom fields, archive, display and many, many others.
 
-This plugin is the result of months of hard work – the original idea, then the technical aspects and weeks of testing and improvements to be sure that it’s reliable and it does exactly what you want, when you want it.
+This plugin is the result of months of hard work - the original idea, then the technical aspects and weeks of testing and improvements to be sure that it's reliable and it does exactly what you want, when you want it.
 
 
 == Installation ==
