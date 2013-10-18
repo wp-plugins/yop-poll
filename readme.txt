@@ -18,7 +18,7 @@ YOP Poll is a truly professional and complete tool for your online polls.
 
 It offers all the basic features included in any other poll plugin but the improvements we've added and the fact that it's fully customizable really make it special. 
 
-The concept of the plugin revolves around user experience – it's very intuitive and easy to use and it was designed with the user in mind. We wanted to offer you the best and make sure that every detail was considered.
+The concept of the plugin revolves around user experience - it's very intuitive and easy to use and it was designed with the user in mind. We wanted to offer you the best and make sure that every detail was considered.
 
 Over the past months we have constantly improved it and we added many of the suggestions received from our users just to make sure that they really get the plugin they need.
 
