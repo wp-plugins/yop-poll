@@ -2,7 +2,7 @@
 	class Yop_Poll_Public_Admin extends Yop_Poll_Plugin {
 		protected function init() {
 			$this->add_action( 'init', 'load_translation_file', 1 );
-			$this->add_action( 'init', 'public_loader' );
+			$this->add_action( 'init', 'public_loader', 1 );
 			$this->add_action( 'widgets_init', 'widget_init' );
 			$this->add_filter( 'the_content', 'yop_poll_do_shortcode_the_content_filter');
 			$this->add_filter( 'widget_text', 'do_shortcode');
@@ -100,11 +100,11 @@
 			return $template.paginate_links( $args );
 		}
 
-		public function return_yop_poll( $id, $tr_id = '' ) {
+		public function return_yop_poll( $id, $tr_id = '', $offset = 0 ) {
 			$pro_options		= get_option( 'yop_poll_pro_options' );
 			require_once( $this->_config->plugin_inc_dir.'/yop_poll_model.php');
 			$poll_unique_id		= uniqid( '_yp' );
-			$yop_poll_model		= new YOP_POLL_MODEL( $id );
+			$yop_poll_model		= new YOP_POLL_MODEL( $id, $offset );
 			$yop_poll_model->set_unique_id( $poll_unique_id );
 
 			$id					= $yop_poll_model->poll['id'];
@@ -124,10 +124,10 @@
 				$loading_image_src	= $this->_config->plugin_url.'/images/loading36x36.gif';
 			else
 				$loading_image_src	= $yop_poll_model->poll_options['loading_image_url'];
-			wp_enqueue_script( 'jquery' );
-			wp_enqueue_script( 'yop-poll-jquery-popup-windows', "{$this->_config->plugin_url}/js/jquery.popupWindow.js", array(), $this->_config->version, true ); 
 			wp_enqueue_style( 'yop-poll-user-defined_'.$id.$poll_unique_id, add_query_arg( array( 'id' => $id, 'location' => 'page', 'unique_id' => $poll_unique_id ), admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_load_css' ), array(), $this->_config->version);
 			wp_enqueue_style( 'yop-poll-public', "{$this->_config->plugin_url}/css/yop-poll-public.css", array(), $this->_config->version );
+			wp_enqueue_script( 'jquery' );
+			wp_enqueue_script( 'yop-poll-jquery-popup-windows', "{$this->_config->plugin_url}/js/jquery.popupWindow.js", array(), $this->_config->version, true ); 
 			wp_enqueue_script( 'yop-poll-user-defined_'.$id.$poll_unique_id, add_query_arg( array( 'id' => $id, 'location' => 'page', 'unique_id' => $poll_unique_id ), admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_load_js' ), array( 'jquery' ), $this->_config->version, true);
 			wp_enqueue_script( 'yop-poll-public', "{$this->_config->plugin_url}/js/yop-poll-public.js", array(), $this->_config->version, true );
 			wp_enqueue_script( 'yop-poll-json2', "{$this->_config->plugin_url}/js/yop-poll-json2.js", array(), $this->_config->version, true );
@@ -197,8 +197,9 @@
 			extract( shortcode_atts( array(
 				'id' => -1,
 				'tr_id' => '',
+				'offset' => 0,
 				), $atts ) );
-			return $this->return_yop_poll( $id, $tr_id );
+			return $this->return_yop_poll( $id, $tr_id, $offset );
 
 		}
 

@@ -334,7 +334,7 @@
 				if (! isset ( $default_options ['widget_template_width'] )) {
 					$default_options ['widget_template_width'] = '200px';
 				}
-				
+
 				$wpdb->query ( "
 					UPDATE " . $wpdb->yop_poll_templates . "
 					SET
@@ -348,7 +348,7 @@
 				update_option ( "yop_poll_version", $wpdb->yop_poll_version );
 			}
 
-			if (version_compare ( $installed_version, '4.3', '<=' ) ) {
+			if (version_compare ( $installed_version, '4.3', '<=' ) ) {    
 				require_once (ABSPATH . 'wp-admin/includes/upgrade.php');
 				require_once (YOP_POLL_INC . '/' . 'db_schema.php');
 				Yop_Poll_DbSchema::create_poll_voters_table ();
@@ -374,7 +374,7 @@
 				if (! isset ( $default_options ['message_after_vote'] )) {
 					$default_options ['message_after_vote'] = 'Thank you for your vote!';
 				}
-				
+
 				if (! isset ( $default_options ['start_scheduler'] )) {
 					$default_options ['start_scheduler'] = 'no';
 				}
@@ -389,6 +389,29 @@
 				}
 				if (! isset ( $default_options ['schedule_reset_poll_recurring_unit'] )) {
 					$default_options ['schedule_reset_poll_recurring_unit'] = 'DAY';
+				}
+
+				update_option ( 'yop_poll_options', $default_options );	
+			}
+
+			if (version_compare ( $installed_version, '4.4', '<=' ) ) {
+				require_once (ABSPATH . 'wp-admin/includes/upgrade.php');
+				require_once (YOP_POLL_INC . '/' . 'db_schema.php');
+				Yop_Poll_DbSchema::create_poll_logs_table ();
+				Yop_Poll_DbSchema::create_poll_votes_custom_fields_table ();
+
+				$default_options = get_option ( 'yop_poll_options' );
+
+				if (! isset ( $default_options ['view_results_permissions'] )) {
+					$default_options ['view_results_permissions'] = 'guest-registered';
+				}
+
+				if (! isset ( $default_options ['date_format'] )) {
+					$default_options ['date_format'] = 'd/m/Y H:i:s';
+				}
+
+				if (! isset ( $default_options ['add_other_answers_to_default_answers'] )) {
+					$default_options ['add_other_answers_to_default_answers'] = 'no';
 				}
 
 				update_option ( 'yop_poll_options', $default_options );	
@@ -523,8 +546,8 @@
 		}
 
 		/**
-		* this file is execute on activation
-		* it creates the database and add some data to database's tables
+		* this file is executed on activation
+		* it creates the database and adds some data to database's table
 		*/
 		public function activate($networkwide) {
 			global $wp_version;
@@ -774,14 +797,14 @@
 						'text_requiered_customfield' => __ ( 'Required', 'yop_poll' ),
 						'text_remove_answer' => __ ( 'Remove', 'yop_poll' ),
 						'text_remove_customfield' => __ ( 'Remove', 'yop_poll' ),
-						'text_customize_answer' => __ ( 'Customize Toggle', 'yop_poll' ),
+						'text_customize_answer' => __ ( 'More Options', 'yop_poll' ),
 						'text_change_votes_number_answer' => __ ( 'Change Number Of Votes', 'yop_poll' ),
 						'text_change_votes_number_poll' => __ ( 'Change Number Of Total Votes', 'yop_poll' ),
 						'text_change_answers_number_poll' => __ ( 'Change Number Of Total Answers', 'yop_poll' ),
 						'plugin_url' => $this->_config->plugin_url,
 						'default_number_of_answers' => $answers_number,
 						'default_number_of_customfields' => $customfields_number,
-						'text_is_default_answer' => 'Make this default answer<br><font size="0">(if "yes", answer will be autoselected when poll is displayed)</font>',
+						'text_is_default_answer' => __( 'Make this the default answer', 'yop_poll').'<br><font size="0">(' . __('if "yes", answer will be autoselected when poll is displayed', 'yop_poll' ) .')</font>',
 						'text_poll_bar_style' => array (
 							'use_template_bar_label' => __ ( 'Use Template Result Bar', 'yop_poll' ),
 							'use_template_bar_yes_label' => __ ( 'Yes', 'yop_poll' ),
@@ -979,7 +1002,7 @@
 				}
 			} elseif (isset ( $_REQUEST ['export'] )) {
 				global $wpdb;
-				if (__ ( 'Export', 'yop_poll' ) == $_REQUEST ['a']) {
+				if ( isset( $_REQUEST ['a'] ) && __ ( 'Export', 'yop_poll' ) == $_REQUEST ['a'] ) {
 					check_admin_referer ( 'yop-poll-logs' );
 					$per_page = (isset ( $_GET ['per_page'] ) ? intval ( $_GET ['per_page'] ) : 100);
 					$page_no = isset ( $_REQUEST ['page_no'] ) ? ( int ) $_REQUEST ['page_no'] : 1;
@@ -1159,10 +1182,10 @@
 							);
 							foreach ( $column_custom_fields_ids as $custom_field_id ) {
 								$vote_log_values = array ();
-								$vote_logs = explode ( ',', $logs ['vote_log'] );
+								$vote_logs = explode ( '<#!,>', $logs ['vote_log'] );
 								if (count ( $vote_logs ) > 0) {
 									foreach ( $vote_logs as $vote_log ) {
-										$temp = explode ( '-', $vote_log );
+										$temp = explode ( '<#!->', $vote_log );
 										$vote_log_values [$temp [1]] = stripslashes ( $temp [0] );
 									}
 								}
@@ -1251,10 +1274,10 @@
 							);
 							foreach ( $column_custom_fields_ids as $custom_field_id ) {
 								$vote_log_values = array ();
-								$vote_logs = explode ( ',', $logs ['vote_log'] );
+								$vote_logs = explode ( '<#!,>', $logs ['vote_log'] );
 								if (count ( $vote_logs ) > 0) {
 									foreach ( $vote_logs as $vote_log ) {
-										$temp = explode ( '-', $vote_log );
+										$temp = explode ( '<#!->', $vote_log );
 										$vote_log_values [$temp [1]] = stripslashes ( $temp [0] );
 									}
 								}
@@ -1776,7 +1799,7 @@
 										<option value="0"><?php _e( 'View All Polls', 'yop_poll' ); ?></option>
 										<option
 											<?php echo isset( $_REQUEST['filters'] ) ? ( 'never_expire' == $_REQUEST['filters'] ? 'selected="selected"' : '' ) : ''?>
-											value="never_expire"><?php _e( 'Never Expire', 'yop_poll' ); ?></option>
+											value="never_expire"><?php _e( 'No end date', 'yop_poll' ); ?></option>
 										<option
 											<?php echo isset( $_REQUEST['filters'] ) ? ( 'expired' == $_REQUEST['filters'] ? 'selected="selected"' : '' ) : ''?>
 											value="expired"><?php _e( 'Expired', 'yop_poll' ); ?></option>
@@ -1954,7 +1977,7 @@
 													<?php
 														if (YOP_POLL_MODEL::get_mysql_curent_date () > $yop_poll ['end_date'])
 															echo '<font style="color:#CC0000;"><b>';
-														echo ('9999-12-31 23:59:59' == $yop_poll ['end_date']) ? __ ( 'Never Expire', 'yop_poll' ) : esc_html ( stripslashes ( $yop_poll ['end_date'] ) );
+														echo ('9999-12-31 23:59:59' == $yop_poll ['end_date']) ? __ ( 'No end date', 'yop_poll' ) : esc_html ( stripslashes ( $yop_poll ['end_date'] ) );
 														if (YOP_POLL_MODEL::get_mysql_curent_date () > $yop_poll ['end_date'])
 															echo '</b></font>'?>
 												</td>
@@ -2330,10 +2353,10 @@
 											<?php
 												foreach ( $column_custom_fields_ids as $custom_field_id ) {
 													$vote_log_values = array ();
-													$vote_logs = explode ( ',', $logs ['vote_log'] );
+													$vote_logs = explode ( '<#!,>', $logs ['vote_log'] );
 													if (count ( $vote_logs ) > 0) {
 														foreach ( $vote_logs as $vote_log ) {
-															$temp = explode ( '-', $vote_log );
+															$temp = explode ( '<#!->', $vote_log );
 															$vote_log_values [$temp [1]] = stripslashes ( $temp [0] );
 														}
 													}
@@ -2489,10 +2512,10 @@
 											<?php
 												foreach ( $column_custom_fields_ids as $custom_field_id ) {
 													$vote_log_values = array ();
-													$vote_logs = explode ( ',', $logs ['vote_log'] );
+													$vote_logs = explode ( '<#!,>', $logs ['vote_log'] );
 													if (count ( $vote_logs ) > 0) {
 														foreach ( $vote_logs as $vote_log ) {
-															$temp = explode ( '-', $vote_log );
+															$temp = explode ( '<#!->', $vote_log );
 															$vote_log_values [$temp [1]] = stripslashes ( $temp [0] );
 														}
 													}
@@ -3643,14 +3666,31 @@
 					} else {
 						$newinput ['allow_other_answers'] = $default_options ['allow_other_answers'];
 						$errors .= __ ( 'Option "Allow Other Answer" Not Updated! Choose "yes" or "no"!', 'yop_poll' ) . $message_delimiter;
-					}
+					}			
 
-					// other_answers_label
 					if ('yes' == $input ['allow_other_answers']) {
+						// other_answers_label
 						if (isset ( $input ['other_answers_label'] )) {
 							if ($default_options ['other_answers_label'] != trim ( $input ['other_answers_label'] )) {
 								$newinput ['other_answers_label'] = trim ( $input ['other_answers_label'] );
 								$updated .= __ ( 'Option "Other Answer Label" Updated!', 'yop_poll' ) . $message_delimiter;
+							}
+						}
+
+						//add_other_answers_to_default_answers
+
+						if (isset ( $input ['add_other_answers_to_default_answers'] )) {
+							if (in_array ( $input ['add_other_answers_to_default_answers'], array (
+								'yes',
+								'no'
+							) )) {
+								if ($default_options ['add_other_answers_to_default_answers'] != trim ( $input ['add_other_answers_to_default_answers'] )) {
+									$newinput ['add_other_answers_to_default_answers'] = trim ( $input ['add_other_answers_to_default_answers'] );
+									$updated .= __ ( 'Option "Add the values submitted in \'Other\' as answers" Updated!', 'yop_poll' ) . $message_delimiter;
+								}
+							} else {
+								$newinput ['add_other_answers_to_default_answers'] = $default_options ['add_other_answers_to_default_answers'];
+								$errors .= __ ( 'Option "Add the values submitted in \'Other\' as answers" Not Updated! Choose "yes" or "no"!', 'yop_poll' ) . $message_delimiter;
 							}
 						}
 
@@ -4037,6 +4077,23 @@
 					}
 				}
 
+				// vote_permisions
+				if (isset ( $input ['view_results_permissions'] )) {
+					if (in_array ( $input ['view_results_permissions'], array (
+						'quest-only',
+						'registered-only',
+						'guest-registered'
+					) )) {
+						if ($default_options ['view_results_permissions'] != trim ( $input ['view_results_permissions'] )) {
+							$newinput ['view_results_permissions'] = trim ( $input ['view_results_permissions'] );
+							$updated .= __ ( 'Option "View Results Permissions" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+					} else {
+						$newinput ['view_results_permissions'] = $default_options ['view_results_permissions'];
+						$errors .= __ ( 'Option "View Results Permissions" Not Updated! Please choose between \'Quest Only\', \'Registered Only\', \'Guest & Registered Users\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
 				// view_results_type
 				if (isset ( $input ['view_results_type'] )) {
 					if (in_array ( $input ['view_results_type'], array (
@@ -4305,7 +4362,7 @@
 					) )) {
 						if ($default_options ['vote_permisions'] != trim ( $input ['vote_permisions'] )) {
 							$newinput ['vote_permisions'] = trim ( $input ['vote_permisions'] );
-							$updated .= __ ( 'Option "Vote Permisions" Updated!', 'yop_poll' ) . $message_delimiter;
+							$updated .= __ ( 'Option "Vote Permissions" Updated!', 'yop_poll' ) . $message_delimiter;
 						}
 
 						if (in_array ( $input ['vote_permisions'], array (
@@ -4313,7 +4370,7 @@
 							'guest-registered'
 						) )) {
 
-							if ( in_array( $input['vote_permisions_facebook'], array( 'yes', 'no' ) ) ) {
+							if ( isset( $input['vote_permisions_facebook'] ) && in_array( $input['vote_permisions_facebook'], array( 'yes', 'no' ) ) ) {
 								if ( $default_options ['vote_permisions_facebook'] != trim ( $input ['vote_permisions_facebook'] ) ) {
 									$newinput ['vote_permisions_facebook'] = trim ( $input ['vote_permisions_facebook'] );
 									$updated .= __ ( 'Option "Vote as Facebook User" Updated!', 'yop_poll' ) . $message_delimiter;
@@ -4325,7 +4382,7 @@
 									}	
 								}
 							}
-							if ( in_array( $input['vote_permisions_wordpress'], array( 'yes', 'no' ) ) ) {
+							if ( isset( $input['vote_permisions_wordpress'] ) && in_array( $input['vote_permisions_wordpress'], array( 'yes', 'no' ) ) ) {
 								if ( $default_options ['vote_permisions_wordpress'] != trim ( $input ['vote_permisions_wordpress'] ) ) {
 									$newinput ['vote_permisions_wordpress'] = trim ( $input ['vote_permisions_wordpress'] );
 									$updated .= __ ( 'Option "Vote as Wordpress User" Updated!', 'yop_poll' ) . $message_delimiter;
@@ -4338,10 +4395,10 @@
 									}	
 								}
 							}
-							if ( in_array( $input['vote_permisions_anonymous'], array( 'yes', 'no' ) ) ) {
+							if ( isset( $input['vote_permisions_anonymous'] ) && in_array( $input['vote_permisions_anonymous'], array( 'yes', 'no' ) ) ) {
 								if ( $default_options ['vote_permisions_anonymous'] != trim ( $input ['vote_permisions_anonymous'] ) ) {
 									$newinput ['vote_permisions_anonymous'] = trim ( $input ['vote_permisions_anonymous'] );
-									$updated .= __ ( 'Option "Vote With Anonymous User" Updated!', 'yop_poll' ) . $message_delimiter;
+									$updated .= __ ( 'Option "Vote as Anonymous User" Updated!', 'yop_poll' ) . $message_delimiter;
 								}
 
 								if ( 'yes' == $input['vote_permisions_anonymous'] ) {
@@ -4354,7 +4411,7 @@
 						}
 					} else {
 						$newinput ['vote_permisions'] = $default_options ['vote_permisions'];
-						$errors .= __ ( 'Option "Vote Permisions" Not Updated! Please choose between \'Quest Only\', \'Registered Only\', \'Guest & Registered Users\'', 'yop_poll' ) . $message_delimiter;
+						$errors .= __ ( 'Option "Vote Permissions" Not Updated! Please choose between \'Quest Only\', \'Registered Only\', \'Guest & Registered Users\'', 'yop_poll' ) . $message_delimiter;
 					}
 				}
 
@@ -4481,6 +4538,14 @@
 					} else {
 						$newinput ['redirect_after_vote'] = $default_options ['redirect_after_vote'];
 						$errors .= __ ( 'Option ""Redirect After Vote" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// date_format
+				if (isset ( $input ['date_format'] )) {
+					if ($default_options ['date_format'] != trim ( $input ['date_format'] )) {
+						$newinput ['date_format'] = trim ( $input ['date_format'] );
+						$updated .= __ ( 'Option "Poll Date Format" Updated!', 'yop_poll' ) . $message_delimiter;
 					}
 				}
 
@@ -4618,7 +4683,7 @@
 						$errors .= __ ( 'Option "Share After Vote" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
 					}	
 				}
-				
+
 				//start_scheduler
 				if ( isset ( $input ['start_scheduler'] ) ) {
 					if (in_array ( $input ['start_scheduler'], array (
@@ -4703,6 +4768,23 @@
 														<input type="hidden"
 															name="yop_poll_options[other_answers_id]"
 															value="<?php echo isset( $other_answer[0]['id'] ) ? $other_answer[0]['id'] : '' ?>" />
+													</td>
+												</tr>
+												<tr class="yop_poll_suboption" id="yop-poll-other-answers-label-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
+													<th>
+														<?php _e( 'Add the values submitted in "Other" as answers ', 'yop_poll' ); ?>:<br><font size="0"><?php _e('all the values submitted in this field by your users will be automatically added as an available "Answer"','yop_poll')?></font>
+													</th>
+													<td>
+														<label for="yop-poll-add-other-answers-to-default-answers-no"><input
+																id="yop-poll-add-other-answers-to-default-answers-no"
+																<?php echo 'no' == $default_options['add_other_answers_to_default_answers'] ? 'checked="checked"' : '';  ?>
+																type="radio" name="yop_poll_options[add_other_answers_to_default_answers]"
+															value="no" /> <?php _e( 'No', 'yop_poll' ); ?></label> <label
+															for="yop-poll-add-other-answers-to-default-answers-yes"><input
+																id="yop-poll-add-other-answers-to-default-answers-yes"
+																<?php echo 'yes' == $default_options['add_other_answers_to_default_answers']  ? 'checked="checked"' : '';  ?>
+																type="radio" name="yop_poll_options[add_other_answers_to_default_answers]"
+															value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label>
 													</td>
 												</tr>
 												<tr class="yop_poll_suboption" id="yop-poll-display-other-answers-values-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
@@ -5080,21 +5162,21 @@
 										<table cellspacing="0" class="links-table">
 											<tbody>
 												<tr>
-													<th><label for="yop-poll-start-date-input"><?php _e( 'Start Date', 'yop_poll' ); ?>:</label>
+													<th><label for="yop-poll-start-date-input"><?php _e( 'Start Date', 'yop_poll' ); ?>:</label><br><font size="0">(<?php _e('Current Server Time', 'yop_poll'); echo ': ' . current_time( 'mysql' );  ?>)</font>
 													</th>
 													<td><input id="yop-poll-start-date-input" type="text"
 														name="yop_poll_options[start_date]"
-														value="<?php echo '' == $default_options['start_date'] ? current_time('mysql', 1) : $default_options['start_date']; ?>" />
+														value="<?php echo '' == $default_options['start_date'] ? current_time('mysql') : $default_options['start_date']; ?>" />
 													</td>
 												</tr>
 												<tr>
-													<th><label for="yop-poll-end-date-input"><?php _e( 'End Date ', 'yop_poll' ); ?>:</label>
+													<th><label for="yop-poll-end-date-input"><?php _e( 'End Date ', 'yop_poll' ); ?>:</label><br><font size="0">(<?php _e('Current Server Time', 'yop_poll'); echo ': ' . current_time( 'mysql' );  ?>)</font>
 													</th>
 													<td><input style="<?php echo 'yes' == $default_options['never_expire'] ? 'display: none;' : '';  ?>" <?php echo 'yes' == $default_options['never_expire'] ? 'disabled="disabled"' : '';  ?> id="yop-poll-end-date-input" type="text" name="yop_poll_options[end_date]" value="<?php echo '' == $default_options['end_date'] ? '' : $default_options['end_date']; ?>" />
 														<label for="yop-poll-never-expire"><input type="checkbox"
 																<?php echo $default_options['never_expire'] == 'yes' ? 'checked="checked"' : '';  ?>
 																id="yop-poll-never-expire"
-															name="yop_poll_options[never_expire]" value="yes" /> <?php _e( 'Do NOT Expire This Poll', 'yop_poll'); ?></label>
+															name="yop_poll_options[never_expire]" value="yes" /> <?php _e( 'No End Date', 'yop_poll'); ?></label>
 													</td>
 												</tr>
 											</tbody>
@@ -5142,11 +5224,32 @@
 																id="yop-poll-view-results-custom" type="radio"
 															value="custom-date" name="yop_poll_options[view_results]" /> <?php _e( 'Custom Date' , 'yop_poll'); ?></label>
 														<div id="yop-poll-display-view-results-div" style="<?php echo 'custom-date' != $default_options['view_results'] ? 'display: none;' : '';  ?>">
-															<label for="yop-poll-view-results-start-date"><?php _e( 'Results display date (after this date the user can see the results)', 'yop_poll' ); ?>:</label>
+															<label for="yop-poll-view-results-start-date"><?php _e( 'Results display date (the users will be able to see the results starting with this date)', 'yop_poll' ); ?>:</label>
 															<input id="yop-poll-view-results-start-date" type="text"
 																name="yop_poll_options[view_results_start_date]"
 																value="<?php echo $default_options['view_results_start_date']; ?>">
 														</div></td>
+												</tr>
+												<tr>
+													<th>
+														<?php _e( 'View Results Permissions', 'yop_poll' ); ?>:
+													</th>
+													<td><label for="yop-poll-view-results-permissions-quest-only"><input
+																id="yop-poll-view-results-permissions-quest-only"
+																<?php echo 'quest-only' == $default_options['view_results_permissions'] ? 'checked="checked"' : '';  ?>
+																type="radio" value="quest-only"
+															name="yop_poll_options[view_results_permissions]" /> <?php _e( 'Guest Only' , 'yop_poll'); ?></label>
+														<label for="yop-poll-view-results-permissions-registered-only"><input
+																id="yop-poll-view-results-permissions-registered-only"
+																<?php echo 'registered-only' == $default_options['view_results_permissions'] ? 'checked="checked"' : '';  ?>
+																type="radio" value="registered-only"
+															name="yop_poll_options[view_results_permissions]" /> <?php _e( 'Registered Users Only' , 'yop_poll'); ?></label>
+														<label for="yop-poll-view-results-permissions-guest-registered"><input
+																id="yop-poll-view-results-permissions-guest-registered"
+																<?php echo 'guest-registered' == $default_options['view_results_permissions'] ? 'checked="checked"' : '';  ?>
+																type="radio" value="guest-registered"
+															name="yop_poll_options[view_results_permissions]" /> <?php _e( 'Guest &amp; Registered Users' , 'yop_poll'); ?></label>
+													</td>
 												</tr>
 												<tr>
 													<th>
@@ -5335,7 +5438,7 @@
 											<tbody>
 												<tr>
 													<th>
-														<?php _e( 'Vote Permisions ', 'yop_poll' ); ?>:
+														<?php _e( 'Vote Permissions ', 'yop_poll' ); ?>:
 													</th>
 													<td><label for="yop-poll-vote-permisions-quest-only"><input
 																id="yop-poll-vote-permisions-quest-only"
@@ -5568,6 +5671,15 @@
 													<td><input id="yop-poll-redirect-after-vote-url" type="text"
 														name="yop_poll_options[redirect_after_vote_url]"
 														value="<?php echo esc_html( stripslashes( $default_options['redirect_after_vote_url'] ) ); ?>" />
+													</td>
+												</tr>
+												<tr>
+													<th>
+														<?php _e( 'Poll Date Format', 'yop_poll' ); ?>: <br /><font size="0"><?php _e('Check', 'yop_popll') ?> <a target="_blank" href="http://codex.wordpress.org/Formatting_Date_and_Time"> <?php _e('documentation', 'yop_popll') ?></a></font>
+													</th>
+													<td><input id="yop-poll-date-format" type="text"
+														name="yop_poll_options[date_format]"
+														value="<?php echo esc_html( stripslashes( $default_options['date_format'] ) ); ?>" />
 													</td>
 												</tr>
 											</tbody>
@@ -6082,6 +6194,23 @@
 														value="<?php echo isset( $other_answer[0]['id'] ) ? $other_answer[0]['id'] : '' ?>" />
 												</td>
 											</tr>
+											<tr class="yop_poll_suboption" id="yop-poll-other-answers-label-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
+												<th>
+													<?php _e( 'Add the values submitted in "Other" as answers ', 'yop_poll' ); ?>:<br><font size="0"><?php _e('all the values submitted in this field by your users will be automatically added as an available "Answer"','yop_poll')?></font>
+												</th>
+												<td>
+													<label for="yop-poll-add-other-answers-to-default-answers-no"><input
+															id="yop-poll-add-other-answers-to-default-answers-no"
+															<?php echo 'no' == $default_options['add_other_answers_to_default_answers'] ? 'checked="checked"' : '';  ?>
+															type="radio" name="yop_poll_options[add_other_answers_to_default_answers]"
+														value="no" /> <?php _e( 'No', 'yop_poll' ); ?></label> <label
+														for="yop-poll-add-other-answers-to-default-answers-yes"><input
+															id="yop-poll-add-other-answers-to-default-answers-yes"
+															<?php echo 'yes' == $default_options['add_other_answers_to_default_answers']  ? 'checked="checked"' : '';  ?>
+															type="radio" name="yop_poll_options[add_other_answers_to_default_answers]"
+														value="yes" /> <?php _e( 'Yes', 'yop_poll' ); ?></label>
+												</td>
+											</tr>
 											<tr class="yop_poll_suboption" id="yop-poll-display-other-answers-values-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
 												<th>
 													<?php _e( 'Display Other Answers Values', 'yop_poll' ); ?>:
@@ -6101,7 +6230,7 @@
 											</tr>
 											<tr class="yop_poll_suboption" id="yop-poll-is-default-other-answers-values-div" style="<?php echo 'no' == $default_options['allow_other_answers'] ? 'display: none;' : '';  ?>">
 												<th>
-													<?php _e( 'Make "Other answer" default answer ', 'yop_poll' ); ?>:
+													<?php _e( 'Make "Other answer" default answer ', 'yop_poll' ); ?>:<br><font size="0"><?php _e('"Other Answer" will be autoselected', 'yop_poll' ); ?></font>
 												</th>
 												<td><label for="yop-poll-is-default-other-answers-no"><input
 															id="yop-poll-is-default-other-answers-no"
@@ -6443,21 +6572,21 @@
 										<table cellspacing="0" class="links-table">
 											<tbody>
 												<tr>
-													<th><label for="yop-poll-start-date-input"><?php _e( 'Start Date', 'yop_poll' ); ?>:</label>
+													<th><label for="yop-poll-start-date-input"><?php _e( 'Start Date', 'yop_poll' ); ?>:</label><br><font size="0">(<?php _e('Current Server Time', 'yop_poll'); echo ': ' . current_time( 'mysql' );  ?>)</font>
 													</th>
 													<td><input id="yop-poll-start-date-input" type="text"
 														name="yop_poll_options[start_date]"
-														value="<?php echo '' == $default_options['start_date'] ? current_time('mysql', 1) : $default_options['start_date']; ?>" />
+														value="<?php echo '' == $default_options['start_date'] ? current_time('mysql') : $default_options['start_date']; ?>" />
 													</td>
 												</tr>
 												<tr>
-													<th><label for="yop-poll-end-date-input"><?php _e( 'End Date ', 'yop_poll' ); ?>:</label>
+													<th><label for="yop-poll-end-date-input"><?php _e( 'End Date ', 'yop_poll' ); ?>:</label><br><font size="0">(<?php _e('Current Server Time', 'yop_poll'); echo ': ' . current_time( 'mysql' );  ?>)</font>
 													</th>
 													<td><input style="<?php echo 'yes' == $default_options['never_expire'] ? 'display: none;' : '';  ?>" <?php echo 'yes' == $default_options['never_expire'] ? 'disabled="disabled"' : '';  ?> id="yop-poll-end-date-input" type="text" name="yop_poll_options[end_date]" value="<?php echo '' == $default_options['end_date'] ? '' : $default_options['end_date']; ?>" />
 														<label for="yop-poll-never-expire"><input type="checkbox"
 																<?php echo $default_options['never_expire'] == 'yes' ? 'checked="checked"' : '';  ?>
 																id="yop-poll-never-expire"
-															name="yop_poll_options[never_expire]" value="yes" /> <?php _e( 'Do NOT Expire This Poll', 'yop_poll'); ?></label>
+															name="yop_poll_options[never_expire]" value="yes" /> <?php _e( 'No end date', 'yop_poll'); ?></label>
 													</td>
 												</tr>
 											</tbody>
@@ -6505,11 +6634,32 @@
 																id="yop-poll-view-results-custom" type="radio"
 															value="custom-date" name="yop_poll_options[view_results]" /> <?php _e( 'Custom Date' , 'yop_poll'); ?></label>
 														<div id="yop-poll-display-view-results-div" style="<?php echo 'custom-date' != $default_options['view_results'] ? 'display: none;' : '';  ?>">
-															<label for="yop-poll-view-results-start-date"><?php _e( 'Results display date (after this date the user can see the results)', 'yop_poll' ); ?>:</label>
+															<label for="yop-poll-view-results-start-date"><?php _e( 'Results display date (the users will be able to see the results starting with this date)', 'yop_poll' ); ?>:</label>
 															<input id="yop-poll-view-results-start-date" type="text"
 																name="yop_poll_options[view_results_start_date]"
 																value="<?php echo $default_options['view_results_start_date']; ?>">
 														</div></td>
+												</tr>
+												<tr>
+													<th>
+														<?php _e( 'View Results Permissions', 'yop_poll' ); ?>:
+													</th>
+													<td><label for="yop-poll-view-results-permissions-quest-only"><input
+																id="yop-poll-view-results-permissions-quest-only"
+																<?php echo 'quest-only' == $default_options['view_results_permissions'] ? 'checked="checked"' : '';  ?>
+																type="radio" value="quest-only"
+															name="yop_poll_options[view_results_permissions]" /> <?php _e( 'Guest Only' , 'yop_poll'); ?></label>
+														<label for="yop-poll-view-results-permissions-registered-only"><input
+																id="yop-poll-view-results-permissions-registered-only"
+																<?php echo 'registered-only' == $default_options['view_results_permissions'] ? 'checked="checked"' : '';  ?>
+																type="radio" value="registered-only"
+															name="yop_poll_options[view_results_permissions]" /> <?php _e( 'Registered Users Only' , 'yop_poll'); ?></label>
+														<label for="yop-poll-view-results-permissions-guest-registered"><input
+																id="yop-poll-view-results-permissions-guest-registered"
+																<?php echo 'guest-registered' == $default_options['view_results_permissions'] ? 'checked="checked"' : '';  ?>
+																type="radio" value="guest-registered"
+															name="yop_poll_options[view_results_permissions]" /> <?php _e( 'Guest &amp; Registered Users' , 'yop_poll'); ?></label>
+													</td>
 												</tr>
 												<tr>
 													<th>
@@ -6731,7 +6881,7 @@
 												</tr>
 												<tr>
 													<th>
-														<?php _e( 'Vote Permisions ', 'yop_poll' ); ?>:
+														<?php _e( 'Vote Permissions ', 'yop_poll' ); ?>:
 													</th>
 													<td><label for="yop-poll-vote-permisions-quest-only"><input
 																id="yop-poll-vote-permisions-quest-only"
@@ -7031,7 +7181,7 @@
 														value="<?php echo esc_html( stripslashes( $default_options['redirect_after_vote_url'] ) ); ?>" />
 													</td>
 												</tr>
-												
+
 												<tr>
 													<th>
 														<?php _e( 'Reset Poll Stats Automatically', 'yop_poll' ); ?>:
@@ -7050,7 +7200,7 @@
 												</tr>
 												<tr class="yop-poll-schedule-reset-poll-stats-options-div yop_poll_suboption" style="<?php echo 'no' == $default_options['schedule_reset_poll_stats'] ? 'display: none;' : '';  ?>">
 													<th>
-														<?php _e( 'Reset Stats Date', 'yop_poll' ); ?>:<br><font size="0">(<?php _e('Current Server Time', 'yop_poll'); echo ': '.date( 'Y-m-d H:i:s', current_time( 'timestamp' ) );  ?>)</font>
+														<?php _e( 'Reset Stats Date', 'yop_poll' ); ?>:<br><font size="0">(<?php _e('Current Server Time', 'yop_poll'); echo ': ' . current_time( 'mysql' );  ?>)</font>
 													</th>
 													<td><input id="yop-poll-schedule-reset-poll-stats-date" type="text"
 														name="yop_poll_options[schedule_reset_poll_date]"
@@ -7062,12 +7212,21 @@
 														<?php _e( 'Reset Stats Every', 'yop_poll' ); ?>:
 													</th>
 													<td><input style="width:20%" id="yop-poll-schedule-reset-poll-stats-recurring-value" type="text"
-														name="yop_poll_options[schedule_reset_poll_recurring_value]"
-														value="<?php echo esc_html( stripslashes( $default_options['schedule_reset_poll_recurring_value'] ) ); ?>" />
+															name="yop_poll_options[schedule_reset_poll_recurring_value]"
+															value="<?php echo esc_html( stripslashes( $default_options['schedule_reset_poll_recurring_value'] ) ); ?>" />
 														<select name="yop_poll_options[schedule_reset_poll_recurring_unit]">
 															<option value="hour" <?php echo selected( 'hour', $default_options['schedule_reset_poll_recurring_unit'] ) ?>>HOURS</option>
 															<option value="day" <?php echo selected( 'day', $default_options['schedule_reset_poll_recurring_unit'] ) ?>>DAYS</option>
 														</select>
+													</td>
+												</tr>
+												<tr>
+													<th>
+														<?php _e( 'Poll Date Format', 'yop_poll' ); ?>: <br /><font size="0"><?php _e('Check', 'yop_popll') ?> <a target="_blank" href="http://codex.wordpress.org/Formatting_Date_and_Time"> <?php _e('documentation', 'yop_popll') ?></a></font>
+													</th>
+													<td><input id="yop-poll-date-format" type="text"
+														name="yop_poll_options[date_format]"
+														value="<?php echo esc_html( stripslashes( $default_options['date_format'] ) ); ?>" />
 													</td>
 												</tr>
 											</tbody>
@@ -7584,20 +7743,20 @@
 					}
 				}
 				if ('edit' == $_REQUEST ['action_type']) {
-						if (ctype_digit ( $_REQUEST ['template_id'] )) {
-							$template_details	= Yop_Poll_Model::get_poll_template_from_database_by_id( $_REQUEST ['template_id'] );
-							if ((! $this->current_user_can ( 'edit_own_polls_templates' ) || $template_details['template_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls_templates' )))
-								wp_die ( __ ( 'You are not allowed to edit this item.', 'yop_poll' ) );
-							else {
-									$yop_poll_template_id = $yop_poll_model->edit_poll_template_in_database ( $_REQUEST, $this->_config );
-									if ($yop_poll_template_id) {
-										_e ( 'Poll Template successfully Edited!', 'yop_poll' );
-									} else {
-										echo $yop_poll_model->error;
-									}
+					if (ctype_digit ( $_REQUEST ['template_id'] )) {
+						$template_details	= Yop_Poll_Model::get_poll_template_from_database_by_id( $_REQUEST ['template_id'] );
+						if ((! $this->current_user_can ( 'edit_own_polls_templates' ) || $template_details['template_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls_templates' )))
+							wp_die ( __ ( 'You are not allowed to edit this item.', 'yop_poll' ) );
+						else {
+							$yop_poll_template_id = $yop_poll_model->edit_poll_template_in_database ( $_REQUEST, $this->_config );
+							if ($yop_poll_template_id) {
+								_e ( 'Poll Template successfully Edited!', 'yop_poll' );
+							} else {
+								echo $yop_poll_model->error;
 							}
-						} else
-							_e ( 'We\'re unable to update your poll template!', 'yop_poll' );
+						}
+					} else
+						_e ( 'We\'re unable to update your poll template!', 'yop_poll' );
 				}
 				unset ( $yop_poll_model );
 			}
@@ -7605,7 +7764,7 @@
 		}
 		function ajax_reset_poll_template() {
 			if (is_admin ()) {
-				global $wpdb;
+				global $wpdb, $current_user;
 				check_ajax_referer ( 'yop-poll-edit-add-new-template' );
 				require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 				$yop_poll_model = new Yop_Poll_Model ();
@@ -7686,7 +7845,6 @@
 					$error = __ ( 'Invalid Request! Try later!', 'yop_poll' );
 				}
 			}
-			// print json_encode( array( 'error' => $error, 'message' => $message ) );
 			print '[ajax-response]' . json_encode ( array (
 				'error' => $error,
 				'success' => $success,
@@ -7719,7 +7877,6 @@
 					$error = __ ( 'Invalid Request! Try later!', 'yop_poll' );
 				}
 			}
-			// print json_encode( array( 'error' => $error, 'message' => $message ) );
 			print '[ajax-response]' . json_encode ( array (
 				'error' => $error,
 				'success' => $success,
@@ -7925,24 +8082,13 @@
 		public function ajax_show_optin_box_modal() {
 			require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 			$optin_box_modal_options = get_option ( 'yop_poll_optin_box_modal_options' );
-			$optin_box_modal_options ['show'] = 'no';
+			$optin_box_modal_options ['show'] = 'no'; //restore to no
 			$optin_box_modal_options ['last_show_date'] = Yop_Poll_Model::get_mysql_curent_date ();
 			update_option ( 'yop_poll_optin_box_modal_options', $optin_box_modal_options );
 		?>
-		<div style="width: 300px; background-color: #ffffff;">
-			<h3
-				style="padding-top: 10px; font-weight: bold; text-align: center; margin: 0px;">
-				<span><b><?php _e( 'Get the latest news and updates', 'yop_poll' ); ?></b></span>
-			</h3>
-			<?php
-				$this->yop_poll_optin_form ();
-			?>
-			<div style="margin: auto; padding: 3px; text-align: center;">
-				<span>OR</</span> <br /> <a class="closeModalBox"
-					href="javascript:void(0);"><?php _e('No Thanks', 'yop_poll'); ?></a>
-				<br />
-			</div>
-		</div>
+		<?php
+			$this->yop_poll_optin_form1 ();
+		?>
 		<?php
 			die ();
 		}
@@ -8049,11 +8195,11 @@
 
 			require_once ($this->_config->plugin_inc_dir . '/yop_poll_model.php');
 			$answer_details	= YOP_POLL_MODEL::get_poll_answer_by_id( $answer_id );
-			
+
 			$yop_poll_model = new Yop_Poll_Model ( $answer_details['poll_id'] );
 			$poll_details	= $yop_poll_model->get_current_poll ();
-			
-            if ((! $this->current_user_can ( 'edit_own_polls' ) || $poll_details ['poll_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls' ))) {
+
+			if ((! $this->current_user_can ( 'edit_own_polls' ) || $poll_details ['poll_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls' ))) {
 				$response	= __ ( 'You are not allowed to edit this item.', 'yop_poll' );
 			}
 			else {
@@ -8102,11 +8248,11 @@
 			$according_to_logs		= $_POST['yop_poll_update_poll_with_logs'];
 			$according_to_answers	= $_POST['yop_poll_update_poll_with_answers'];
 			$response				= NULL;
-			
+
 			$yop_poll_model = new Yop_Poll_Model ( $poll_id );
 			$poll_details	= $yop_poll_model->get_current_poll ();
-			
-            if ((! $this->current_user_can ( 'edit_own_polls' ) || $poll_details ['poll_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls' ))) {
+
+			if ((! $this->current_user_can ( 'edit_own_polls' ) || $poll_details ['poll_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls' ))) {
 				$response	= __ ( 'You are not allowed to edit this item.', 'yop_poll' );
 			}
 			else {
@@ -8187,11 +8333,11 @@
 			$poll_id				= intval( $_POST['yop_poll_id'] );
 			$poll_author			= intval( $_POST['yop_poll_author'] );
 			$response				= NULL;
-			
+
 			$yop_poll_model = new Yop_Poll_Model ( $poll_id );
 			$poll_details	= $yop_poll_model->get_current_poll ();
-			
-            if ((! $this->current_user_can ( 'edit_own_polls' ) || $poll_details ['poll_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls' ))) {
+
+			if ((! $this->current_user_can ( 'edit_own_polls' ) || $poll_details ['poll_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls' ))) {
 				$response	= __ ( 'You are not allowed to edit this item.', 'yop_poll' );
 			}
 			else {
@@ -8215,7 +8361,7 @@
 			$template_id				= intval( $_POST['yop_poll_template_id'] );
 			$template_author			= intval( $_POST['yop_poll_template_author'] );
 			$response				= NULL;
-			
+
 			$template_details	= Yop_Poll_Model::get_poll_template_from_database_by_id( $template_id );
 
 			if ((! $this->current_user_can ( 'edit_own_polls_templates' ) || $template_details ['template_author'] != $current_user->ID) && (! $this->current_user_can ( 'edit_polls_templates' ))) {
@@ -8516,13 +8662,11 @@
 					</h3>
 					<div class="inside">
 						<b><?php _e( 'Have you found this plugin useful? Please help support it\'s continued development with a donation', 'yop_poll' ); ?>!</b><br />
-						<p align="center">
-							<a href="http://www.yourownprogrammer.com/thankyou/donation.html"
-								target="_blank"> <img id="previewImage" border="0"
-									alt="<?php _e( 'Donate', 'yop_poll' ); ?>"
-									src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif">
+						<div style="background-image: url(<?php echo $this->_config->plugin_url ?>/images/donate-button-bg.png); background-repeat: no-repeat; width:109px; height: 35px; text-align:center; padding-top:9px;margin:auto;">
+							<a href="http://www.yop-poll.com/thankyou/don.php" style="font-weight:bold; font-size:13px; text-decoration:none; color:#000000;  padding: 9px 31px; text-shadow: 1px 1px 0 #F6B835;"
+								target="_blank" ><?php _e( 'Donate', 'yop_poll' ); ?>
 							</a>
-						</p>
+						</div>
 						<br /> <b><?php _e( 'Short on funds?', 'yop_poll' ); ?></b>
 						<ul id="donate_ul">
 							<li><a target="_blank"
@@ -8589,17 +8733,7 @@
 						if ($optin_box_modal_options ['sidebar_had_submit'] == 'no') {
 							if ($optin_box_modal_options ['modal_had_submit'] == 'no') {
 							?>
-							<div class="postbox " id="linksubmitdiv3">
-								<div title="Click to toggle" class="handlediv">
-									<br />
-								</div>
-								<h3 class="hndle">
-									<span><font size="-1"><?php _e( 'Get the latest news and updates', 'yop_poll' ); ?></font></span>
-								</h3>
-								<div class="inside">
-									<?php $this->yop_poll_optin_form()?>
-								</div>
-							</div>
+									<?php $this->yop_poll_optin_form2()?>
 							<?php
 							}
 						}
@@ -9214,6 +9348,166 @@
 		</div>
 		<?php
 		}
+
+		private function yop_poll_optin_form1() {
+		?>
+		<style type="text/css">
+			#WFItem394041 {
+				background: url("<?php echo $this->_config->plugin_url ?>/images/optin-no-title.png") no-repeat scroll 0 0 transparent;
+				/*height: 200px;*/
+				overflow: hidden;
+				padding: 37px 33px 0 33px;
+				width: 242px;
+			}
+			#WFItem394041 p {text-align:center;margin:-23px -20px 29px -47px;font-size:13px;}
+			#WFItem394041 p a {color:#555;display:inline-block;margin:40px 0px;}
+			#WFItem394041 input[type="text"]{
+				background: none repeat scroll 0 0 transparent;
+				border: 0 none;
+				float: left;
+				padding: 11px 15px;
+				width: 225px;
+				color:#999;
+			}
+			#WFItem394041 [type="submit"] {
+				background: none repeat scroll 0 0 transparent;
+				border: 0 none;
+				cursor: pointer;
+				margin: 6px 0 0 -13px;
+				padding: 11px 12px;
+				text-indent: -999px;
+				width: 240px;
+			}
+		</style>
+		<div id="WFItem394041" class="wf-formTpl">
+			<form accept-charset="utf-8"
+				action="https://app.getresponse.com/add_contact_webform.html"
+				method="post" target="_top">
+				<div class="box">
+					<div id="WFIcenter" class="wf-body">
+						<ul class="wf-sortable" id="wf-sort-id">
+							<li>
+								<p><b><?php _e('Want to receive YOP Poll User\'s Guide?', 'yop_poll'); ?><br><?php _e('Sign up below!', 'yop_poll'); ?></b></p>
+							</li>												
+							<li class="wf-email" rel="undefined"
+								style="display: block !important;">
+								<div class="wf-contbox">
+									<div class="wf-inputpos">
+										<input type="text" class="wf-input wf-req wf-valid__email"
+											name="email" placeholder="<?php _e('Email', 'yop_poll'); ?>"></input>
+									</div>
+									<em class="clearfix clearer"></em>
+								</div>
+							</li>
+							<li class="wf-submit" rel="undefined"
+								style="display: block !important;">
+								<div class="wf-contbox">
+									<div class="wf-inputpos">
+										<input type="submit" value="<?php _e('Sign Up!', 'yop_poll'); ?>" class="wf-button" name="submit"></input>
+									</div>
+									<em class="clearfix clearer"></em>
+								</div>
+							</li>
+							<li class="wf-captcha" rel="undefined"
+								style="display: none !important;">
+								<div wf-captchaerror="<?php _e('Incorrect please try again', 'yop_poll'); ?>"
+									wf-captchasound="<?php _e('Enter the numbers you hear:', 'yop_poll'); ?>"
+									wf-captchaword="<?php _e('Enter the words above:', 'yop_poll'); ?>"
+									class="wf-contbox wf-captcha-1" id="wf-captcha-1"></div>
+							</li>
+						</ul>
+					</div>
+					<div id="WFIfooter" class="wf-footer el">
+						<div class="actTinyMceElBodyContent"></div>
+						<em class="clearfix clearer"></em>
+					</div>
+				</div>
+				<input type="hidden" name="webform_id" value="394041" />
+			</form>
+		</div>
+		<?php
+		}
+		
+		private function yop_poll_optin_form2() {
+		?>
+		<style type="text/css">
+			#WFItem394041 {
+				background: url("<?php echo $this->_config->plugin_url ?>/images/optin-sidebar-no-title.png") no-repeat scroll 0 0 transparent;
+				height: 200px;
+				overflow: hidden;
+				padding: 37px 33px 0 33px;
+				width: 242px;
+			}
+			#WFItem394041 p {text-align:center;margin:-23px -20px 29px -47px;font-size:13px;}
+			#WFItem394041 p a {color:#555;display:inline-block;margin:40px 0px;}
+			#WFItem394041 input[type="text"]{
+				background: none repeat scroll 0 0 transparent;
+				border: 0 none;
+				float: left;
+				padding: 11px 15px;
+				width: 225px;
+				color:#999;
+			}
+			#WFItem394041 [type="submit"] {
+				background: none repeat scroll 0 0 transparent;
+				border: 0 none;
+				cursor: pointer;
+				margin: 6px 0 0 -13px;
+				padding: 11px 12px;
+				text-indent: -999px;
+				width: 240px;
+			}
+		</style>
+		<div id="WFItem394041" class="wf-formTpl">
+			<form accept-charset="utf-8"
+				action="https://app.getresponse.com/add_contact_webform.html"
+				method="post" target="_top">
+				<div class="box">
+					<div id="WFIcenter" class="wf-body">
+						<ul class="wf-sortable" id="wf-sort-id">
+							<li>
+								<p><b><?php _e('Want to receive YOP Poll User\'s Guide?', 'yop_poll'); ?><br><?php _e('Sign up below!', 'yop_poll'); ?></b></p>
+							</li>												
+							<li class="wf-email" rel="undefined"
+								style="display: block !important;">
+								<div class="wf-contbox">
+									<div class="wf-inputpos">
+										<input type="text" class="wf-input wf-req wf-valid__email"
+											name="email" placeholder="<?php _e('Email', 'yop_poll'); ?>"></input>
+									</div>
+									<em class="clearfix clearer"></em>
+								</div>
+							</li>
+							<li class="wf-submit" rel="undefined"
+								style="display: block !important;">
+								<div class="wf-contbox">
+									<div class="wf-inputpos">
+										<input type="submit" value="<?php _e('Sign Up!', 'yop_poll'); ?>" class="wf-button" name="submit"></input>
+									</div>
+									<em class="clearfix clearer"></em>
+								</div>
+							</li>
+							<li class="wf-captcha" rel="undefined"
+								style="display: none !important;">
+								<div wf-captchaerror="<?php _e('Incorrect please try again', 'yop_poll'); ?>"
+									wf-captchasound="<?php _e('Enter the numbers you hear:', 'yop_poll'); ?>"
+									wf-captchaword="<?php _e('Enter the words above:', 'yop_poll'); ?>"
+									class="wf-contbox wf-captcha-1" id="wf-captcha-1"></div>
+							</li>
+						</ul>
+					</div>
+					<div id="WFIfooter" class="wf-footer el">
+						<div class="actTinyMceElBodyContent"></div>
+						<em class="clearfix clearer"></em>
+					</div>
+				</div>
+				<input type="hidden" name="webform_id" value="394041" />
+			</form>
+		</div>
+		<?php
+		}
+
+
 		public function load_optin_box() {
 			$optin_box_modal_options = get_option ( 'yop_poll_optin_box_modal_options' );
 			if ($optin_box_modal_options ['show'] == 'yes') {
@@ -9231,7 +9525,7 @@
 					)
 				);
 				wp_localize_script ( 'yop-poll-modal-functions', 'yop_poll_modal_functions_config', $yop_poll_modal_functions_config );
-				wp_enqueue_style ( 'yop-poll-modal-box-css', "{$this->_config->plugin_url}/modal/css/jquery.modalbox-skin-precious-white.css", array (), $this->_config->version );
+				wp_enqueue_style ( 'yop-poll-modal-box-css', "{$this->_config->plugin_url}/modal/css/jquery.modalbox-basic.css", array (), $this->_config->version );
 			} elseif ($optin_box_modal_options ['sidebar_had_submit'] == 'no') {
 				wp_enqueue_script ( 'yop-poll-sidebar-option-functions', "{$this->_config->plugin_url}/js/yop-poll-sidebar-optin-functions.js", array (
 					'jquery'
@@ -9284,7 +9578,7 @@
 
 				if (isset ( $_GET ['yop_poll_support_plugin'] )) {
 					if ('yes' == $_GET ['yop_poll_support_plugin']) {
-						wp_redirect ( 'http://www.yourownprogrammer.com/thankyou/donation.html', '302' );
+						wp_redirect ( 'http://www.yop-poll.com/thankyou/don.php', '302' );
 					}
 				}
 

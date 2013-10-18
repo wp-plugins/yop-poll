@@ -1,16 +1,15 @@
 <?php
 /*
  * Plugin Name: Yop Poll Plugin 
- * URI: http://www.yourownprogrammer.com/thankyou/ 
+ * URI: http://www.yop-poll.com/thankyou/ 
  * Description: Use a full option polling functionality to get the answers you need. YOP Poll is the perfect, easy to use plugin for your WordPress website. 
  * Author: yourownprogrammer 
- * Author URL: http://www.yourownprogrammer.com 
- * Version: 4.4 
- * Network: true
+ * Author URL: http://www.yop-poll.com /thankyou/
+ * Version: 4.5 
+ * Network: false
  */
-
 define ( 'YOP_POLL_WP_VERSION', '3.3' );
-define ( 'YOP_POLL_VERSION', '4.4' );
+define ( 'YOP_POLL_VERSION', '4.5' );
 define ( 'YOP_POLL_PATH', plugin_dir_path ( __FILE__ ) );
 define ( 'YOP_POLL_URL', plugins_url ( '', __FILE__ ) );
 define ( 'YOP_POLL_PLUGIN_FILE', plugin_basename ( __FILE__ ) );

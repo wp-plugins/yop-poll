@@ -234,67 +234,69 @@ function yop_poll_do_vote( yop_poll_various_config ) {
 		url: yop_poll_public_config_general.ajax.url,
 		data: 'action=' + yop_poll_public_config_general.ajax.vote_action + '&poll_id=' + poll_id + '&' + jQuery('#yop-poll-form-'+ poll_id + unique_id ).serialize() + '&vote_type=' + vote_type + '&facebook_user_details=' + yop_poll_various_config.facebook_user_details + '&facebook_error=' + yop_poll_various_config.facebook_error + '&unique_id=' + unique_id + '&location=' + poll_location ,
 		cache: false,
-		async: false
-	}).done( function( data ) {
-		data		= yop_poll_extractResponse( data );
-		response	= JSON.parse(data);
-		if ( '' != response.error ) {
-			jQuery( '#yop-poll-container-error-'+ poll_id + unique_id ).html(response.error);
-			jQuery( '#yop-poll-container-success-'+ poll_id + unique_id ).html('');
-			popupClose	= true;
-		}
-		else {
-			if ( '' != response.message ) {
-
-				if ( 'yes' == yop_poll_public_config_general.pro.pro_user ) {
-					if ( 'yes' == yop_poll_various_config.public_config.poll_options.share_after_vote ) {
-						jQuery('#yop_poll_vote-button-' + yop_poll_various_config.poll_id + unique_id ).popupWindow({
-							windowURL: yop_poll_public_config_general.pro.api_server_url + '/api/facebook/share_vote?' + 'api_key='+yop_poll_public_config_general.pro.api_key + '&' + yop_poll_various_config_to_get_params( yop_poll_various_config, 'yes' ),
-							windowName:'yop_poll_popup_window',
-							height:200,
-							left:0,
-							location:0,
-							menubar:0,
-							resizable:0,
-							scrollbars:1,
-							status:0,
-							width:450,
-							top:0,
-							toolbar:0,
-							centerScreen:1
-						});	
-					}
-					else 
-						popupClose	= true;
-				}
-				else 
-					popupClose	= true;				
-
-				jQuery('#yop-poll-container-'+ poll_id + unique_id ).replaceWith(response.message);
-				jQuery('#yop-poll-container-error-'+ poll_id + unique_id ).html('');
-				jQuery( '#yop-poll-container-success-'+ poll_id + unique_id ).html(response.success);
-
-				eval(
-					"if(typeof window.strip_results_" + poll_id + unique_id + " == 'function')  strip_results_"+poll_id + unique_id +"();" +
-					"if(typeof window.tabulate_answers_" + poll_id + unique_id + " == 'function')  tabulate_answers_"+poll_id + unique_id +"();" +
-					"if(typeof window.tabulate_results_" + poll_id + unique_id + " == 'function')	tabulate_results_"+poll_id + unique_id +"(); "
-				); 
-				
-				if ( 'yes' == yop_poll_various_config.public_config.poll_options.redirect_after_vote ) {
-					window.location = yop_poll_various_config.public_config.poll_options.redirect_after_vote_url;
-				}
-			}
-			else {
-				jQuery( '#yop-poll-container-error-' + poll_id + unique_id ).html('An Error Has Occured!');
+		async: false, 
+		success: function( data ) {
+			data		= yop_poll_extractResponse( data );
+			response	= JSON.parse(data);
+			if ( '' != response.error ) {
+				jQuery( '#yop-poll-container-error-'+ poll_id + unique_id ).html(response.error);
 				jQuery( '#yop-poll-container-success-'+ poll_id + unique_id ).html('');
 				popupClose	= true;
 			}
-		}
-	})
-	.fail( function() {
-		jQuery( '#yop-poll-container-error-' + poll_id + unique_id ).html('An Error Has Occured!');
-		jQuery( '#yop-poll-container-success-'+ poll_id + unique_id ).html('');
-		popupClose	= true;
+			else {
+				if ( '' != response.message ) {
+
+					if ( 'yes' == yop_poll_public_config_general.pro.pro_user ) {
+						if ( 'yes' == yop_poll_various_config.public_config.poll_options.share_after_vote ) {
+							jQuery('#yop_poll_vote-button-' + yop_poll_various_config.poll_id + unique_id ).popupWindow({
+								windowURL: yop_poll_public_config_general.pro.api_server_url + '/api/facebook/share_vote?' + 'api_key='+yop_poll_public_config_general.pro.api_key + '&' + yop_poll_various_config_to_get_params( yop_poll_various_config, 'yes' ),
+								windowName:'yop_poll_popup_window',
+								height:200,
+								left:0,
+								location:0,
+								menubar:0,
+								resizable:0,
+								scrollbars:1,
+								status:0,
+								width:450,
+								top:0,
+								toolbar:0,
+								centerScreen:1
+							});	
+						}
+						else 
+							popupClose	= true;
+					}
+					else 
+						popupClose	= true;				
+
+					jQuery('#yop-poll-container-'+ poll_id + unique_id ).replaceWith(response.message);
+					jQuery('#yop-poll-container-error-'+ poll_id + unique_id ).html('');
+					jQuery( '#yop-poll-container-success-'+ poll_id + unique_id ).html(response.success);
+
+					eval(
+						"if(typeof window.strip_results_" + poll_id + unique_id + " == 'function')  strip_results_"+poll_id + unique_id +"();" +
+						"if(typeof window.tabulate_answers_" + poll_id + unique_id + " == 'function')  tabulate_answers_"+poll_id + unique_id +"();" +
+						"if(typeof window.tabulate_results_" + poll_id + unique_id + " == 'function')	tabulate_results_"+poll_id + unique_id +"(); "
+					); 
+
+					if ( 'yes' == yop_poll_various_config.public_config.poll_options.redirect_after_vote ) {
+						window.location = yop_poll_various_config.public_config.poll_options.redirect_after_vote_url;
+					}
+				}
+				else {
+					jQuery( '#yop-poll-container-error-' + poll_id + unique_id ).html('An Error Has Occured!');
+					jQuery( '#yop-poll-container-success-'+ poll_id + unique_id ).html('');
+					popupClose	= true;
+				}
+			}
+		},
+		error: 
+		function() {
+			jQuery( '#yop-poll-container-error-' + poll_id + unique_id ).html('An Error Has Occured!');
+			jQuery( '#yop-poll-container-success-'+ poll_id + unique_id ).html('');
+			popupClose	= true;
+		} 
 	});
 	return popupClose;
 }
@@ -422,7 +424,7 @@ function yop_poll_reloadCaptcha( poll_id, unique_id ) {
 function yop_poll_show_multiple_vote_options( yop_poll_various_config ) {
 	poll_location = typeof yop_poll_various_config.poll_location  !== 'undefined' ? yop_poll_various_config.poll_location  : 'page';
 	unique_id = typeof yop_poll_various_config.unique_id  !== 'undefined' ? yop_poll_various_config.unique_id  : '';
-	
+
 	var vote_options		= yop_poll_get_vote_options( yop_poll_various_config.public_config.poll_options.vote_permisions_types );
 	var vote_options_string	= '<div id="yop_poll_vote_options_div-' + yop_poll_various_config.poll_id + unique_id + '">';
 	if ( vote_options.W )
