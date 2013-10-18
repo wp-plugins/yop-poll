@@ -1,6 +1,6 @@
 === YOP Poll ===
 Contributors: yourownprogrammer
-Donate Link: http://www.yourownprogrammer.com/thankyou/bee.php
+Donate Link: http://www.yop-poll.com/thankyou/don.php
 Tags: poll, polls, vote, survey, polling, yop poll, yop
 Requires at least: 3.3
 Tested up to: 3.6
