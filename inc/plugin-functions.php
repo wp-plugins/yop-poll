@@ -158,3 +158,7 @@
 		else
 			$h_time = mysql2date( __( 'Y/m/d' ), $m_time );
 	}
+	
+	function yop_poll_set_html_content_type() {
+		return 'text/html';
+	}

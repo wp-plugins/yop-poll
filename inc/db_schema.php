@@ -35,6 +35,11 @@
 				'pro_api_server_url'	=> 'http://www.yop-poll.com/pro',
 				'pro_user'				=> 'no'
 			);
+			
+			$sitename = strtolower( $_SERVER['SERVER_NAME'] );
+			if ( substr( $sitename, 0, 4 ) == 'www.' ) {
+				$sitename = substr( $sitename, 4 );
+			}
 
 			$default_options = array(
 				'poll_name_html_tags'						=> 'yes',
@@ -127,7 +132,18 @@
 				'schedule_reset_poll_recurring_unit'		=> 'day',
 				'view_results_permissions'					=> 'guest-registered',
 				'date_format'								=> 'd/m/Y H:i:s',
-				'add_other_answers_to_default_answers'		=> 'no'
+				'add_other_answers_to_default_answers'		=> 'no',
+				'send_email_notifications'					=> 'no',
+				'email_notifications_from_name'				=> 'Yop Poll',
+				'email_notifications_from_email'			=> 'yop-poll@' . $sitename,
+				'email_notifications_recipients'			=> '',
+				'email_notifications_subject'				=> 'New Vote',
+				'email_notifications_body'					=> '<p>A new vote was registered on [VOTE_DATE] for [POLL_NAME]</p>
+<p>Vote Details:</p>
+<p><b>Question:</b> [QUESTION]</p>
+<p><b>Answers:</b> <br />[ANSWERS]</p>
+<p><b>Custom Fields:</b> <br />[CUSTOM_FIELDS]</p>
+<p><b>Vote ID:</b> <br />[VOTE_ID]</p>',
 			);
 
 			if ( ! get_option( "yop_poll_version" ) ) {

@@ -138,6 +138,13 @@ jQuery(document).ready(function(jQuery) {
 	jQuery( "#yop-poll-show-in-archive-yes" ).click( function () {
 		jQuery( '#yop-poll-show-in-archive-div' ).show();
 	});
+	
+	jQuery( "#yop-poll-send-email-notifications-no" ).click( function () {
+		jQuery( '.yop-poll-email-notifications-div' ).hide();
+	});
+	jQuery( "#yop-poll-send-email-notifications-yes" ).click( function () {
+		jQuery( '.yop-poll-email-notifications-div' ).show();
+	});
 
 	jQuery( "#yop-poll-answers-advanced-options-button" ).click( function () {
 		jQuery( '#yop-poll-answers-advanced-options-div' ).toggle( 'medium' );

@@ -1283,6 +1283,22 @@
 			return $result;
 		}
 
+		public static function get_customfield_by_id( $customfield_id ) {
+			global $wpdb;
+			$result = $wpdb->get_row(
+				$wpdb -> prepare(
+					"
+					SELECT *
+					FROM ".$wpdb->yop_poll_custom_fields."
+					WHERE id = %d
+					",
+					$customfield_id
+				),
+				ARRAY_A
+			);
+			return $result;
+		}
+
 		public static function get_poll_customfields_logs( $poll_id, $orderby = 'vote_date', $order = 'desc', $offset = 0, $per_page = 99999999, $sdate = '', $edate = '' ) {
 			global $wpdb;
 			$sdatesql	= '';
@@ -2999,6 +3015,7 @@
 													if ( $img->check( $_REQUEST[ 'yop_poll_captcha_input' ][ $poll_id ] ) ) {
 														$cookie_ids = '';
 														$votes		= 0;
+														$mail_notifications_answers	= '';
 														foreach( $answers as &$answer ) {
 															if ( 'facebook'	== $vote_type ) {
 																$answer['user_id']	=  $facebook_user_id;
@@ -3010,11 +3027,18 @@
 															$cookie_ids	.= $answer['answer_id'].',';
 															$this->update_answer_votes( $answer['answer_id'], 1 );
 															$votes++;
+															$answer_base	= self::get_answer_from_database( $answer['answer_id'] );
+															if ( $answer_base['type'] != 'other' )
+																$mail_notifications_answers	.= $answer_base['answer'] . '<br>';
+															else
+																$mail_notifications_answers	.= $answer_base['answer'] . ': '.$answer['other_answer_value'].'<br>';
 														}
+														$mail_notifications_answers	= trim( $mail_notifications_answers, '<br>');
 
 														self::insert_voter_in_database( $voter );
 														$this->update_poll_votes_and_answers( $votes, 1 );
 
+														$mail_notifications_custom_fields	= '';
 														foreach( $custom_fields as $custom_field ) {
 															if ( 'facebook'	== $vote_type )
 																$custom_field['user_id']	= $facebook_user_id;
@@ -3022,7 +3046,11 @@
 																$custom_field['user_id']	= 0;
 															$custom_field['tr_id']	= $tr_id;
 															self::insert_vote_custom_field_in_database( $custom_field );
+															$custom_field_base	= self::get_customfield_by_id( $custom_field['custom_field_id'] );
+															$mail_notifications_custom_fields	.= $custom_field_base['custom_field'] . ': '.$custom_field['custom_field_value'].'<br>';
 														}
+														$mail_notifications_custom_fields	= trim( $mail_notifications_custom_fields, '<br>');
+
 														$this->set_vote_cookie( trim($cookie_ids, ',' ), $vote_type, $facebook_user_details );
 														$this->vote		= true;
 														$this -> poll	= self::get_poll_from_database_by_id( $poll_id );
@@ -3030,6 +3058,27 @@
 															$this->success	= str_replace( '%USER-VOTES-LEFT%',  intval( $poll_options['number_of_votes_per_user'] ) - $this->get_voter_number_of_votes( $voter ), $poll_options['message_after_vote'] );
 														else
 															$this->success	= str_replace( '%USER-VOTES-LEFT%',  '', $poll_options['message_after_vote'] );
+														if ( 'yes' == $poll_options['send_email_notifications'] ) {
+															$headers = 'From: '.$poll_options['email_notifications_from_name'].' <'.$poll_options['email_notifications_from_email'].'>';
+															$subject	= str_replace( '[POLL_NAME]', $this->poll['name'], $poll_options['email_notifications_subject'] ); 
+															$subject	= str_replace( '[QUESTION]', $this->poll['question'], $subject ); 
+															$subject	= str_replace( '[ANSWERS]', $mail_notifications_answers, $subject ); 
+															$subject	= str_replace( '[CUSTOM_FIELDS]', $mail_notifications_custom_fields, $subject );
+															$subject	= str_replace( '[VOTE_ID]', $vote_id, $subject );
+															$subject	= str_replace( '[VOTE_DATE]', self::convert_date( current_time( 'mysql' ), $poll_options['date_format'] ), $subject );
+
+															$body	= str_replace( '[POLL_NAME]', $this->poll['name'], $poll_options['email_notifications_body'] ); 
+															$body	= str_replace( '[QUESTION]', $this->poll['question'], $body ); 
+															$body	= str_replace( '[ANSWERS]', $mail_notifications_answers, $body ); 
+															$body	= str_replace( '[CUSTOM_FIELDS]', $mail_notifications_custom_fields, $body );
+															$body	= str_replace( '[CUSTOM_FIELDS]', $mail_notifications_custom_fields, $body );
+															$body	= str_replace( '[VOTE_ID]', $vote_id, $body );
+															$body	= str_replace( '[VOTE_DATE]', self::convert_date( current_time( 'mysql' ), $poll_options['date_format'] ), $body );
+															
+															add_filter( 'wp_mail_content_type', 'yop_poll_set_html_content_type' );
+															$is_sent	= wp_mail( $poll_options['email_notifications_recipients'], $subject, $body, $headers );
+															remove_filter( 'wp_mail_content_type', 'yop_poll_set_html_content_type' );
+														}
 														return do_shortcode( $this->return_poll_html( array( 'tr_id' => $tr_id, 'location' => $location ) ) );
 													}
 													else {
@@ -3040,6 +3089,7 @@
 												else {
 													$cookie_ids = '';
 													$votes		= 0;
+													$mail_notifications_answers	= '';
 													foreach( $answers as &$answer ) {
 														if ( 'facebook'	== $vote_type ) {
 															$answer['user_id']	=  $facebook_user_id;
@@ -3052,12 +3102,20 @@
 														$cookie_ids	.= $answer['answer_id'].',';
 														$this->update_answer_votes( $answer['answer_id'], 1 );
 														$votes++;
+														$answer_base	= self::get_answer_from_database( $answer['answer_id'] );
+														if ( $answer_base['type'] != 'other' )
+															$mail_notifications_answers	.= $answer_base['answer'] . '<br>';
+														else
+															$mail_notifications_answers	.= $answer_base['answer'] . ': '.$answer['other_answer_value'].'<br>';
 													}
+
+													$mail_notifications_answers	= trim( $mail_notifications_answers, '<br>');
 
 													self::insert_voter_in_database( $voter );
 
 													$this->update_poll_votes_and_answers( $votes, 1 );
 
+													$mail_notifications_custom_fields	= '';
 													foreach( $custom_fields as $custom_field ) {
 														if ( 'facebook'	== $vote_type )
 															$custom_field['user_id']	= $facebook_user_id;
@@ -3065,7 +3123,11 @@
 															$custom_field['user_id']	= 0;
 														$custom_field['tr_id']	= $tr_id;
 														self::insert_vote_custom_field_in_database( $custom_field );
+														$custom_field_base	= self::get_customfield_by_id( $custom_field['custom_field_id'] );
+														$mail_notifications_custom_fields	.= $custom_field_base['custom_field'] . ': '.$custom_field['custom_field_value'].'<br>';
 													}
+													$mail_notifications_custom_fields	= trim( $mail_notifications_custom_fields, '<br>');
+
 													$this->set_vote_cookie( trim($cookie_ids, ',' ), $vote_type, $facebook_user_details );
 													$this->vote		= true;
 													$this -> poll	= self::get_poll_from_database_by_id( $poll_id );
@@ -3073,6 +3135,27 @@
 														$this->success	= str_replace( '%USER-VOTES-LEFT%',  intval( $poll_options['number_of_votes_per_user'] ) - $this->get_voter_number_of_votes( $voter ), $poll_options['message_after_vote'] );
 													else
 														$this->success	= str_replace( '%USER-VOTES-LEFT%',  '', $poll_options['message_after_vote'] );
+													if ( 'yes' == $poll_options['send_email_notifications'] ) {
+														$headers = 'From: '.$poll_options['email_notifications_from_name'].' <'.$poll_options['email_notifications_from_email'].'>';
+														$subject	= str_replace( '[POLL_NAME]', $this->poll['name'], $poll_options['email_notifications_subject'] ); 
+														$subject	= str_replace( '[QUESTION]', $this->poll['question'], $subject ); 
+														$subject	= str_replace( '[ANSWERS]', $mail_notifications_answers, $subject ); 
+														$subject	= str_replace( '[CUSTOM_FIELDS]', $mail_notifications_custom_fields, $subject );
+														$subject	= str_replace( '[VOTE_ID]', $vote_id, $subject );
+														$subject	= str_replace( '[VOTE_DATE]', self::convert_date( current_time( 'mysql' ), $poll_options['date_format'] ), $subject );
+
+														$body	= str_replace( '[POLL_NAME]', $this->poll['name'], $poll_options['email_notifications_body'] ); 
+														$body	= str_replace( '[QUESTION]', $this->poll['question'], $body ); 
+														$body	= str_replace( '[ANSWERS]', $mail_notifications_answers, $body ); 
+														$body	= str_replace( '[CUSTOM_FIELDS]', $mail_notifications_custom_fields, $body );
+														$body	= str_replace( '[VOTE_ID]', $vote_id, $body );
+														$body	= str_replace( '[VOTE_DATE]', self::convert_date( current_time( 'mysql' ), $poll_options['date_format'] ), $body );
+
+														add_filter( 'wp_mail_content_type', 'yop_poll_set_html_content_type' );
+														$is_sent	= wp_mail( $poll_options['email_notifications_recipients'], $subject, $body, $headers );
+														remove_filter( 'wp_mail_content_type', 'yop_poll_set_html_content_type' );
+													}
+
 													return do_shortcode( $this->return_poll_html( array( 'tr_id' => $tr_id, 'location' => $location ) ) );
 												}
 											}
@@ -3607,11 +3690,11 @@
 								$answer_options[ $option_name ] =  $option_value;	
 							}	
 						}
-						
+
 						if ( function_exists( 'icl_translate' ) ) {
 							$answer['answer'] = icl_translate( 'yop_poll', $answer['id'] .'_answer', $answer['answer'] );
 						}
-						
+
 						if ( $multiple_answers ) {
 							if ( isset( $answer_options['is_default_answer'] ) && 'yes' == $answer_options['is_default_answer'] )
 								$temp_string	= str_ireplace( '%POLL-ANSWER-CHECK-INPUT%', '<input type="checkbox" checked="checked" value="'.$answer['id'].'" name="yop_poll_answer['.$answer['id'].']" id="yop-poll-answer-'.$answer['id'].'" />', $m[5] );

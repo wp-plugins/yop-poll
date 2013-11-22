@@ -14,19 +14,41 @@ YOP Poll is the perfect, easy to use poll plugin for your WP site.
 
 == Description ==
 
-YOP Poll is a truly professional and complete tool for your online polls. 
+YOP Poll plugin allows you to easily integrate a survey in your blog post/page and to manage the polls from within your WordPress dashboard but if offers so much more than other similar products.  Simply put, it doesn't lose sight of your needs and ensures that no detail is left unaccounted for. 
 
-It offers all the basic features included in any other poll plugin but the improvements we've added and the fact that it's fully customizable really make it special. 
+To name just a few improvements, you can create polls to include both single or multiple answers, work with a wide variety of options and settings to decide how you wish to sort your poll information, how to manage the results, what details to display and what to keep private, whether you want to view the total votes or the total voters, to set vote permissions or block voters etc. 
 
-The concept of the plugin revolves around user experience - it's very intuitive and easy to use and it was designed with the user in mind. We wanted to offer you the best and make sure that every detail was considered.
+Scheduling your polls is no longer a problem. YOP Poll can simultaneously run multiple surveys (no limit included) or you can schedule your polls to start one after another. Also, keeping track of your polls is easy, you have various sorting functions and you can access older versions at any time.
 
-Over the past months we have constantly improved it and we added many of the suggestions received from our users just to make sure that they really get the plugin they need.
+Designed to intuitive and easy to use, this plugin allows shortcodes and includes a widget functionality that fits perfectly with your WordPress website. For more details on the included features, please refer to the description below.
 
-It is easy to use, even for someone who doesn't have any experience as a programmer or developer. However, if you have any questions or suggestions don't hesitate to contact us. We're here to help. We want to ensure that you get the best out of this plugin and any feedback is welcomed.
+Current poll features:     
 
-Some of the features included that you can customize are: poll scheduling, displaying polls, poll answers, poll results, new custom fields, archive, display and many, many others.
+   *  Create/ Edit / Clone/Delete poll - allows you to create or intervene in your survey at any time, if you consider it necessary.   
+   
+   *  Poll scheduling:  programs each poll to start/end on a certain date. You can simultaneously run multiple polls you can use this option to schedule your polls one after another.    
+   
+   *  Display polls: you can choose to display one or more polls on your website by simply adding the corresponding poll ID. You can also decide for a random display of your active polls.    
+   
+   *  View all polls: lists all your polls that you can sort by number of votes or voters, by question or by date and includes a search option.     
 
-This plugin is the result of months of hard work - the original idea, then the technical aspects and weeks of testing and improvements to be sure that it's reliable and it does exactly what you want, when you want it.
+   *  Poll answers - allows other answers, multiple answers and includes a sorting module by various criteria: in exact order, in alphabetical order, by number of votes, ascending, descending etc.   
+
+   *  Poll results - offers a great flexibility when displaying the results: before/after vote, after poll's end date, on a custom date or never. The results can also be displayed by vote numbers, percentages or both. You can choose to include a view results link, view number of votes or number of voters.   
+
+   *  Add new custom fields - is a complex option that you can use to ask for additional information from your voters, information that you can then download and use for.   
+
+   *  Reset stats - proves useful when you wish to restart a poll.   
+
+   *  Vote permissions: - limits the voting accessibility to guests, registered users or both, or blocks user access by cookie, IP and username.   
+
+   *  Archive options - allows the users of the website to access former polls statistics. You can choose which polls to display according to their start/end date.   
+
+   *  Edit/delete/clone templates - allows you to customize the poll using either the html or the visual modes. You can also customize the result bar.   
+
+   *  Display Options - displays answers and results tabulated, vertically or horizontally.   
+
+   *  Logs and bans - user logs and bans can be seen in the admin section. You can ban users by email, username and IP and you can set the limitation preferences for all your polls or for just one of them. 
 
 
 == Installation ==
@@ -159,6 +181,11 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 
 == Changelog ==
+
+= 4.6 =
+
+* Added ability to send email notifications when a vote was recorded
+* Various bug fixes
 
 = 4.5 =
 

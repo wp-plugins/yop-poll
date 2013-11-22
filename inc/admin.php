@@ -391,7 +391,8 @@
 					$default_options ['schedule_reset_poll_recurring_unit'] = 'DAY';
 				}
 
-				update_option ( 'yop_poll_options', $default_options );	
+				update_option ( 'yop_poll_options', $default_options );
+				update_option ( "yop_poll_version", $wpdb->yop_poll_version );	
 			}
 
 			if (version_compare ( $installed_version, '4.4', '<=' ) ) {
@@ -415,7 +416,51 @@
 				}
 
 				update_option ( 'yop_poll_options', $default_options );	
+				update_option ( "yop_poll_version", $wpdb->yop_poll_version );
 			}
+
+			if (version_compare ( $installed_version, '4.5', '<=' ) ) {
+
+				$default_options = get_option ( 'yop_poll_options' );
+
+				if (! isset ( $default_options ['send_email_notifications'] )) {
+					$default_options ['send_email_notifications'] = 'no';
+				}
+
+				if (! isset ( $default_options ['email_notifications_from_name'] )) {
+					$default_options ['email_notifications_from_name'] = 'Yop Poll';
+				}
+
+				$sitename = strtolower( $_SERVER['SERVER_NAME'] );
+				if ( substr( $sitename, 0, 4 ) == 'www.' ) {
+					$sitename = substr( $sitename, 4 );
+				}
+
+				if (! isset ( $default_options ['email_notifications_from_email'] )) {
+					$default_options ['email_notifications_from_email'] = 'yop-poll@'.$sitename;
+				}
+
+				if (! isset ( $default_options ['email_notifications_recipients'] )) {
+					$default_options ['email_notifications_recipients'] = '';
+				}
+
+				if (! isset ( $default_options ['email_notifications_subject'] )) {
+					$default_options ['email_notifications_subject'] = 'New Vote';
+				}
+
+				if (! isset ( $default_options ['email_notifications_body'] )) {
+					$default_options ['email_notifications_body'] = '<p>A new vote was registered on [VOTE_DATE] for [POLL_NAME]</p>
+<p>Vote Details:</p>
+<p><b>Question:</b> [QUESTION]</p>
+<p><b>Answers:</b> <br />[ANSWERS]</p>
+<p><b>Custom Fields:</b> <br />[CUSTOM_FIELDS]</p>
+<p><b>Vote ID:</b> <br />[VOTE_ID]</p>';
+				}
+
+				update_option ( 'yop_poll_options', $default_options );
+				update_option ( "yop_poll_version", $wpdb->yop_poll_version );
+			}
+
 		}
 		public function update_to_4_2() {
 			global $wpdb;
@@ -4022,28 +4067,25 @@
 				}
 
 				// never_expire
-				if (isset ( $input ['never_expire'] )) {
-					if ('yes' == $input ['never_expire']) {
-						if ($default_options ['never_expire'] != trim ( $input ['never_expire'] )) {
-							$newinput ['never_expire'] = trim ( $input ['never_expire'] );
-							$updated .= __ ( 'Option "Poll End Date" Updated!', 'yop_poll' ) . $message_delimiter;
-						}
-					} else {
-						$newinput ['never_expire'] = $default_options ['never_expire'];
-						$errors .= __ ( 'Option "Poll End Date" Not Updated! ', 'yop_poll' ) . $message_delimiter;
+				if ( ! isset ( $input ['never_expire'] ) ) {
+					$input ['never_expire'] = 'no';
+				}
+				if ('yes' == $input ['never_expire']) {
+					if ($default_options ['never_expire'] != trim ( $input ['never_expire'] )) {
+						$newinput ['never_expire'] = trim ( $input ['never_expire'] );
+						$newinput ['end_date'] = '9999-12-31 23:59:59';
+						$updated .= __ ( 'Option "Poll End Date" Updated!', 'yop_poll' ) . $message_delimiter;
 					}
-
-					// end_date
-					if ('yes' != $newinput ['never_expire']) {
-						if (isset ( $input ['end_date'] )) {
-							if ('' != $input ['end_date']) {
-								if ($default_options ['end_date'] != trim ( $input ['end_date'] )) {
-									$newinput ['end_date'] = $input ['end_date'];
-									$updated .= __ ( 'Option "Poll End Date" Updated!', 'yop_poll' ) . $message_delimiter;
-								}
-							} else {
-								$errors .= __ ( 'Option "Poll End Date" Not Updated! The field is empty! ', 'yop_poll' ) . $message_delimiter;
+				} else {
+					if (isset ( $input ['end_date'] )) {
+						if ('' != $input ['end_date']) {
+							if ($default_options ['end_date'] != trim ( $input ['end_date'] )) {
+								$newinput ['end_date'] = $input ['end_date'];
+								$newinput ['never_expire'] = 'no';
+								$updated .= __ ( 'Option "Poll End Date" Updated!', 'yop_poll' ) . $message_delimiter;
 							}
+						} else {
+							$errors .= __ ( 'Option "Poll End Date" Not Updated! The field is empty! ', 'yop_poll' ) . $message_delimiter;
 						}
 					}
 				}
@@ -4620,6 +4662,89 @@
 					} else {
 						$newinput ['show_in_archive'] = $default_options ['show_in_archive'];
 						$errors .= __ ( 'Option "Show Poll in Archive" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
+					}
+				}
+
+				// send_email_notifications
+				if (isset ( $input ['send_email_notifications'] )) {
+					if (in_array ( $input ['send_email_notifications'], array (
+						'yes',
+						'no'
+					) )) {
+						if ($default_options ['send_email_notifications'] != trim ( $input ['send_email_notifications'] )) {
+							$newinput ['send_email_notifications'] = trim ( $input ['send_email_notifications'] );
+							$updated .= __ ( 'Option "Send Email Notifications" Updated!', 'yop_poll' ) . $message_delimiter;
+						}
+
+						if ('yes' == $input ['send_email_notifications']) {
+							// email_notifications_from_name
+							if (isset ( $input ['email_notifications_from_name'] )) {
+								if ( '' != $input ['email_notifications_from_name'] ) {
+									if ($default_options ['email_notifications_from_name'] != trim ( $input ['email_notifications_from_name'] )) {
+										$newinput ['email_notifications_from_name'] = trim ( $input ['email_notifications_from_name'] );
+										$updated .= __ ( 'Option "Notifications From Name" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['email_notifications_from_name'] = $default_options ['email_notifications_from_name'];
+									$errors .= __ ( 'Option "Notifications From Name" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+
+							// email_notifications_from_email
+							if (isset ( $input ['email_notifications_from_email'] )) {
+								if ( '' != $input ['email_notifications_from_email'] ) {
+									if ($default_options ['email_notifications_from_email'] != trim ( $input ['email_notifications_from_email'] )) {
+										$newinput ['email_notifications_from_email'] = trim ( $input ['email_notifications_from_email'] );
+										$updated .= __ ( 'Option "Notifications From Email" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['email_notifications_from_email'] = $default_options ['email_notifications_from_email'];
+									$errors .= __ ( 'Option "Notifications From Email" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+
+							// email_notifications_recipients
+							if (isset ( $input ['email_notifications_recipients'] )) {
+								if ( '' != $input ['email_notifications_recipients'] ) {
+									if ($default_options ['email_notifications_recipients'] != trim ( $input ['email_notifications_recipients'] )) {
+										$newinput ['email_notifications_recipients'] = trim ( $input ['email_notifications_recipients'] );
+										$updated .= __ ( 'Option "Email Notifications Recipients" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['email_notifications_recipients'] = $default_options ['email_notifications_recipients'];
+									$errors .= __ ( 'Option "Email Notifications Recipients" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+
+							// email_notifications_subject
+							if (isset ( $input ['email_notifications_subject'] )) {
+								if ( '' != $input ['email_notifications_subject'] ) {
+									if ($default_options ['email_notifications_subject'] != trim ( $input ['email_notifications_subject'] )) {
+										$newinput ['email_notifications_subject'] = trim ( $input ['email_notifications_subject'] );
+										$updated .= __ ( 'Option "Email Notifications Subject" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['email_notifications_subject'] = $default_options ['email_notifications_subject'];
+									$errors .= __ ( 'Option "Email Notifications Subject" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+
+							// email_notifications_subject
+							if (isset ( $input ['email_notifications_body'] )) {
+								if ( '' != $input ['email_notifications_body'] ) {
+									if ($default_options ['email_notifications_body'] != trim ( $input ['email_notifications_body'] )) {
+										$newinput ['email_notifications_body'] = trim ( $input ['email_notifications_body'] );
+										$updated .= __ ( 'Option "Email Notifications Body" Updated!', 'yop_poll' ) . $message_delimiter;
+									}
+								} else {
+									$newinput ['email_notifications_body'] = $default_options ['email_notifications_body'];
+									$errors .= __ ( 'Option "Email Notifications Body" Not Updated! The field is empty!', 'yop_poll' ) . $message_delimiter;
+								}
+							}
+						}
+					} else {
+						$newinput ['send_email_notifications'] = $default_options ['send_email_notifications'];
+						$errors .= __ ( 'Option "Send Email Notifications" Not Updated! Please choose between \'yes\' or \'no\'', 'yop_poll' ) . $message_delimiter;
 					}
 				}
 
@@ -5767,6 +5892,89 @@
 										</table>
 									</div>
 								</div>
+
+								<div class="postbox" id="yop-poll-advanced-options-div8">
+									<div title="Click to toggle" class="handlediv">
+										<br />
+									</div>
+									<h3 class="hndle">
+										<span><?php _e( 'Notifications Options', 'yop_poll' ); ?></span>
+									</h3>
+									<div class="inside">
+										<table cellspacing="0" class="links-table">
+											<tbody>
+											<tr>
+												<th>
+													<?php _e( 'Send Email Notifications', 'yop_poll' ); ?>:
+												</th>
+												<td><input <?php checked( 'yes', $default_options['send_email_notifications'] ); ?>
+														id="yop-poll-send-email-notifications-yes" type="radio"
+														value="yes" name="yop_poll_options[send_email_notifications]" /><label
+														for="yop-poll-send-email-notifications-yes"><?php _e( 'Yes' , 'yop_poll'); ?></label>
+													<input <?php checked( 'no', $default_options['send_email_notifications'] ); ?>
+														id="yop-poll-send-email-notifications-no" type="radio"
+														value="no" name="yop_poll_options[send_email_notifications]" /><label
+														for="yop-poll-send-email-notifications-no"><?php _e( 'No' , 'yop_poll'); ?></label>
+												</td>
+											</tr>
+											<tr class="yop_poll_suboption yop-poll-email-notifications-div" id="yop-poll-email-notifications-from-name-div" style="<?php echo 'yes' != $default_options['send_email_notifications'] ? 'display: none;' : '';  ?>">
+												<th>
+													<?php _e( 'Notifications From Name', 'yop_poll' ); ?>:
+												</th>
+												<td valign="top">
+													<input id="yop-poll-email-notifications-from-name"
+														type="text"
+														name="yop_poll_options[email_notifications_from_name]"
+														value="<?php echo esc_html( stripslashes( $default_options['email_notifications_from_name'] ) ); ?>" />
+												</td>
+											</tr>
+											<tr class="yop_poll_suboption yop-poll-email-notifications-div" id="yop-poll-email-notifications-from-email-div" style="<?php echo 'yes' != $default_options['send_email_notifications'] ? 'display: none;' : '';  ?>">
+												<th>
+													<?php _e( 'Notifications From Email', 'yop_poll' ); ?>:
+												</th>
+												<td valign="top">
+													<input id="yop-poll-email-notifications-from-email"
+														type="text"
+														name="yop_poll_options[email_notifications_from_email]"
+														value="<?php echo esc_html( stripslashes( $default_options['email_notifications_from_email'] ) ); ?>" />
+												</td>
+											</tr>
+											<tr class="yop_poll_suboption yop-poll-email-notifications-div" id="yop-poll-email-notifications-recipients-div" style="<?php echo 'yes' != $default_options['send_email_notifications'] ? 'display: none;' : '';  ?>">
+												<th>
+													<?php _e( 'Notifications Recipients', 'yop_poll' ); ?>:<br><font size="0"><?php _e('Use comma separated email addresses: email@xmail.com,email2@xmail.com', 'yop_poll') ?></font>
+												</th>
+												<td valign="top">
+													<input id="yop-poll-email-notifications-recipients"
+														type="text"
+														name="yop_poll_options[email_notifications_recipients]"
+														value="<?php echo esc_html( stripslashes( $default_options['email_notifications_recipients'] ) ); ?>" />
+												</td>
+											</tr>
+											<tr class="yop_poll_suboption yop-poll-email-notifications-div" id="yop-poll-email-notifications-subject-div" style="<?php echo 'yes' != $default_options['send_email_notifications'] ? 'display: none;' : '';  ?>">
+												<th>
+													<?php _e( 'Notifications Subject', 'yop_poll' ); ?>:
+												</th>
+												<td>
+													<input id="yop-poll-email-notifications-subject"
+														type="text"
+														name="yop_poll_options[email_notifications_subject]"
+														value="<?php echo esc_html( stripslashes( $default_options['email_notifications_subject'] ) ); ?>"
+														/>
+												</td>
+											</tr>
+											<tr class="yop_poll_suboption yop-poll-email-notifications-div" id="yop-poll-email-notifications-body-div" style="<?php echo 'yes' != $default_options['send_email_notifications'] ? 'display: none;' : '';  ?>">
+												<th>
+													<?php _e( 'Notifications Body', 'yop_poll' ); ?>:
+												</th>
+												<td>
+													<textarea id="yop-poll-email-notifications-body" rows="10"
+														name="yop_poll_options[email_notifications_body]"><?php echo esc_html( stripslashes( $default_options['email_notifications_body'] ) ); ?></textarea>
+												</td>
+											</tr>
+										</table>
+									</div>
+								</div>
+
 								<?php if ( false ) { ?>
 									<div class="postbox" id="yop-poll-advanced-options-div9">
 										<div title="Click to toggle" class="handlediv">
@@ -7305,6 +7513,87 @@
 										</table>
 									</div>
 								</div>
+								<div class="postbox" id="yop-poll-advanced-options-div8">
+									<div title="Click to toggle" class="handlediv">
+										<br />
+									</div>
+									<h3 class="hndle">
+										<span><?php _e( 'Notifications Options', 'yop_poll' ); ?></span>
+									</h3>
+									<div class="inside">
+										<table cellspacing="0" class="links-table">
+											<tbody>
+											<tr>
+												<th>
+													<?php _e( 'Send Email Notifications', 'yop_poll' ); ?>:
+												</th>
+												<td><input <?php checked( 'yes', $default_options['send_email_notifications'] ); ?>
+														id="yop-poll-send-email-notifications-yes" type="radio"
+														value="yes" name="yop_poll_options[send_email_notifications]" /><label
+														for="yop-poll-send-email-notifications-yes"><?php _e( 'Yes' , 'yop_poll'); ?></label>
+													<input <?php checked( 'no', $default_options['send_email_notifications'] ); ?>
+														id="yop-poll-send-email-notifications-no" type="radio"
+														value="no" name="yop_poll_options[send_email_notifications]" /><label
+														for="yop-poll-send-email-notifications-no"><?php _e( 'No' , 'yop_poll'); ?></label>
+												</td>
+											</tr>
+											<tr class="yop_poll_suboption yop-poll-email-notifications-div" id="yop-poll-email-notifications-from-name-div" style="<?php echo 'yes' != $default_options['send_email_notifications'] ? 'display: none;' : '';  ?>">
+												<th>
+													<?php _e( 'Notifications From Name', 'yop_poll' ); ?>:
+												</th>
+												<td valign="top">
+													<input id="yop-poll-email-notifications-from-name"
+														type="text"
+														name="yop_poll_options[email_notifications_from_name]"
+														value="<?php echo esc_html( stripslashes( $default_options['email_notifications_from_name'] ) ); ?>" />
+												</td>
+											</tr>
+											<tr class="yop_poll_suboption yop-poll-email-notifications-div" id="yop-poll-email-notifications-from-email-div" style="<?php echo 'yes' != $default_options['send_email_notifications'] ? 'display: none;' : '';  ?>">
+												<th>
+													<?php _e( 'Notifications From Email', 'yop_poll' ); ?>:
+												</th>
+												<td valign="top">
+													<input id="yop-poll-email-notifications-from-email"
+														type="text"
+														name="yop_poll_options[email_notifications_from_email]"
+														value="<?php echo esc_html( stripslashes( $default_options['email_notifications_from_email'] ) ); ?>" />
+												</td>
+											</tr>
+											<tr class="yop_poll_suboption yop-poll-email-notifications-div" id="yop-poll-email-notifications-recipients-div" style="<?php echo 'yes' != $default_options['send_email_notifications'] ? 'display: none;' : '';  ?>">
+												<th>
+													<?php _e( 'Notifications Recipients', 'yop_poll' ); ?>:<br><font size="0"><?php _e('Use comma separated email addresses: email@xmail.com,email2@xmail.com', 'yop_poll') ?></font>
+												</th>
+												<td valign="top">
+													<input id="yop-poll-email-notifications-recipients"
+														type="text"
+														name="yop_poll_options[email_notifications_recipients]"
+														value="<?php echo esc_html( stripslashes( $default_options['email_notifications_recipients'] ) ); ?>" />
+												</td>
+											</tr>
+											<tr class="yop_poll_suboption yop-poll-email-notifications-div" id="yop-poll-email-notifications-subject-div" style="<?php echo 'yes' != $default_options['send_email_notifications'] ? 'display: none;' : '';  ?>">
+												<th>
+													<?php _e( 'Notifications Subject', 'yop_poll' ); ?>:
+												</th>
+												<td>
+													<input id="yop-poll-email-notifications-subject"
+														type="text"
+														name="yop_poll_options[email_notifications_subject]"
+														value="<?php echo esc_html( stripslashes( $default_options['email_notifications_subject'] ) ); ?>"
+														/>
+												</td>
+											</tr>
+											<tr class="yop_poll_suboption yop-poll-email-notifications-div" id="yop-poll-email-notifications-body-div" style="<?php echo 'yes' != $default_options['send_email_notifications'] ? 'display: none;' : '';  ?>">
+												<th>
+													<?php _e( 'Notifications Body', 'yop_poll' ); ?>:
+												</th>
+												<td>
+													<textarea id="yop-poll-email-notifications-body" rows="10"
+														name="yop_poll_options[email_notifications_body]"><?php echo esc_html( stripslashes( $default_options['email_notifications_body'] ) ); ?></textarea>
+												</td>
+											</tr>
+										</table>
+									</div>
+								</div>
 								<?php if ( false ) { ?>
 									<div class="postbox" id="yop-poll-advanced-options-div9">
 										<div title="Click to toggle" class="handlediv">
@@ -8733,7 +9022,7 @@
 						if ($optin_box_modal_options ['sidebar_had_submit'] == 'no') {
 							if ($optin_box_modal_options ['modal_had_submit'] == 'no') {
 							?>
-									<?php $this->yop_poll_optin_form2()?>
+							<?php $this->yop_poll_optin_form2()?>
 							<?php
 							}
 						}
@@ -9427,7 +9716,7 @@
 		</div>
 		<?php
 		}
-		
+
 		private function yop_poll_optin_form2() {
 		?>
 		<style type="text/css">
