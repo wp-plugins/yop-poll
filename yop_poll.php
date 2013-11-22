@@ -5,7 +5,7 @@
  * Description: Use a full option polling functionality to get the answers you need. YOP Poll is the perfect, easy to use plugin for your WordPress website. 
  * Author: yourownprogrammer 
  * Author URL: http://www.yop-poll.com /thankyou/
- * Version: 4.5 
+ * Version: 4.6 
  * Network: false
  */
 define ( 'YOP_POLL_WP_VERSION', '3.3' );
