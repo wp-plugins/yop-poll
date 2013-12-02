@@ -2607,6 +2607,7 @@
 		private static function insert_vote_custom_field_in_database( $custom_field = array() ) {
 			global $wpdb;
 
+			$custom_field['custom_field_value'] = strip_tags( $custom_field['custom_field_value'] );
 			$wpdb->query(
 				$wpdb->prepare(
 					"
@@ -2821,7 +2822,7 @@
 					$field['value']
 				)
 			);
-		}
+		}   
 
 		public function register_vote( $request ) {
 			global $current_user;
@@ -2905,8 +2906,8 @@
 															$answer_details					= self::get_poll_answer_by_id( $answer_id );
 															if ( 'other' == $answer_details['type'] ) {
 																if( isset( $request['yop_poll_other_answer'] ) ) {
-																	if ( '' != trim( $request['yop_poll_other_answer'] ) ) {
-																		$answer['other_answer_value']	= $request['yop_poll_other_answer'];
+																	if ( '' != strip_tags( trim( $request['yop_poll_other_answer'] ) ) ) {
+																		$answer['other_answer_value']	= strip_tags($request['yop_poll_other_answer']);
 																		$answer['type']					= 'other';
 																	}
 																	else {
@@ -2952,12 +2953,12 @@
 												$answer_details					= self::get_poll_answer_by_id( $request['yop_poll_answer'] );
 												if ( 'other' == $answer_details['type'] ) {
 													if( isset( $request['yop_poll_other_answer'] ) ) {
-														if ( '' != trim( $request['yop_poll_other_answer'] ) ) {
-															$answer['other_answer_value']	= $request['yop_poll_other_answer'];
+														if ( '' != strip_tags( trim( $request['yop_poll_other_answer'] ) ) ) {
+															$answer['other_answer_value']	= strip_tags( $request['yop_poll_other_answer']);
 															$answer['type']					= 'other';
 														}
 														else {
-															$this->error	= __( 'Your other answer is empty!', 'yop_poll' );
+															$this->error	= __( 'Your other answer is empty or contains invalid tags!', 'yop_poll' );
 															return false;
 														}
 													}
@@ -2991,7 +2992,7 @@
 																		if ( in_array( $vote_type, $this->vote_types ) )
 																			$new_custom_field['user_type']		= $vote_type;
 
-																		$new_custom_field['custom_field_value']	= trim( $request['yop_poll_customfield'][ $custom_field['id'] ] );
+																		$new_custom_field['custom_field_value']	= strip_tags( trim( $request['yop_poll_customfield'][ $custom_field['id'] ] ) );
 																		$custom_fields[]						= $new_custom_field;
 																	}
 																}
@@ -3511,9 +3512,9 @@
 						$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-VOTES%', self::display_poll_result_votes( $answer, $poll_options ), $m[5] );
 						$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-PERCENTAGES%', self::display_poll_result_percentages( $answer, $poll_options ), $temp_string );
 						if ( 'yes' == $poll_options['poll_answer_html_tags'] )
-							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', stripslashes( $answer['answer'] ), $temp_string );
+							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', strip_tags(stripslashes( $answer['answer'] )), $temp_string );
 						else
-							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', esc_html( stripslashes( $answer['answer'] ) ), $temp_string );
+							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', strip_tags(esc_html( stripslashes( $answer['answer'] )) ), $temp_string );
 						$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $poll_id, $answer['id'], $answer['procentes'], $poll_options, $unique_id ), $temp_string );
 						$return_string	.= $temp_string;
 					}
@@ -3536,9 +3537,9 @@
 							$custom_field['custom_field'] = icl_translate( 'yop_poll', $custom_field['id'] .'_custom_field', $custom_field['custom_field'] );
 						}
 						if ( 'yes' == $poll_options['poll_custom_field_html_tags'] )
-							$temp_string	= str_ireplace( '%POLL-CUSTOM-FIELD-LABEL%', '<label for="yop-poll-customfield-'.$custom_field['id'].'">'.stripslashes( $custom_field['custom_field'] ).'</label>', $m[5] );
+							$temp_string	= str_ireplace( '%POLL-CUSTOM-FIELD-LABEL%', '<label for="yop-poll-customfield-'.$custom_field['id'].'">'. strip_tags(stripslashes( $custom_field['custom_field'] )).'</label>', $m[5] );
 						else
-							$temp_string	= str_ireplace( '%POLL-CUSTOM-FIELD-LABEL%', '<label for="yop-poll-customfield-'.$custom_field['id'].'">'.esc_html( stripslashes( $custom_field['custom_field'] ) ).'</label>', $m[5] );
+							$temp_string	= str_ireplace( '%POLL-CUSTOM-FIELD-LABEL%', '<label for="yop-poll-customfield-'.$custom_field['id'].'">'.strip_tags(esc_html( stripslashes( $custom_field['custom_field'] ) ) ).'</label>', $m[5] );
 						$temp_string	= str_ireplace( '%POLL-CUSTOM-FIELD-TEXT-INPUT%', '<input type="text" value="" name="yop_poll_customfield['.$custom_field['id'].']" id="yop-poll-customfield-'.$custom_field['id'].'" />', $temp_string );
 						$return_string	.= $temp_string;
 					}
@@ -3569,7 +3570,7 @@
 							$answer = array(
 								'id'		=> NULL,
 								'poll_id'	=> $poll_id,
-								'answer'	=> isset( $poll_options['other_answers_label'] ) ? $poll_options['other_answers_label'] : __( 'Other', 'yop_poll'),
+								'answer'	=> isset( $poll_options['other_answers_label'] ) ? strip_tags($poll_options['other_answers_label']) : __( 'Other', 'yop_poll'),
 								'votes'		=> 0,
 								'status'	=> 'active',
 								'type'		=> 'other'
@@ -3579,9 +3580,9 @@
 						$other_answer = self::get_poll_answers( $poll_id, array( 'other'), 'id', '', false, $percentages_decimals );
 
 						if ( function_exists( 'icl_translate' ) ) {
-							$other_answer_label = icl_translate( 'yop_poll', $poll_id .'_other_answer_label', esc_html( stripslashes( $other_answer[0]['answer'] ) ) );
+							$other_answer_label = icl_translate( 'yop_poll', $poll_id .'_other_answer_label', strip_tags( stripslashes( $other_answer[0]['answer'] ) ) );
 						} else {
-							$other_answer_label = esc_html( stripslashes( $other_answer[0]['answer'] ) );
+							$other_answer_label = strip_tags( stripslashes( $other_answer[0]['answer'] ) );
 						}
 
 						if( $multiple_answers ) {
@@ -3708,9 +3709,9 @@
 								$temp_string	= str_ireplace( '%POLL-ANSWER-CHECK-INPUT%', '<input type="radio" value="'.$answer['id'].'" name="yop_poll_answer" id="yop-poll-answer-'.$answer['id'].'" />', $m[5] );
 						}
 						if ( 'yes' == $poll_options['poll_answer_html_tags'] )
-							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$answer['id'].'">'.stripslashes( $answer['answer'] ).'</label>', $temp_string );
+							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$answer['id'].'">'.strip_tags(stripslashes( $answer['answer'] ) ).'</label>', $temp_string );
 						else
-							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$answer['id'].'">'.esc_html( stripslashes( $answer['answer'] ) ).'</label>', $temp_string );
+							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$answer['id'].'">'.strip_tags( stripslashes( $answer['answer'] ) ).'</label>', $temp_string );
 						if ( $this->is_view_poll_results() ) {
 							$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $poll_id, $answer['id'], $answer['procentes'], $poll_options, $unique_id ), $temp_string );
 							$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-VOTES%', self::display_poll_result_votes( $answer, $poll_options ), $temp_string );

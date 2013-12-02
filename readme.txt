@@ -182,6 +182,10 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 4.7 =
+
+* Fixed bug with Other answers. Html code is no longer allowed.
+
 = 4.6 =
 
 * Added ability to send email notifications when a vote was recorded
