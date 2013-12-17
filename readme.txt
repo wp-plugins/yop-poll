@@ -182,6 +182,12 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
+= 4.8 =
+
+* Re-added ability to use html tags.
+* Added new tags: %POLL-SUCCESS-MSG% and %POLL-ERROR-MSG%
+* Various bug fixes
+
 = 4.7 =
 
 * Fixed bug with Other answers. Html code is no longer allowed.
