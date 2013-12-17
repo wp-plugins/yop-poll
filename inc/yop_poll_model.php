@@ -1,6 +1,5 @@
 <?php
 	class Yop_Poll_Model {
-
 		var $error							= NULL;
 		var $success						= NULL;
 		var $poll							= array(
@@ -1248,8 +1247,8 @@
 				ARRAY_A
 			);
 			return $answer;
-		}
-
+		}                      
+		
 		private static function get_poll_answer_by_field( $poll_id, $field_name, $field_value, $field_type = '%s' ) {
 			$answer	= $GLOBALS['wpdb']->get_row (
 				$GLOBALS['wpdb']->prepare(
@@ -1610,7 +1609,7 @@
 					type = %s
 					",
 					$answer['poll_id'],
-					$answer['answer'],
+					strip_tags($answer['answer'], "<a><img>"),
 					$answer['votes'],
 					$answer['status'],
 					$answer['type']
@@ -1645,7 +1644,7 @@
 					SET answer = %s
 					WHERE id = %d
 					",
-					$answer['answer'],
+					strip_tags($answer['answer'], "<a><img>"),
 					$answer['id']
 				)
 			);
@@ -3075,7 +3074,7 @@
 															$body	= str_replace( '[CUSTOM_FIELDS]', $mail_notifications_custom_fields, $body );
 															$body	= str_replace( '[VOTE_ID]', $vote_id, $body );
 															$body	= str_replace( '[VOTE_DATE]', self::convert_date( current_time( 'mysql' ), $poll_options['date_format'] ), $body );
-															
+
 															add_filter( 'wp_mail_content_type', 'yop_poll_set_html_content_type' );
 															$is_sent	= wp_mail( $poll_options['email_notifications_recipients'], $subject, $body, $headers );
 															remove_filter( 'wp_mail_content_type', 'yop_poll_set_html_content_type' );
@@ -3212,7 +3211,7 @@
 			$poll_options		= $this->poll_options;
 			if ( 'widget' == $location )
 				$template_id		= $poll_options['widget_template'];
-			else
+			else  
 				$template_id		= $poll_options['template'];
 
 			if ( '' == $template_id ) {
@@ -3233,13 +3232,14 @@
 			$poll_id 			= $this->poll['id'];
 			$location			= isset( $attr['location'] ) ? $attr['location'] : 'page'; 
 			$unique_id			= $this->unique_id;
+
 			if( ! $poll_id )
 				return '';
 			$poll_details			= $this->poll;
 			$poll_options			= $this->poll_options;
 			if ( 'widget' == $location )
-				$template_id		= $poll_options['widget_template'];
-			else
+				$template_id		= $poll_options['widget_template'];     
+			else   
 				$template_id		= $poll_options['template'];
 			$display_other_answers_values	= false;
 			if ( isset( $poll_options['display_other_answers_values'] ) ) {
@@ -3272,15 +3272,16 @@
 			$template			= $template_details['js'];   
 			$template			= str_ireplace( '%POLL-ID%', $poll_id.$unique_id, $template );
 			$template			= str_ireplace( '%ANSWERS-TABULATED-COLS%', $answers_tabulated_cols, $template );
-			$template			= str_ireplace( '%RESULTS-TABULATED-COLS%', $results_tabulated_cols, $template );
+			$template			= str_ireplace( '%RESULTS-TABULATED-COLS%', $results_tabulated_cols, $template );    
 			return stripslashes( $template );
 		}
 
-		public function return_poll_html( $attr	= array( 'tr_id' => '', 'location' => 'page' ) ) {
-
+		public function return_poll_html( $attr	= array( 'tr_id' => '', 'location' => 'page', 'load_css' => false, 'load_js' => false ) ) {
 			$tr_id				= isset( $attr['tr_id'] ) ? $attr['tr_id'] : ''; 
 			$location			= isset( $attr['location'] ) ? $attr['location'] : 'page'; 
 			$unique_id			= $this->unique_id; 
+			$load_css           = isset( $attr['load_css'] ) ? $attr['load_css'] : false; 
+			$load_js            = isset( $attr['load_js'] ) ? $attr['load_js'] : false; 
 
 			$poll_id 			= $this->poll['id'];
 			if ( ! $poll_id )
@@ -3379,7 +3380,7 @@
 			else
 				$template			= str_ireplace( '%POLL-END-DATE%', esc_html( stripslashes( self::convert_date( $poll_details['end_date'], $poll_options['date_format'] ) ) ), $template );
 			if ( 'yes' == $poll_options['poll_question_html_tags'] )
-				$template			= str_ireplace( '%POLL-QUESTION%', stripslashes( $poll_details['question'] ), $template );
+				$template			= str_ireplace( '%POLL-QUESTION%', esc_html(stripslashes( $poll_details['question']) ), $template );
 			else
 				$template			= str_ireplace( '%POLL-QUESTION%', esc_html( stripslashes( $poll_details['question'] ) ), $template );
 
@@ -3398,6 +3399,19 @@
 				$template		= str_ireplace( '%POLL-TOTAL-VOTES%', $poll_options['view_total_votes_label'], $template );
 				$template		= str_ireplace( '%POLL-TOTAL-VOTES%', $poll_details['total_votes'], $template );
 			}
+
+			$msgDivS = false;
+			$msgDivE = false;
+
+			if( strpos( $template, "%POLL-SUCCESS-MSG%" ) != false ) { 
+				$msgDivS = true;
+				str_ireplace( '%POLL-SUCCESS-MSG%', '<div id="yop-poll-container-success-'.$poll_id.$unique_id. '" class="yop-poll-container-success"></div>', $template );
+			}
+			if( strpos( $template, "%POLL-ERROR-MSG%" )   != false ) { 
+				$msgDivE = true;
+				str_ireplace( '%POLL-ERROR-MSG%', '<div id="yop-poll-container-error-'.$poll_id.$unique_id.	'" class="yop-poll-container-error"></div>', $template );
+			} 
+
 			$pattern			= '\[(\[?)(ANSWER_CONTAINER)\b([^\]\/]*(?:\/(?!\])[^\]\/]*)*?)(?:(\/)\]|\](?:([^\[]*+(?:\[(?!\/\2\])[^\[]*+)*+)\[\/\2\])?)(\]?)';
 			$template			= preg_replace_callback( "/$pattern/s", array(&$this,'answer_replace_callback'), $template );
 			$pattern			= '\[(\[?)(OTHER_ANSWER_CONTAINER)\b([^\]\/]*(?:\/(?!\])[^\]\/]*)*?)(?:(\/)\]|\](?:([^\[]*+(?:\[(?!\/\2\])[^\[]*+)*+)\[\/\2\])?)(\]?)';
@@ -3408,8 +3422,29 @@
 			$template			= preg_replace_callback( "/$pattern/s", array(&$this,'answer_result_replace_callback'), $template );
 			$pattern			= '\[(\[?)(CAPTCHA_CONTAINER)\b([^\]\/]*(?:\/(?!\])[^\]\/]*)*?)(?:(\/)\]|\](?:([^\[]*+(?:\[(?!\/\2\])[^\[]*+)*+)\[\/\2\])?)(\]?)';
 			$template			= preg_replace_callback( "/$pattern/s", array(&$this,'captcha_replace_callback'), $template );
-			$template			= self::strip_all_tags( $template ); 
-			$template			= '<div id="yop-poll-container-'.$poll_id.$unique_id.'" class="yop-poll-container"><div id="yop-poll-container-error-'.$poll_id.$unique_id.'" class="yop-poll-container-error"></div><div id="yop-poll-container-success-'.$poll_id.$unique_id.'" class="yop-poll-container-success"></div><form id="yop-poll-form-'.$poll_id.$unique_id.'" class="yop-poll-forms">'.$template.'<input type="hidden" id="yop-poll-tr-id-'.$poll_id.$unique_id.'" name="yop_poll_tr_id" value="'.$tr_id.'"/>'.wp_nonce_field( 'yop_poll-'.$poll_id.$unique_id.'-user-actions', 'yop-poll-nonce-'.$poll_id.$unique_id, false, false ).'</form></div>';
+
+			$temp       		= self::strip_all_tags( $template );
+			$template           = "";
+
+			if( $load_css ) {
+				$template           .= '<style type="text/css">' . self::return_poll_css( array( "location" => $location ) ) . '</style>';
+			} 
+
+			$template                .= '<div id="yop-poll-container-'.$poll_id.$unique_id. 
+			'" class="yop-poll-container">';  
+			if( !$msgDivS ) {
+				$template       .= '<div id="yop-poll-container-success-'.$poll_id.$unique_id. '" class="yop-poll-container-success"></div>';
+			}
+			if( !$msgDivE ) {
+				$template       .= '<div id="yop-poll-container-error-'.$poll_id.$unique_id.    '" class="yop-poll-container-error"></div>';
+			}
+
+			$template			.= '<form id="yop-poll-form-'.$poll_id.$unique_id.
+			'" class="yop-poll-forms">'.$temp.
+			'<input type="hidden" id="yop-poll-tr-id-'.$poll_id.$unique_id.
+			'" name="yop_poll_tr_id" value="'.$tr_id.'"/>'.
+			wp_nonce_field( 'yop_poll-'.$poll_id.$unique_id.'-user-actions', 'yop-poll-nonce-'.$poll_id.$unique_id, false, false ).
+			'</form></div>';
 			return $template;
 		}
 
@@ -3512,9 +3547,9 @@
 						$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-VOTES%', self::display_poll_result_votes( $answer, $poll_options ), $m[5] );
 						$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-PERCENTAGES%', self::display_poll_result_percentages( $answer, $poll_options ), $temp_string );
 						if ( 'yes' == $poll_options['poll_answer_html_tags'] )
-							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', strip_tags(stripslashes( $answer['answer'] )), $temp_string );
+							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', strip_tags(stripslashes( $answer['answer'] ), '<a><img>'), $temp_string );
 						else
-							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', strip_tags(esc_html( stripslashes( $answer['answer'] )) ), $temp_string );
+							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', strip_tags(esc_html( stripslashes( $answer['answer'] )), '<a><img>' ), $temp_string );
 						$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $poll_id, $answer['id'], $answer['procentes'], $poll_options, $unique_id ), $temp_string );
 						$return_string	.= $temp_string;
 					}
@@ -3570,7 +3605,7 @@
 							$answer = array(
 								'id'		=> NULL,
 								'poll_id'	=> $poll_id,
-								'answer'	=> isset( $poll_options['other_answers_label'] ) ? strip_tags($poll_options['other_answers_label']) : __( 'Other', 'yop_poll'),
+								'answer'	=> isset( $poll_options['other_answers_label'] ) ? strip_tags($poll_options['other_answers_label'], '<a><img>') : __( 'Other', 'yop_poll'),
 								'votes'		=> 0,
 								'status'	=> 'active',
 								'type'		=> 'other'
@@ -3580,9 +3615,9 @@
 						$other_answer = self::get_poll_answers( $poll_id, array( 'other'), 'id', '', false, $percentages_decimals );
 
 						if ( function_exists( 'icl_translate' ) ) {
-							$other_answer_label = icl_translate( 'yop_poll', $poll_id .'_other_answer_label', strip_tags( stripslashes( $other_answer[0]['answer'] ) ) );
+							$other_answer_label = icl_translate( 'yop_poll', $poll_id .'_other_answer_label', strip_tags( stripslashes( $other_answer[0]['answer'] ) ), '<a><img>' );
 						} else {
-							$other_answer_label = strip_tags( stripslashes( $other_answer[0]['answer'] ) );
+							$other_answer_label = strip_tags( stripslashes( $other_answer[0]['answer'] ), '<a><img>' );
 						}
 
 						if( $multiple_answers ) {
@@ -3709,9 +3744,9 @@
 								$temp_string	= str_ireplace( '%POLL-ANSWER-CHECK-INPUT%', '<input type="radio" value="'.$answer['id'].'" name="yop_poll_answer" id="yop-poll-answer-'.$answer['id'].'" />', $m[5] );
 						}
 						if ( 'yes' == $poll_options['poll_answer_html_tags'] )
-							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$answer['id'].'">'.strip_tags(stripslashes( $answer['answer'] ) ).'</label>', $temp_string );
+							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$answer['id'].'">'.strip_tags(stripslashes( $answer['answer'] ), '<a><img>' ).'</label>', $temp_string );
 						else
-							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$answer['id'].'">'.strip_tags( stripslashes( $answer['answer'] ) ).'</label>', $temp_string );
+							$temp_string	= str_ireplace( '%POLL-ANSWER-LABEL%', '<label for="yop-poll-answer-'.$answer['id'].'">'.strip_tags( stripslashes( $answer['answer'] ), '<a><img>' ).'</label>', $temp_string );
 						if ( $this->is_view_poll_results() ) {
 							$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $poll_id, $answer['id'], $answer['procentes'], $poll_options, $unique_id ), $temp_string );
 							$temp_string	= str_ireplace( '%POLL-ANSWER-RESULT-VOTES%', self::display_poll_result_votes( $answer, $poll_options ), $temp_string );
@@ -4106,7 +4141,7 @@
 				$value		= $this->poll_options['blocking_voters_interval_value'];
 			$unit			= 'days';
 			if ( isset( $this->poll_options['blocking_voters_interval_unit'] ) )
-			$unit		= $this->poll_options['blocking_voters_interval_unit'];
+				$unit		= $this->poll_options['blocking_voters_interval_unit'];
 
 			switch ( $unit ) {
 				case 'seconds' :

@@ -4,12 +4,12 @@
  * URI: http://www.yop-poll.com/thankyou/ 
  * Description: Use a full option polling functionality to get the answers you need. YOP Poll is the perfect, easy to use plugin for your WordPress website. 
  * Author: yourownprogrammer 
- * Author URL: http://www.yop-poll.com /thankyou/
- * Version: 4.7 
+ * Author URL: http://www.yop-poll.com/thankyou/
+ * Version: 4.8
  * Network: false
  */
 define ( 'YOP_POLL_WP_VERSION', '3.3' );
-define ( 'YOP_POLL_VERSION', '4.7' );
+define ( 'YOP_POLL_VERSION', '4.8' );
 define ( 'YOP_POLL_PATH', plugin_dir_path ( __FILE__ ) );
 define ( 'YOP_POLL_URL', plugins_url ( '', __FILE__ ) );
 define ( 'YOP_POLL_PLUGIN_FILE', plugin_basename ( __FILE__ ) );
@@ -26,18 +26,18 @@ require_once (YOP_POLL_INC . '/theme-functions.php');
 
 // Yop Poll Tables Name
 global $wpdb;
-$wpdb->yop_poll_version = YOP_POLL_VERSION;
-$wpdb->yop_polls = $wpdb->prefix . 'yop_polls';
-$wpdb->yop_poll_answers = $wpdb->prefix . 'yop_poll_answers';
-$wpdb->yop_poll_templates = $wpdb->prefix . 'yop_poll_templates';
-$wpdb->yop_poll_custom_fields = $wpdb->prefix . 'yop_poll_custom_fields';
-$wpdb->yop_pollmeta = $wpdb->prefix . 'yop_pollmeta';
-$wpdb->yop_poll_answermeta = $wpdb->prefix . 'yop_poll_answermeta';
-$wpdb->yop_poll_logs = $wpdb->prefix . 'yop_poll_logs';
-$wpdb->yop_poll_voters = $wpdb->prefix . 'yop_poll_voters';
-$wpdb->yop_poll_bans = $wpdb->prefix . 'yop_poll_bans';
+$wpdb->yop_poll_version         = YOP_POLL_VERSION;
+$wpdb->yop_polls                = $wpdb->prefix . 'yop_polls';
+$wpdb->yop_poll_answers         = $wpdb->prefix . 'yop_poll_answers';
+$wpdb->yop_poll_templates       = $wpdb->prefix . 'yop_poll_templates';
+$wpdb->yop_poll_custom_fields   = $wpdb->prefix . 'yop_poll_custom_fields';
+$wpdb->yop_pollmeta             = $wpdb->prefix . 'yop_pollmeta';
+$wpdb->yop_poll_answermeta      = $wpdb->prefix . 'yop_poll_answermeta';
+$wpdb->yop_poll_logs            = $wpdb->prefix . 'yop_poll_logs';
+$wpdb->yop_poll_voters          = $wpdb->prefix . 'yop_poll_voters';
+$wpdb->yop_poll_bans            = $wpdb->prefix . 'yop_poll_bans';
 $wpdb->yop_poll_votes_custom_fields = $wpdb->prefix . 'yop_poll_votes_custom_fields';
-$wpdb->yop_poll_facebook_users = $wpdb->prefix . 'yop_poll_facebook_users';
+$wpdb->yop_poll_facebook_users  = $wpdb->prefix . 'yop_poll_facebook_users';
 
 $yop_poll_current_class = 'Yop_Poll_';
 

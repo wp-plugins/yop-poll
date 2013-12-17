@@ -119,12 +119,11 @@
 
 			if ( ! $yop_poll_model->poll )
 				return '';
-			$template			= $yop_poll_model->return_poll_html( array( 'tr_id' => $tr_id, 'location' => 'page' ) );
+			$template			= $yop_poll_model->return_poll_html( array( 'tr_id' => $tr_id, 'location' => 'page', 'load_css' => true, 'load_js' => true ) );
 			if ( 'yes' == $yop_poll_model->poll_options['use_default_loading_image'] )
 				$loading_image_src	= $this->_config->plugin_url.'/images/loading36x36.gif';
 			else
 				$loading_image_src	= $yop_poll_model->poll_options['loading_image_url'];
-			wp_enqueue_style( 'yop-poll-user-defined_'.$id.$poll_unique_id, add_query_arg( array( 'id' => $id, 'location' => 'page', 'unique_id' => $poll_unique_id ), admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http')).'?action=yop_poll_load_css' ), array(), $this->_config->version);
 			wp_enqueue_style( 'yop-poll-public', "{$this->_config->plugin_url}/css/yop-poll-public.css", array(), $this->_config->version );
 			wp_enqueue_script( 'jquery' );
 			wp_enqueue_script( 'yop-poll-jquery-popup-windows', "{$this->_config->plugin_url}/js/jquery.popupWindow.js", array(), $this->_config->version, true ); 

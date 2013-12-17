@@ -162,3 +162,9 @@
 	function yop_poll_set_html_content_type() {
 		return 'text/html';
 	}
+	
+	function dump( $str ) {
+		print "<pre>";
+		print_r($str);
+		print "</pre>";
+	}
