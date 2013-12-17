@@ -182,7 +182,6 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
-
 = 4.8 =
 
 * Re-added ability to use html tags. Available only for admin

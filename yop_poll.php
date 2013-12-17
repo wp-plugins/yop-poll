@@ -7,7 +7,7 @@
  * Author URL: http://www.yop-poll.com/thankyou/
  * Version: 4.8
  * Network: false
- */
+*/
 define ( 'YOP_POLL_WP_VERSION', '3.3' );
 define ( 'YOP_POLL_VERSION', '4.8' );
 define ( 'YOP_POLL_PATH', plugin_dir_path ( __FILE__ ) );
