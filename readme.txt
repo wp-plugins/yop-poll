@@ -1,6 +1,6 @@
 === YOP Poll ===
 Contributors: yourownprogrammer
-Donate Link: http://www.yop-poll.com/thankyou/
+Donate Link: http://www.yop-poll.com/thankyou/don.php
 Tags: poll, polls, vote, survey, polling, yop poll, yop
 Requires at least: 3.3
 Tested up to: 3.8
@@ -181,12 +181,6 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 
 == Changelog ==
-
-= 4.8 =
-
-* Re-added ability to use html tags. Available only for admin
-* Added 2 new tags: %POLL-SUCCESS-MSG% and %POLL-ERROR-MSG%
-* Various bug fixes
 
 = 4.7 =
 
