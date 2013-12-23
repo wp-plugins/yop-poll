@@ -230,10 +230,10 @@
 		$before_vote_template           = <<<NOWDOC
 <div id="yop-poll-name-%POLL-ID%" class="yop-poll-name">%POLL-NAME%</div>
 	<div id="yop-poll-question-%POLL-ID%" class="yop-poll-question">%POLL-QUESTION%</div>
-	<div id="yop-poll-answers-%POLL-ID" class="yop-poll-answers">
+	<div id="yop-poll-answers-%POLL-ID%" class="yop-poll-answers">
 	<ul>
 		[ANSWER_CONTAINER]
-		<li class="yop-poll-li-answer-%POLL-ID">
+		<li class="yop-poll-li-answer-%POLL-ID%">
 			%POLL-ANSWER-CHECK-INPUT% 
 			%POLL-ANSWER-LABEL%
 			<span class="yop-poll-results-text-%POLL-ID%">%POLL-ANSWER-RESULT-LABEL%</span>

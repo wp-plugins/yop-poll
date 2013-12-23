@@ -1,4 +1,5 @@
 === YOP Poll ===
+
 Contributors: yourownprogrammer
 Donate Link: http://www.yop-poll.com/thankyou/don.php
 Tags: poll, polls, vote, survey, polling, yop poll, yop
@@ -181,6 +182,14 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 
 == Changelog ==
+
+= 4.9 = 
+
+* Added templates preview when adding/editing a poll
+* Added sidebar scroll
+* Typos fixes
+* CSS and Javascript improvements
+* Various bugs fixes
 
 = 4.8 =
 

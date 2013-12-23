@@ -236,10 +236,22 @@ function yop_poll_do_vote( yop_poll_various_config ) {
 
 	var popupClose		= false;
 
+	var pollData = {
+		'action'                : yop_poll_public_config_general.ajax.vote_action,
+		'poll_id'               : poll_id,
+		'vote_type'             : vote_type,
+		'facebook_user_details' : yop_poll_various_config.facebook_user_details,
+		'facebook_error'        : yop_poll_various_config.facebook_error,
+		'unique_id'             : unique_id,
+		'location'              : poll_location
+	};
+	pollData = jQuery.param(pollData) + "&" + jQuery('#yop-poll-form-'+ poll_id + unique_id ).serialize();
+																				
+	
 	jQuery.ajax({
 			type: 'POST',
 			url: yop_poll_public_config_general.ajax.url,
-			data: 'action=' + yop_poll_public_config_general.ajax.vote_action + '&poll_id=' + poll_id + '&' + jQuery('#yop-poll-form-'+ poll_id + unique_id ).serialize() + '&vote_type=' + vote_type + '&facebook_user_details=' + yop_poll_various_config.facebook_user_details + '&facebook_error=' + yop_poll_various_config.facebook_error + '&unique_id=' + unique_id + '&location=' + poll_location ,
+			data: pollData,
 			cache: false,
 			async: false, 
 			success: function( data ) {

@@ -263,8 +263,7 @@ jQuery(document).ready(function(jQuery) {
 
 	jQuery('#yop-poll-edit-add-new-form-submit').click( function () {
 		savePoll();
-	});
-
+	});                                         
 	jQuery('#yop-poll-edit-add-new-form-submit1').click( function () {
 		savePoll();
 	});
@@ -635,4 +634,33 @@ function yop_poll_extractApiResponse( str ) {
 	var patt	= /\[response\](.*)\[\/response\]/m;
 	resp 		= str.match( patt )
 	return resp[1];
+}
+
+function yop_poll_return_template_preview( template_id, destination, location) {
+	dest = jQuery(destination);
+	console.log(dest);
+	if( '' == template_id )	{
+		dest.html('');
+	}
+	else {
+		var t_data = {
+			action : 'yop_poll_preview_template',
+			template_id: template_id,
+			loc: location
+		}
+		jQuery.ajax({
+			type: 'POST',
+			url: yop_poll_add_new_config.ajax.url,
+			data: t_data,
+			beforeSend: function() {
+				dest.html('<p>' + yop_poll_add_new_config.ajax.beforeSendMessage + '</p>');
+			},
+			error: function() {
+				dest.html('<p>' + yop_poll_add_new_config.ajax.errorMessage + '</p>');
+			},
+			success: function( data ) {
+				dest.html(data);
+			}
+		});
+	}
 }

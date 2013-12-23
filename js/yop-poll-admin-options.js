@@ -7,6 +7,7 @@ jQuery(document).ready(function(jQuery) {
 		jQuery( '#yop-poll-other-answers-label-div' ).hide();
 		jQuery( '#yop-poll-display-other-answers-values-div' ).hide();
 	});
+	
 	jQuery( "#yop-poll-display-answers-vertical" ).click( function () {
 		jQuery( '#yop-poll-display-answers-tabulated-div' ).hide();
 	});
@@ -16,6 +17,7 @@ jQuery(document).ready(function(jQuery) {
 	jQuery( "#yop-poll-display-answers-tabulated" ).click( function () {
 		jQuery( '#yop-poll-display-answers-tabulated-div' ).show();
 	});
+	
 	jQuery( "#yop-poll-display-results-vertical" ).click( function () {
 		jQuery( '#yop-poll-display-results-tabulated-div' ).hide();
 	});
@@ -25,6 +27,7 @@ jQuery(document).ready(function(jQuery) {
 	jQuery( "#yop-poll-display-results-tabulated" ).click( function () {
 		jQuery( '#yop-poll-display-results-tabulated-div' ).show();
 	});
+	
 	jQuery( "#yop-poll-allow-multiple-answers-yes" ).click( function () {
 		jQuery( '#yop-poll-allow-multiple-answers-div' ).show();
 		jQuery( '#yop-poll-allow-multiple-answers-div1' ).show();
