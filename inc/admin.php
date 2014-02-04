@@ -9386,11 +9386,10 @@ EOT;
                 height: auto;
             }
             #WFItem394041 h1 {
-                font-size: 12em;
+                font-size: 8em;
                 margin: 0.2em;
                 color: #fff;
                 font-family: Lato-Bla, Arial, Helvetica, sans-serif;
-				font-weight: bold;
                 line-height: 1em;
             }
 
@@ -9399,7 +9398,7 @@ EOT;
             }
 
             #WFItem394041 h2 {
-                font-size: 8em;
+                font-size: 5em;
                 margin-top: 0.5em;
                 font-variant: small-caps;
 				font-weight: bold;
@@ -9487,7 +9486,7 @@ EOT;
 						<ul class="wf-sortable" id="wf-sort-id">
 							<li>
                                 <div id="circle"><h1>?</h1></div>
-								<p><h2><?php _e( 'Need Help?', 'yop_poll' ); ?></h2><br><?php _e( 'Download YOP Poll User Guide', 'yop_poll' ); ?></b></p>
+								<p><h2><?php _e( 'Need Help?', 'yop_poll' ); ?></h2><br><h2><?php _e( 'Download YOP Poll User Guide', 'yop_poll' ); ?></h2></p>
 							</li>
 							<li class="wf-email" rel="undefined"
                                 style="display: block !important;">
