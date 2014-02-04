@@ -9410,6 +9410,7 @@ EOT;
                 margin-top: 0.2em;
 				font-weight: bold;
                 color: #95abb7;
+				display: block;
             }
 
             #WFItem394041 #circle {
