@@ -9485,7 +9485,7 @@ EOT;
 						<ul class="wf-sortable" id="wf-sort-id">
 							<li>
                                 <div id="circle"><h1>?</h1></div>
-								<p><b><?php _e( 'Need Help?', 'yop_poll' ); ?><br><?php _e( 'Download YOP Poll User Guide', 'yop_poll' ); ?></b></p>
+								<p><h2><?php _e( 'Need Help?', 'yop_poll' ); ?></h2><br><?php _e( 'Download YOP Poll User Guide', 'yop_poll' ); ?></b></p>
 							</li>
 							<li class="wf-email" rel="undefined"
                                 style="display: block !important;">
