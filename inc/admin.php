@@ -9382,7 +9382,7 @@ EOT;
                 box-shadow: 0px 0px 9px #dadada;
                 color: #95abb7;
                 text-align: center;
-                width: 20em;
+                width: 25em;
                 height: auto;
             }
             #WFItem394041 h1 {
