@@ -9406,11 +9406,11 @@ EOT;
             }
 
 			#WFItem394041 h3 {
-                font-size: 3em;
+                font-size: 2em;
                 margin-top: 0.2em;
 				font-weight: bold;
                 color: #95abb7;
-				display: block;
+				display: inline;
             }
 
             #WFItem394041 #circle {
