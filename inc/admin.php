@@ -9386,10 +9386,11 @@ EOT;
                 height: auto;
             }
             #WFItem394041 h1 {
-                font-size: 8em;
+                font-size: 12em;
                 margin: 0.2em;
                 color: #fff;
                 font-family: Lato-Bla, Arial, Helvetica, sans-serif;
+				font-weight: bold;
                 line-height: 1em;
             }
 
@@ -9398,9 +9399,10 @@ EOT;
             }
 
             #WFItem394041 h2 {
-                font-size: 1.5em;
+                font-size: 8em;
                 margin-top: 0.5em;
                 font-variant: small-caps;
+				font-weight: bold;
                 color: #95abb7;
             }
 
