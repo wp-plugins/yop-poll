@@ -9398,7 +9398,7 @@ EOT;
             }
 
             #WFItem394041 h2 {
-                font-size: 5em;
+                font-size: 3em;
                 margin-top: 0.5em;
                 font-variant: small-caps;
 				font-weight: bold;
