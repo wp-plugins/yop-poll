@@ -3,14 +3,16 @@ function yop_poll_show_modal_box( element ) {
 		directCall: {
 			source : jQuery( element ).attr('href')
 		},
-		disablingTheOverlayClickToClose : true
+		disablingTheOverlayClickToClose : true,
+		selectorModalboxCloseContainer: "#yop-poll-close-modal-box",
+		selectorCloseModalBox: "#yop-poll-close-modal-box span",
+		selectorModalboxBodyContainer: "#WFItem394041"
 	});
-	return false;
+    return false;
 }
 
 jQuery(document).ready(function(jQuery) {
 	yop_poll_show_modal_box( '#yop-poll-show-modal-box' );
-
 	jQuery('.wf-button[value="Thank You!"]').waitUntilExists(function() {
 		jQuery.ajax({
 			type: 'GET',

@@ -32,7 +32,7 @@ div#modalBox.modalboxIsDraggable div#modalBoxBody div.modalboxStyleContainer_sur
 }
 
 /*div#modalBox div#modalBoxBody div#modalBoxCloseButton {
-	display: none;
+display: none;
 }*/
 
 div#modalBoxFaderLayer {
@@ -130,9 +130,15 @@ div#modalBox.modalBoxSingleImage div#modalBoxBody div.modalboxStyleContainerCont
 
 /* modalBoxCloseButton */
 div#modalBox div#modalBoxBody div#modalBoxCloseButton {
-	position:absolute; 
-	top:2px; 
-	right:30px; 
+	position: absolute;
+	color: #00A8FF;
+	cursor: pointer;
+	float: right;
+	font-size: 1.5em;
+	height: 1em;
+	width: 1em;
+	right: 10px;
+	text-decoration: none;
 }
 div#modalBox div#modalBoxBody div#modalBoxCloseButton a.closeModalBox,
 div#modalBox div#modalBoxBody div#modalBoxCloseButton a.closeModalBox span {
@@ -144,7 +150,6 @@ div#modalBox div#modalBoxBody div#modalBoxCloseButton a.closeModalBox {
 	display:block;
 	width:20px;
 	height:20px;
-	background:transparent url(../img/skins/precious_white/closebutton_13x13.png) center center no-repeat;
 }
 div#modalBox div#modalBoxBody div#modalBoxCloseButton a.closeModalBox span {
 	display:none;

@@ -2,9 +2,9 @@
 	class Yop_Poll_Public_Admin extends Yop_Poll_Plugin {
 		protected function init() {
 			$this->add_action( 'init', 'load_translation_file', 1 );
+            $this->add_filter( 'the_content', 'yop_poll_do_shortcode_the_content_filter', 1 );
 			$this->add_action( 'init', 'public_loader', 1 );
 			$this->add_action( 'widgets_init', 'widget_init' );
-			$this->add_filter( 'the_content', 'yop_poll_do_shortcode_the_content_filter');
 			$this->add_filter( 'widget_text', 'do_shortcode');
 			$this->add_action( 'init', 'yop_poll_setup_schedule');
 			$this->add_action( 'yop_poll_hourly_event', 'yop_poll_do_scheduler' );
@@ -203,7 +203,18 @@
 		}
 
 		public function yop_poll_do_shortcode_the_content_filter( $content ) {
-			return do_shortcode( $content );
+            global $shortcode_tags;
+            // Backup current registered shortcodes and clear them all out
+            $orig_shortcode_tags = $shortcode_tags;
+            $shortcode_tags      = array();
+
+            // Do the shortcode (only the one above is registered)
+            $content = do_shortcode( $content );
+
+            // Put the original shortcodes back
+            $shortcode_tags = $orig_shortcode_tags;
+
+            return $content;
 		}
 
 		public function widget_init(){

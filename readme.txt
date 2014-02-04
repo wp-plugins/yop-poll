@@ -4,7 +4,7 @@ Contributors: yourownprogrammer
 Donate Link: http://www.yop-poll.com/thankyou/don.php
 Tags: poll, polls, vote, survey, polling, yop poll, yop
 Requires at least: 3.3
-Tested up to: 3.8
+Tested up to: 3.8.1
 Stable tag: trunk
 License: GPLv2 or later
 
@@ -183,7 +183,14 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 == Changelog ==
 
-= 4.9 = 
+= 4.9.1 =
+
+* Fixed issue with Template preview not working in IE8
+* Fixed issue with wpautop filter
+* Redefined admin area allowed tags: a(href, title, target), img( src, title), br
+* Fixed issue with Other answers
+
+= 4.9 =
 
 * Added templates preview when adding/editing a poll
 * Added sidebar scroll
@@ -203,7 +210,7 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 = 4.6 =
 
-* Added ability to send email notifications when a vote was recorded
+* Added ability to send email notifications when a vote is recorded
 * Various bug fixes
 
 = 4.5 =

@@ -296,7 +296,7 @@ function yop_poll_do_vote( yop_poll_various_config ) {
 						yop_poll_runEval(poll_id, unique_id);
 
 						if ( 'yes' == yop_poll_various_config.public_config.poll_options.redirect_after_vote ) {
-							window.location = yop_poll_various_config.public_config.poll_options.redirect_after_vote_url;
+                                window.location = yop_poll_various_config.public_config.poll_options.redirect_after_vote_url;
 						}
 					}
 					else {

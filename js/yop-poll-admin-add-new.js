@@ -7,17 +7,21 @@ jQuery(document).ready(function(jQuery) {
 		yop_poll_add_table_customfield( jQuery( "#yop-poll-customfields-table" ), yop_poll_count_number_of_customfields ( "#yop-poll-customfields-table" ) + 1 );
 		return false;
 	});
-	jQuery( "#yop-poll-allow-other-answers-yes" ).click( function () {
+
+    jQuery( "#yop-poll-allow-other-answers-yes" ).click( function () {
 		jQuery( '#yop-poll-other-answers-label-div' ).show();
+		jQuery( '#yop-poll-other-answers-to-results-div' ).show();
 		jQuery( '#yop-poll-display-other-answers-values-div' ).show();
 		jQuery( '#yop-poll-is-default-other-answers-values-div' ).show();
 	});
 	jQuery( "#yop-poll-allow-other-answers-no" ).click( function () {
 		jQuery( '#yop-poll-other-answers-label-div' ).hide();
+        jQuery( '#yop-poll-other-answers-to-results-div' ).hide();
 		jQuery( '#yop-poll-display-other-answers-values-div' ).hide();
 		jQuery( '#yop-poll-is-default-other-answers-values-div' ).hide();
 	});
-	jQuery( "#yop-poll-display-answers-vertical" ).click( function () {
+
+    jQuery( "#yop-poll-display-answers-vertical" ).click( function () {
 		jQuery( '#yop-poll-display-answers-tabulated-div' ).hide();
 	});
 	jQuery( "#yop-poll-display-answers-orizontal" ).click( function () {
@@ -26,7 +30,8 @@ jQuery(document).ready(function(jQuery) {
 	jQuery( "#yop-poll-display-answers-tabulated" ).click( function () {
 		jQuery( '#yop-poll-display-answers-tabulated-div' ).show();
 	});
-	jQuery( "#yop-poll-display-results-vertical" ).click( function () {
+
+    jQuery( "#yop-poll-display-results-vertical" ).click( function () {
 		jQuery( '#yop-poll-display-results-tabulated-div' ).hide();
 	});
 	jQuery( "#yop-poll-display-results-orizontal" ).click( function () {
@@ -35,7 +40,8 @@ jQuery(document).ready(function(jQuery) {
 	jQuery( "#yop-poll-display-results-tabulated" ).click( function () {
 		jQuery( '#yop-poll-display-results-tabulated-div' ).show();
 	});
-	jQuery( "#yop-poll-allow-multiple-answers-yes" ).click( function () {
+
+    jQuery( "#yop-poll-allow-multiple-answers-yes" ).click( function () {
 		jQuery( '#yop-poll-allow-multiple-answers-div' ).show();
 		jQuery( '#yop-poll-allow-multiple-answers-div1' ).show();
 	});
@@ -43,13 +49,15 @@ jQuery(document).ready(function(jQuery) {
 		jQuery( '#yop-poll-allow-multiple-answers-div' ).hide();
 		jQuery( '#yop-poll-allow-multiple-answers-div1' ).hide();
 	});
-	jQuery( ".yop-poll-view-results-hide-custom" ).click( function () {
+
+    jQuery( ".yop-poll-view-results-hide-custom" ).click( function () {
 		jQuery( '#yop-poll-display-view-results-div' ).hide();
 	});
 	jQuery( ".yop-poll-view-results-show-custom" ).click( function () {
 		jQuery( '#yop-poll-display-view-results-div' ).show();
 	});
-	jQuery( ".yop-poll-blocking-voters-hide-interval" ).click( function () {
+
+    jQuery( ".yop-poll-blocking-voters-hide-interval" ).click( function () {
 		jQuery( '#yop-poll-blocking-voters-interval-div' ).hide();
 	});
 	jQuery( ".yop-poll-blocking-voters-show-interval" ).click( function () {
@@ -89,6 +97,13 @@ jQuery(document).ready(function(jQuery) {
 	});
 	jQuery( "#yop-poll-view-total-votes-yes" ).click( function () {
 		jQuery( '#yop-poll-view-total-votes-div' ).show();
+	});
+
+	jQuery( "#yop-poll-view-total-answers-no" ).click( function () {
+		jQuery( '#yop-poll-view-total-answers-div' ).hide();
+	});
+	jQuery( "#yop-poll-view-total-answers-yes" ).click( function () {
+		jQuery( '#yop-poll-view-total-answers-div' ).show();
 	});
 
 	jQuery( "#yop-poll-view-total-voters-no" ).click( function () {
@@ -269,10 +284,14 @@ jQuery(document).ready(function(jQuery) {
 	});
 
 	function savePoll() {
+        var x = {
+            'action' : yop_poll_add_new_config.ajax.action
+        };
+        var toSend = jQuery.param(x) + "&" + jQuery('#yop-poll-edit-add-new-form' ).serialize();
 		jQuery.ajax({
 			type: 'POST',
 			url: yop_poll_add_new_config.ajax.url,
-			data: 'action='+yop_poll_add_new_config.ajax.action+'&'+jQuery( "#yop-poll-edit-add-new-form" ).serialize(),
+			data: toSend,
 			cache: false,
 			beforeSend: function() {
 				jQuery('html, body').animate({scrollTop: '0px'}, 800);
@@ -638,7 +657,6 @@ function yop_poll_extractApiResponse( str ) {
 
 function yop_poll_return_template_preview( template_id, destination, location) {
 	dest = jQuery(destination);
-	console.log(dest);
 	if( '' == template_id )	{
 		dest.html('');
 	}

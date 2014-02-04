@@ -1,10 +1,12 @@
 jQuery(document).ready(function(jQuery) {
 	jQuery( "#yop-poll-allow-other-answers-yes" ).click( function () {
 		jQuery( '#yop-poll-other-answers-label-div' ).show();
+        jQuery( '#yop-poll-other-answers-to-results-div' ).show();
 		jQuery( '#yop-poll-display-other-answers-values-div' ).show();
 	});
 	jQuery( "#yop-poll-allow-other-answers-no" ).click( function () {
 		jQuery( '#yop-poll-other-answers-label-div' ).hide();
+        jQuery( '#yop-poll-other-answers-to-results-div' ).hide();
 		jQuery( '#yop-poll-display-other-answers-values-div' ).hide();
 	});
 	
