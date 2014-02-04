@@ -9405,6 +9405,13 @@ EOT;
                 color: #95abb7;
             }
 
+			#WFItem394041 h3 {
+                font-size: 3em;
+                margin-top: 0.2em;
+				font-weight: bold;
+                color: #95abb7;
+            }
+
             #WFItem394041 #circle {
                 border-radius: 50%;
                 background: #00a8ff;
@@ -9486,7 +9493,7 @@ EOT;
 						<ul class="wf-sortable" id="wf-sort-id">
 							<li>
                                 <div id="circle"><h1>?</h1></div>
-								<p><h2><?php _e( 'Need Help?', 'yop_poll' ); ?></h2><br><h2><?php _e( 'Download<br /> YOP Poll User Guide', 'yop_poll' ); ?></h2></p>
+								<p><h2><?php _e( 'Need Help?', 'yop_poll' ); ?></h2><br><h3><?php _e( 'Download<br /> YOP Poll User Guide', 'yop_poll' ); ?></h3></p>
 							</li>
 							<li class="wf-email" rel="undefined"
                                 style="display: block !important;">
