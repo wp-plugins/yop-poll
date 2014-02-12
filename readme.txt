@@ -1,5 +1,4 @@
 === YOP Poll ===
-
 Contributors: yourownprogrammer
 Donate Link: http://www.yop-poll.com/thankyou/don.php
 Tags: poll, polls, vote, voting, survey, polling, yop poll, yop
@@ -12,7 +11,6 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.htm
 Use a full option polling functionality to get the answers you need.           
 
 YOP Poll is the perfect, easy to use poll plugin for your WP site.
-
 
 == Description ==
 
@@ -52,7 +50,6 @@ Current poll features:
 
    *  Logs and bans - user logs and bans can be seen in the admin section. You can ban users by email, username and IP and you can set the limitation preferences for all your polls or for just one of them. 
 
-
 == Installation ==
 
 1. Upload 'plugin-name.php' to the '/wp-content/plugins/' directory,
@@ -64,110 +61,77 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 = How can I create a poll? =
 
-	*  Go to your YOP Poll menu and select the "Add New" option.    
-
-	*  Fill the required information according to the examples we included: name, question, answers (add additional ones if you need), select the start/end date for your poll, and decide on the advanced settings for results, votes, voters, accessibility etc.   
-
-	*  Once you decided on all your poll details, click on "Save".   
-
-	*  To view your new poll access "All Polls" from your main menu and choose the corresponding entry from the list.   
-
+Go to your YOP Poll menu and select the "Add New" option.    
+Fill the required information according to the examples we included: name, question, answers (add additional ones if you need), select the start/end date for your poll, and decide on the advanced settings for results, votes, voters, accessibility etc.   
+Once you decided on all your poll details, click on "Save".   
+To view your new poll access "All Polls" from your main menu and choose the corresponding entry from the list.   
 
 = How can I link a poll to my webpage? =
 
-	*  Find out the ID assigned to poll by accessing "All Polls".   
-	   Locate your poll and notice the ID on the left, before the name section.   
-
-	*  Copy the following shortcode and paste it in your page: [yop_poll id="ID"]   
-           For instance, if the poll you want to display has the ID=15 the code will be: [yop_poll id="15"].   
-
-	*  This is it. Check your page or post now.   
-
+Find out the ID assigned to poll by accessing "All Polls".   
+Locate your poll and notice the ID on the left, before the name section.   
+Copy the following shortcode and paste it in your page: [yop_poll id="ID"]   
+For instance, if the poll you want to display has the ID=15 the code will be: [yop_poll id="15"].   
+This is it. Check your page or post now.   
 
 = Do you have some predefined shortcodes that I can use? =
 
-	Yes.       
-
-	Current Active Poll ID = -1:   [yop_poll id="-1"]      
-
-	Latest Poll id = -2:           [yop_poll id="-2"]      
-
-	Random Poll id = -3:           [yop_poll id="-3"]     
-	
+Yes.       
+Current Active Poll ID = -1:   [yop_poll id="-1"]      
+Latest Poll id = -2:           [yop_poll id="-2"]      
+Random Poll id = -3:           [yop_poll id="-3"]     
 
 = Can I have more than one poll active? =
 
-	Yes, you can run multiple polls at the same time or you can schedule them to begin one after another using the "Select start/end date" option.       
-
+Yes, you can run multiple polls at the same time or you can schedule them to begin one after another using the "Select start/end date" option.       
 
 = Can I ask for additional information from my voters? =
 
-	Yes, you can customize your poll to request additional information. Eg. name, email, age, profession. To include this, when you create your poll using the "Add New" form, go to "Custom Text Fields" -> "Add new custom field" and include as many requests as you need.   
-
+Yes, you can customize your poll to request additional information. Eg. name, email, age, profession. To include this, when you create your poll using the "Add New" form, go to "Custom Text Fields" -> "Add new custom field" and include as many requests as you need.   
 
 = How can I create/modify a template? =
 
-	*  Access the "Templates" menu.     
-	
-	*  If you want to create a new template use the "Add new" option and include the corresponding HTML/visual code.    
-
-	*  If you want to modify an existing template, select it from the Templates list and choose "Edit". You will access the HTML/visual code you want to edit.     
-
+Access the "Templates" menu.     
+If you want to create a new template use the "Add new" option and include the corresponding HTML/visual code.    
+If you want to modify an existing template, select it from the Templates list and choose "Edit". You will access the HTML/visual code you want to edit.     
 
 = How do I check the results? =
 
-	*  Locate the poll you want to evaluate by accessing "All Polls".     
-	
-	*  Below the name of the poll you have several options.       
-
-	*  Use the "Results" link to track the results of the poll,      
-
-	*  or access the "Logs" for a more detailed evaluation. 
-
+Locate the poll you want to evaluate by accessing "All Polls".     
+Below the name of the poll you have several options.       
+Use the "Results" link to track the results of the poll,      
+or access the "Logs" for a more detailed evaluation. 
 
 = What is the difference between Options and Poll Options for each poll? =
 
-	*  Options (located under plugin menu) is the way to specifify general settings for all your polls.     
-	
-	*  If you want to go further and customize each poll, these settings will take precedence over Options settings.         
-
+Options (located under plugin menu) is the way to specifify general settings for all your polls.     
+If you want to go further and customize each poll, these settings will take precedence over Options settings.         
 
 = How can I edit access to YOP Poll for administrators, editors, authors? =
 
-	*  To do this, in your wordpress go to Plugins->Editor.     
-	
-	*  On the right choose Yop Poll as the plugin to be edited.
-
-	*  The file you need to edit is yop-poll/inc/admin.php.
-
-	*  The file you need to edit is yop-poll/inc/admin.php.
-
-	*  Once you open the file, do a search for function current_user_can.
-
-	*  In that function you can find the options you need to edit.       
-
+To do this, in your wordpress go to Plugins->Editor.     
+On the right choose Yop Poll as the plugin to be edited.
+The file you need to edit is yop-poll/inc/admin.php.
+The file you need to edit is yop-poll/inc/admin.php.
+Once you open the file, do a search for function current_user_can.
+In that function you can find the options you need to edit.       
 
 = How can I see the results after the poll ends? =
 
-	*  Edit your poll and in "View Results:" choose "After Poll End Date" and save.       
-
+Edit your poll and in "View Results:" choose "After Poll End Date" and save.       
 
 = How can I add a Poll Archive page on my website? =
 
-	*  From your WordPress menu create a new page that contains [yop_poll_archive] and has the permalink http://www.yourwebsite.com/polls/       
-
+From your WordPress menu create a new page that contains [yop_poll_archive] and has the permalink http://www.yourwebsite.com/polls/       
 
 = How can I add a hyperlink in the poll question or add a photo as an answer? =
 
-	*  To add a link to your question you can use <a href="[your link]" target="_blank">[link text]</a>       
-
-	*  to add a photo as an answer you can use <img src=[photo_url] title="[photo_title]" alt="[photo_description]"/>       
-
+To add a link to your question you can use <a href="[your link]" target="_blank">[link text]</a>       
+To add a photo as an answer you can use <img src=[photo_url] title="[photo_title]" alt="[photo_description]"/>       
 
 = Can I add more than one question to a poll? =
 
-	*  You can have only one question per poll. If you want to ask more than one question, you have to create a poll for each one.       
-
+You can have only one question per poll. If you want to ask more than one question, you have to create a poll for each one.       
 
 == Screenshots ==
 
@@ -177,18 +141,15 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 4. YOP Poll as a widget with a custom field defined
 5. YOP Poll on a page with a custom field defined
 
-
 == Changelog ==
 
 = 4.9.1 =
-
 * Fixed issue with Template preview not working in IE8
 * Fixed issue with wpautop filter
 * Redefined admin area allowed tags: a(href, title, target), img( src, title), br
 * Fixed issue with Other answers
 
 = 4.9 =
-
 * Added templates preview when adding/editing a poll
 * Added sidebar scroll
 * Typos fixes
@@ -196,22 +157,18 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 * Various bugs fixes
 
 = 4.8 =
-
 * Re-added ability to use html tags.
 * Added new tags: %POLL-SUCCESS-MSG% and %POLL-ERROR-MSG%
 * Various bug fixes
 
 = 4.7 =
-
 * Fixed bug with Other answers. Html code is no longer allowed.
 
 = 4.6 =
-
 * Added ability to send email notifications when a vote is recorded
 * Various bug fixes
 
 = 4.5 =
-
 * Added ability to choose date format when displaying polls
 * Added ability to limit viewing results only for logged in users
 * Added ability to add custom answers to poll answers
@@ -221,14 +178,12 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 * Various bugs fixes
 
 = 4.4 =
-
 * Added ability to reset polls
 * Added ability to to add a custom message to be displayed after voting
 * Added ability to allow users to vote multiple times on the same poll
 * Various bugs fixes
 
 = 4.3 =
-
 * Added multisite support
 * Added ability to redirect to a custom url after voting
 * Added ability to edit polls and templates author
@@ -238,54 +193,43 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 * Added tracking capabilities
 * Various improvements on logs
 
-
 = 4.2 =
-
 * Added captcha
 * Fixed issue with start date and end date when adding/editing a poll
 * Fixed issue with the message displayed when editing a poll
 
 = 4.1 =
-
 * Fixed js issue causing the widget poll not to work
 
 = 4.0 =
-
 * Added ability to use custom loading animation. 
 * Added capabilities and roles
 * Fixed issue with update overwritting settings
 
 = 3.9 = 
-
 * Fixed display issue with IE7 and IE8
 
 = 3.8 = 
-
 * Fixed compatibility issue with Restore jQuery plugin
 * Added ability to link poll answers
 
 = 3.7 = 
-
 * Fixed issue with Loading text displayed above the polls
 * Fixed issue with deleting answers from polls
 
 = 3.6 = 
-
 * Fixed issue with missing files
 
 = 3.5 = 
-
 * Added french language pack
 * Added loading animation when vote button is clicked
 * Fixed issue with characters encoding
 
 = 3.4 = 
-
 * Fixed issue with menu items in admin area
 * Fixed issue with language packs
 
 = 3.3 = 
-
 * Added option to auto generate a page when a poll is created
 * Fixed compatibility issues with IE
 * Fixed issues with custom fields
@@ -332,7 +276,6 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 = 1.1 =   
 * Fixed call_user_func_array() bug   
-
 
 == Donations ==  
 
