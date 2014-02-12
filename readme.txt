@@ -62,7 +62,7 @@ Current poll features:
 
 This plugin was especially designed for flexibility and it is very easy to use. We don't expect you to encounter serious issues, but we included a list with some logical questions that you may find useful.
 
-1.  How can I create a poll?        
+= How can I create a poll? =
 
 	*  Go to your YOP Poll menu and select the "Add New" option.    
 
@@ -73,7 +73,7 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 	*  To view your new poll access "All Polls" from your main menu and choose the corresponding entry from the list.   
 
 
-2.  How can I link a poll to my webpage?     
+= How can I link a poll to my webpage? =
 
 	*  Find out the ID assigned to poll by accessing "All Polls".   
 	   Locate your poll and notice the ID on the left, before the name section.   
@@ -84,7 +84,7 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 	*  This is it. Check your page or post now.   
 
 
-3.  Do you have some predefined shortcodes that I can use?    
+= Do you have some predefined shortcodes that I can use? =
 
 	Yes.       
 
@@ -95,17 +95,17 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 	Random Poll id = -3:           [yop_poll id="-3"]     
 	
 
-4.  Can I have more than one poll active?      
+= Can I have more than one poll active? =
 
 	Yes, you can run multiple polls at the same time or you can schedule them to begin one after another using the "Select start/end date" option.       
 
 
-5.  Can I ask for additional information from my voters?       
+= Can I ask for additional information from my voters? =
 
 	Yes, you can customize your poll to request additional information. Eg. name, email, age, profession. To include this, when you create your poll using the "Add New" form, go to "Custom Text Fields" -> "Add new custom field" and include as many requests as you need.   
 
 
-6.  How can I create/modify a template?      
+= How can I create/modify a template? =
 
 	*  Access the "Templates" menu.     
 	
@@ -114,7 +114,7 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 	*  If you want to modify an existing template, select it from the Templates list and choose "Edit". You will access the HTML/visual code you want to edit.     
 
 
-7.  How do I check the results?      
+= How do I check the results? =
 
 	*  Locate the poll you want to evaluate by accessing "All Polls".     
 	
@@ -125,14 +125,14 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 	*  or access the "Logs" for a more detailed evaluation. 
 
 
-8.  What is the difference between Options and Poll Options for each poll?      
+= What is the difference between Options and Poll Options for each poll? =
 
 	*  Options (located under plugin menu) is the way to specifify general settings for all your polls.     
 	
 	*  If you want to go further and customize each poll, these settings will take precedence over Options settings.         
 
 
-9.  How can I edit access to YOP Poll for administrators, editors, authors?      
+= How can I edit access to YOP Poll for administrators, editors, authors? =
 
 	*  To do this, in your wordpress go to Plugins->Editor.     
 	
@@ -147,33 +147,29 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 	*  In that function you can find the options you need to edit.       
 
 
-10.  How can I see the results after the poll ends?      
+= How can I see the results after the poll ends? =
 
 	*  Edit your poll and in "View Results:" choose "After Poll End Date" and save.       
 
 
-11.  How can I add a Poll Archive page on my website?      
+= How can I add a Poll Archive page on my website? =
 
 	*  From your WordPress menu create a new page that contains [yop_poll_archive] and has the permalink http://www.yourwebsite.com/polls/       
 
 
-12.  How can I add a hyperlink in the poll question or add a photo as an answer?      
+= How can I add a hyperlink in the poll question or add a photo as an answer? =
 
 	*  To add a link to your question you can use <a href="[your link]" target="_blank">[link text]</a>       
 
 	*  to add a photo as an answer you can use <img src=[photo_url] title="[photo_title]" alt="[photo_description]"/>       
 
 
-11.  Can I add more than one question to a poll?      
+= Can I add more than one question to a poll? =
 
 	*  You can have only one question per poll. If you want to ask more than one question, you have to create a poll for each one.       
 
 
-
-
-
 == Screenshots ==
-
 
 1. Add New
 2. Templates
@@ -336,7 +332,6 @@ This plugin was especially designed for flexibility and it is very easy to use. 
 
 = 1.1 =   
 * Fixed call_user_func_array() bug   
-
 
 
 == Donations ==  
