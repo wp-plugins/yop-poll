@@ -1,9 +1,9 @@
 === YOP Poll ===
-Contributors: yourownprogrammer
-Donate Link: http://www.yop-poll.com/thankyou/don.php
+Contributors: yop
+Donate Link: http://www.yop-poll.com
 Tags: poll, polls, vote, voting, survey, polling, yop poll, yop
 Requires at least: 3.3
-Tested up to: 3.8.1
+Tested up to: 3.9.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.htm
@@ -142,6 +142,11 @@ You can have only one question per poll. If you want to ask more than one questi
 5. YOP Poll on a page with a custom field defined
 
 == Changelog ==
+
+= 5.0 =
+* Complete redesign
+* Added templates preview
+* Added polls import feature
 
 = 4.9.1 =
 * Fixed issue with Template preview not working in IE8
