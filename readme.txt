@@ -1,5 +1,5 @@
 === YOP Poll ===
-Contributors: yop
+Contributors: yourownprogrammer
 Donate Link: http://www.yop-poll.com
 Tags: poll, polls, vote, voting, survey, polling, yop poll, yop
 Requires at least: 3.3
