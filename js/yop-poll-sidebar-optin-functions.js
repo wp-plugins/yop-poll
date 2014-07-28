@@ -13,7 +13,6 @@ jQuery(document).ready(function(jQuery) {
 
 (function ($) {
 	jQuery.fn.waitUntilExists    = function (handler, shouldRunHandlerOnce, isChild) {
-
 		var found       = 'found';
 		var $this       = jQuery(this.selector);
 		var $elements   = $this.not(function () { return jQuery(this).data(found); }).each(handler).data(found, true);
