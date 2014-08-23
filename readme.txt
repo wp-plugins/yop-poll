@@ -144,7 +144,7 @@ You can have only one question per poll. If you want to ask more than one questi
 == Changelog ==
 
 = 4.9.2 =
-* Fixed security issue 
+* Fixed security issue
 
 = 4.9.1 =
 * Fixed issue with Template preview not working in IE8
