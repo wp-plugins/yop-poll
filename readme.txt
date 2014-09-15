@@ -143,6 +143,9 @@ You can have only one question per poll. If you want to ask more than one questi
 
 == Changelog ==
 
+= 4.9.3 =
+* Fixed security issue. Many thanks to Antonio Sanchez for all his help.
+
 = 4.9.2 =
 * Fixed security issue
 
