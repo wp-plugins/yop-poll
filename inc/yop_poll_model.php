@@ -2412,8 +2412,8 @@
 			$poll_id   = $this->poll['id'];
 			$unique_id = $this->unique_id;
 			$location  = $request['location'];
-            if($location!="page" && $location="widget"){
-                $this->error = __( 'Bad reguest!', 'yop_poll' );
+            if($location!="page" && $location!="widget"){
+                $this->error = __( 'Bad request!', 'yop_poll' );
                 return false;
             }
             if( wp_verify_nonce( $request['yop-poll-nonce-' . $poll_id . $unique_id], 'yop_poll-' . $poll_id     . $unique_id . '-user-actions' ) ) {
