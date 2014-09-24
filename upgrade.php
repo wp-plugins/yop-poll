@@ -7,7 +7,7 @@
     $plugin      = $plugin_slug . "/" . 'yop-poll' . ".php";
 $upgrader = new Plugin_Upgrader( new Plugin_Upgrader_Skin( array(
     'title'  => 'Yop Poll 2.0 Plugin',
-    'plugin' => $plugin_slug.'/yop-poll.php'
+    'plugin' => $plugin_slug.'/yop_poll.php'
 ) ) );
 $options = get_option( 'yop_poll_options' );
 $options ['vote_permisions_facebook'] = "no";
