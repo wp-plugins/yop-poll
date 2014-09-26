@@ -143,11 +143,6 @@ You can have only one question per poll. If you want to ask more than one questi
 
 == Changelog ==
 
-= 5.1 =
-* Complete rewrite of the plugin
-* Added ability to change the order answers are showing up
-* Added a new way of limiting number of votes
-
 = 4.9.3 =
 * Fixed security issue. Many thanks to Antonio Sanchez for all his help.
 
