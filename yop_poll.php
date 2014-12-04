@@ -172,7 +172,7 @@ function yop_poll_uninstall() {
         ?>
         <div class="error">
             <p><?php _e( 'YOP POLL!', 'my-text-domain' ); ?></p>
-       <p> <?php _e("Php version isn't high enough! Yop Poll will be automatically downgraded!Please upgrade your Php version!")?></p>
+       <p> <?php _e("Your php version is lower than the minimum required(5.3). YOP Poll will downgrade to version 4.9.3")?></p>
         </div>
         <?php
         include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
