@@ -1346,6 +1346,7 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                     ) {
 
                         $template = $template_details['after_vote_template'];
+
                         if( $this->is_view_poll_results() ) {
                             $template = str_ireplace( '%POLL-ANSWER-RESULT-LABEL%', $this->answer_result_label, $template );
                         }
@@ -1368,6 +1369,8 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                 if( in_array( 'after-poll-end-date', $this->view_results ) || in_array( 'before', $this->view_results ) || in_array( 'after', $this->view_results ) ) {
                     if( $this->is_view_poll_results() ) {
                         $template = str_ireplace( '%POLL-ANSWER-RESULT-LABEL%', $this->answer_result_label, $template );
+                        $template = str_ireplace( '%POLL-END-DATE%', $this->poll_end_date, $template );
+                        $template = str_ireplace( '%POLL-START-DATE%', $this->poll_start_date, $template );
                     }
                 }
 
@@ -1376,15 +1379,20 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
         else {
             //poll hasn't started
             $template = $template_details['before_start_date_template'];
+            $template = str_ireplace( '%POLL-END-DATE%', $this->poll_end_date, $template );
+            $template = str_ireplace( '%POLL-START-DATE%', $this->poll_start_date, $template );
             if( in_array( 'before', $this->view_results ) ) {
                 if( $this->is_view_poll_results() ) {
                     $template = str_ireplace( '%POLL-ANSWER-RESULT-LABEL%', $this->answer_result_label, $template );
+
                 }
+
             }
         }
 
         if( in_array( 'custom-date', $this->view_results ) ) {
-
+            $template = str_ireplace( '%POLL-END-DATE%', $this->poll_end_date, $template );
+            $template = str_ireplace( '%POLL-START-DATE%', $this->poll_start_date, $template );
             if( self::get_mysql_curent_date() >= convert_date( $this->view_results_start_date, 'Y-m-d H:i:s',1 ) ) {
 
                 if( $this->is_view_poll_results() ) {
@@ -1392,7 +1400,8 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                 }
             }
         }
-
+        $template = str_ireplace( '%POLL-END-DATE%', $this->poll_end_date, $template );
+        $template = str_ireplace( '%POLL-START-DATE%', $this->poll_start_date, $template );
         $template = stripslashes_deep( $template );
 
         $template = str_ireplace( '%POLL-ID%', $this->ID . $unique_id, $template );

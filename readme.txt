@@ -143,6 +143,12 @@ You can have only one question per poll. If you want to ask more than one questi
 
 == Changelog ==
 
+= 5.3 =
+* Fixed issue with links color being overwritten
+* Fixed issue with start date and end date not displaying corectly
+* Fixed issue with widget
+* Added email notifications customization per poll
+
 = 5.2 =
 * Complete new design
 * Wizard to guide you when creating a poll

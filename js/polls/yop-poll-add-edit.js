@@ -19,6 +19,12 @@ function init()
 
 }
 jQuery( document ).ready( function( jQuery ) {
+    if(jQuery('#yop-poll-send-email-notifications-yes').attr("checked")=='checked'){
+        jQuery("#yop_poll_email_notification").show();
+    }
+    else{
+        jQuery("#yop_poll_email_notification").hide();
+    }
 
     if( jQuery( '#yop-poll-vote-permisions-guest' ).attr( "checked" ) == 'checked' ) {
 
@@ -29,7 +35,9 @@ jQuery( document ).ready( function( jQuery ) {
         jQuery( '#yop-poll-vote-anonymous' ).hide();
     }
     jQuery("#yop-poll-edit-add-new-form").css('visibility', 'visible');
-
+    if(jQuery('#yop-poll-send-email-notifications-yes').attr("checked")=='checked'){
+        jQuery("#yop_poll_email_notification").show();
+    }
   yop_poll_answers_sortable = function() {
     jQuery( ".yop-poll-answers-sortable" ).sortable( {
       update: function( event, ui ) {
@@ -82,36 +90,52 @@ jQuery( document ).ready( function( jQuery ) {
   //</editor-fold>
 
   //<editor-fold desc="Vote Permissions">
+    if( jQuery( '#yop-poll-vote-permisions-guest' ).attr( "checked" ) == 'checked' ) {
+
+        jQuery( '#yop-poll-vote-anonymous' ).hide();
+        jQuery( '#yop-poll-vote-permisions-anonymous-yes' ).attr( "checked",true );
+
+    }
+    jQuery('#yop-poll-send-email-notifications-yes').click(function(){
+           jQuery("#yop_poll_email_notification").show();
+
+    });
+        jQuery('#yop-poll-send-email-notifications-no').click(function(){
+                jQuery("#yop_poll_email_notification").hide();
+
+            });
   jQuery( '#yop-poll-vote-permisions-guest' ).change( function() {
-    if( jQuery( this ).attr( 'checked' ) == "checked" ) {
+
       if( jQuery( '#yop-poll-vote-permisions-registered' ).attr( "checked" ) != 'checked' ) {
         jQuery( '.yop-poll-vote-as-div' ).hide();
       }
-    }
+      if( jQuery( '#yop-poll-vote-permisions-registered' ).attr( "checked" ) == 'checked' ) {
+          jQuery( '#yop-poll-vote-anonymous' ).show();
+      }
+
       if( jQuery( '#yop-poll-vote-permisions-guest' ).attr( "checked" ) == 'checked' ) {
 
-          jQuery( '#yop-poll-vote-anonymous' ).show();
+          jQuery( '#yop-poll-vote-anonymous' ).hide();
+          jQuery( '#yop-poll-vote-permisions-anonymous-yes' ).attr( "checked",true );
 
       }
-      else{
-          jQuery( '#yop-poll-vote-anonymous' ).hide();
-      }
+
   } );
   jQuery( '#yop-poll-vote-permisions-registered' ).change( function() {
     if( jQuery( this ).attr( 'checked' ) == "checked" ) {
       jQuery( '.yop-poll-vote-as-div' ).show();
+        jQuery( '#yop-poll-vote-anonymous' ).show();
+
     }
     else {
       jQuery( '.yop-poll-vote-as-div' ).hide();
     }
       if( jQuery( '#yop-poll-vote-permisions-guest' ).attr( "checked" ) == 'checked' ) {
 
-          jQuery( '#yop-poll-vote-anonymous' ).show();
-
-      }
-      else{
           jQuery( '#yop-poll-vote-anonymous' ).hide();
-      }
+          jQuery( '#yop-poll-vote-permisions-anonymous-yes' ).attr( "checked",true );
+              }
+
   } );
   //</editor-fold>
     if( jQuery( '#yop-poll-view-results-custom' ).is( ':checked' )==true){
@@ -320,6 +344,8 @@ function yop_poll_add_new_answer( question_id, answer_id, current_button, type )
         dataType: 'html',
 
         cache: false,
+
+        async :false,
 
         beforeSend: function() {
 

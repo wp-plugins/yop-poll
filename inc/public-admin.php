@@ -229,7 +229,7 @@
 
                     }
 
-                    if( 'yes' == $yop_poll_model->vote_permisions_anonymous &&in_array( 'guest', $yop_poll_model->vote_permisions)) {
+                    if( 'yes' == $yop_poll_model->vote_permisions_anonymous &&in_array( 'guest', $yop_poll_model->vote_permisions)|| 'yes' == $yop_poll_model->vote_permisions_anonymous &&in_array( 'registered', $yop_poll_model->vote_permisions)) {
 
                         $vote_permisions_types += 2;
 
@@ -347,7 +347,7 @@
             wp_localize_script( 'yop-poll-public-js', 'yop_poll_public_config_general', $yop_poll_public_config_general );
             wp_localize_script( 'yop-poll-public-js', 'yop_poll_public_config_' . $yop_poll_model->ID . $poll_unique_id, $yop_poll_public_config );
 
-            wp_enqueue_style( 'yop-poll-public-css', "{$this->_config->plugin_url}css/yop-poll-admin.css", array(), YOP_POLL_VERSION );
+           // wp_enqueue_style( 'yop-poll-public-css', "{$this->_config->plugin_url}css/yop-poll-admin.css", array(), YOP_POLL_VERSION );
 
             /*wp_enqueue_style( 'yop-poll-public-css', "{$this->_config->plugin_url}/css/yop-poll-public.css", array(), $this->_config->version );
             wp_enqueue_script( 'jquery' );

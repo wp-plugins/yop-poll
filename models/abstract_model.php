@@ -127,10 +127,10 @@ abstract class YOP_POLL_Abstract_Model {
             $total_polls = Yop_Poll_Model::get_polls_filter_search( $args );
             $ok=0;
             $current_date = yop_poll_get_mysql_curent_date();
+
            if( count($total_polls)>1)  {
             while($ok==0){
             $id=rand ( 1 , count($total_polls));
-
             $poll=new YOP_POLL_Poll_Model($id);
                 if( $current_date <= convert_date( $poll->poll_end_date, 'Y-m-d H:i:s' ) ) {
                 $ok=1;
@@ -162,8 +162,8 @@ abstract class YOP_POLL_Abstract_Model {
                 'search'        => array(
 
                 ),
-                'orderby'       => "poll_start_date",
-                'order'         => 'DESC'
+                'orderby'       => "poll_date",
+                'order'         => 'ASC'
             );
 
             $total_polls = Yop_Poll_Model::get_polls_filter_search( $args );
@@ -1611,7 +1611,7 @@ abstract class YOP_POLL_Abstract_Model {
 
                 if( 'anonymous' == $vote_type ) {
 
-                    return false;
+                    return true;
 
                 }
 
@@ -1967,17 +1967,17 @@ abstract class YOP_POLL_Abstract_Model {
 
     protected function sendMail( $mail_notifications_answers, $mail_notifications_custom_fields, $vote_id ) {
 
-        $options = get_option( 'yop_poll_options' );
+        //$options = get_option( 'yop_poll_options' );
 
 
 
-        $headers = 'From: ' . $options['email_notifications_from_name'] . ' <' . $options['email_notifications_from_email'] . '>';
+        $headers = 'From: ' . $this->email_notifications_from_name . ' <' . $this->email_notifications_from_email . '>';
 
-        $subject = str_replace( '[POLL_NAME]', $this->poll_title, $options['email_notifications_subject'] );
+        $subject = str_replace( '[POLL_NAME]', $this->poll_title, $this->email_notifications_subject );
 
 
 
-        $body  = stripslashes_deep( $options['email_notifications_body'] );
+        $body  = stripslashes_deep( $this->email_notifications_body );
 
         $regex = '/\[(\[?)(QUESTION)\b([^\]\/]*(?:\/(?!\])[^\]\/]*)*?)(?:(\/)\]|\](?:([^\[]*+(?:\[(?!\/\2\])[^\[]*+)*+)\[\/\2\])?)(\]?)/';
 
@@ -1988,7 +1988,7 @@ abstract class YOP_POLL_Abstract_Model {
             $template = '';
 
             foreach( $q as $question ) {
-
+                        yop_poll_dump($m[5]);
                 $temp_question_body = str_ireplace( "%QUESTION_TEXT%", $question->question, $m[5] );
 
 
@@ -2067,15 +2067,13 @@ abstract class YOP_POLL_Abstract_Model {
 
         $body = str_replace( '%VOTE_ID%', $vote_id, $body );
 
-        $body = str_replace( '%VOTE_DATE%', self::convert_date( current_time( 'mysql' ), 'dd-mm-YYY' ), $body );
+        $body = str_replace( '%VOTE_DATE%', current_time( 'mysql'), $body );
 
 
 
         add_filter( 'wp_mail_content_type', 'yop_poll_set_html_content_type' );
 
-
-
-        wp_mail( $options['email_notifications_recipients'], $subject, $body, $headers );
+        wp_mail( $this->email_notifications_recipients, $subject, $body, $headers );
 
 
 

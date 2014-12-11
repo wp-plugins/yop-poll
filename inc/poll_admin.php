@@ -573,11 +573,19 @@ class YOP_POLL_Poll_Admin extends YOP_POLL_Abstract_Admin {
         for( $i = 0; $i < $n; $i ++ ) {
             $data['templates'][$i]['preview'] = YOP_POLL_Poll_Model::return_template_preview_html( $data['templates'][$i]['id'] );
         }
+        $current =new YOP_POLL_Poll_Model( $poll_id );
+        if('add' == $action_type){
+            $current->email_notifications_from_name=$options['email_notifications_from_name'];
+            $current->email_notifications_from_email=$options['email_notifications_from_email'];
+            $current->email_notifications_recipients=$options['email_notifications_recipients'];
+            $current->email_notifications_subject=$options['email_notifications_subject'];
+            $current->email_notifications_body=$options['email_notifications_body'];
+        }
+        $data['current_poll'] = $current;
         if( 'edit' == $action_type ) {
             $data['title'] = __yop_poll( 'Edit Poll' );
         }
 
-        $data['current_poll'] = new YOP_POLL_Poll_Model( $poll_id );
         if( $data['current_poll']->get( 'template' ) ) {
             //$data['template_preview'] = Yop_Poll_Model::return_template_preview_html( $data['current_poll']['template'] );
         }

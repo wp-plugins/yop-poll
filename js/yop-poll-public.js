@@ -395,7 +395,7 @@ function yop_poll_register_vote(poll_id, poll_location, unique_id) {
     yop_poll_various_config.vote_type = 'default';
     yop_poll_various_config.public_config = yop_poll_public_config;
 
-    if( yop_poll_public_config.poll_options.vote_permisions != 'guest-only' ) {
+    if( yop_poll_public_config.poll_options.vote_permisions != 'guest' ) {
         switch( yop_poll_get_vote_options_number( yop_poll_public_config ) ) {
             case 'single':
                 yop_poll_show_loading( yop_poll_various_config.vote_loading_image_target,

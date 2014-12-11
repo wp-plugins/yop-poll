@@ -2,7 +2,8 @@
 {% from "form_macros.html" import yop_poll_input_field as input  %}
 {% from "form_macros.html" import yop_poll_select as select  %}
 
-<div class="postbox stuffbox {% if ( 'advanced' == user_interface_type ) %} closed {% endif %}">
+<div class="postbox stuffbox {% if ( 'advanced' == user_interface_type ) %} closed {% endif %}"
+     xmlns="http://www.w3.org/1999/html">
     <div title="{{ __('Click to toggle') }}" class="handlediv"><br/> </div>
     <h3 class="hndle" style="border-bottom: 1px solid #AAAAAA;">
         <span>{{ __('Poll Options') }}</span>
@@ -249,6 +250,21 @@
                     <td>
                         {{ label( 'Yes', 'yop-poll-send-email-notifications-yes', 'yop_poll_options[send_email_notifications]', "yes", "radio", "", current_poll.send_email_notifications, "yes" ) }}
                         {{ label( 'No',  'yop-poll-send-email-notifications-no',  'yop_poll_options[send_email_notifications]', "no",  "radio", "", current_poll.send_email_notifications, "no"  ) }}
+                        <div class="notification" id="yop_poll_email_notification">
+                                            {{ __('From Name') }}:
+                                                {{ input( current_poll.email_notifications_from_name,  'yop-poll-email-notifications-from-name', 'yop_poll_options[email_notifications_from_name]' )}}
+                                            {{ __('From Email') }}:
+                                                {{ input( current_poll.email_notifications_from_email,  'yop-poll-email-notifications-from-email', 'yop_poll_options[email_notifications_from_email]' )}}
+                                              {{ __('Recipients') }}: <br><small>({{ __('Use comma separated email addresses: email@xmail.com,email2@ymail.com') }})</small>
+                                                {{ input( current_poll.email_notifications_recipients,  'yop-poll-email-notifications-recipients', 'yop_poll_options[email_notifications_recipients]' )}}
+                                            {{ __('Subject') }}:
+                                                {{ input( current_poll.email_notifications_subject,  'yop-poll-email-notifications-subject', 'yop_poll_options[email_notifications_subject]' )}}
+                                            {{ __('Body') }}
+                                                <textarea id="yop-poll-email-notifications-body" rows="10" name="yop_poll_options[email_notifications_body]">{{ stripslashes(current_poll.email_notifications_body )|e }}</textarea>
+
+
+
+                        </div>
                     </td>
                 </tr>
                 <tr>

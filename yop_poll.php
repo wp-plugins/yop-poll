@@ -5,7 +5,7 @@
     * Description: Use a full option polling functionality to get the answers you need. YOP Poll is the perfect, easy to use plugin for your WordPress website.
     * Author: yourownprogrammer
     * Author URL: http://www.yop-poll.com/thankyou/
-    * Version: 5.2
+    * Version: 5.3
     * Network: false
     */
 
@@ -22,7 +22,7 @@
 if (!(version_compare(phpversion(), '5.3', '<'))) {
     define ( 'YOP_POLL_DOMAIN', 'yop_poll' );
     define ( 'YOP_POLL_WP_VERSION', '3.3' );
-    define ( 'YOP_POLL_VERSION', '5.2' );
+    define ( 'YOP_POLL_VERSION', '5.3' );
     define ( 'YOP_POLL_PATH', plugin_dir_path( __FILE__ ) ); ///home/..../wp-content/plugins/yop-poll-2.0/
     define ( 'YOP_POLL_URL', plugin_dir_url( __FILE__ ) ); //http://your-domain/wp-content/plugins/yop-poll-2.0/
     define ( 'YOP_POLL_PLUGIN_FILE', __FILE__ ); ///home/..../wp-content/plugins/yop-poll-2.0/yop-poll-2.0.php
@@ -172,7 +172,7 @@ function yop_poll_uninstall() {
         ?>
         <div class="error">
             <p><?php _e( 'YOP POLL!', 'my-text-domain' ); ?></p>
-       <p> <?php _e("Your php version is lower than the minimum required(5.3). YOP Poll will downgrade to version 4.9.3")?></p>
+       <p> <?php _e("Php version isn't high enough! Yop Poll will be automatically downgraded!Please upgrade your Php version!")?></p>
         </div>
         <?php
         include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';

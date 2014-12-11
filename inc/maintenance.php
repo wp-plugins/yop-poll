@@ -285,7 +285,37 @@ class YOP_POLL_Maintenance {
                     'email_notifications_from_email'            => $current_options['email_notifications_from_email'],
                     'email_notifications_recipients'            => $current_options['email_notifications_recipients'],
                     'email_notifications_subject'               =>$current_options['email_notifications_subject'],
-                    'email_notifications_body'                  => $current_options['email_notifications_body'],
+                    'email_notifications_body'                  => '<p>A new vote was registered on %VOTE_DATE% for %POLL_NAME%</p>
+
+                                                            <p>Vote Details:</p>
+
+                                                            [QUESTION]
+
+                                                            <p><b>Question:</b> %QUESTION_TEXT%</p>
+
+                                                            <p><b>Answers:</b> <br />
+
+                                                            [ANSWERS]
+
+                                                            %ANSWER_VALUE%
+
+                                                            [/ANSWERS]
+
+                                                            </p>
+
+                                                            <p><b>Custom Fields:</b> <br />
+
+                                                            [CUSTOM_FIELDS]
+
+                                                            %CUSTOM_FIELD_NAME% - %CUSTOM_FIELD_VALUE%
+
+                                                            [/CUSTOM_FIELDS]
+
+                                                            </p>
+
+                                                            [/QUESTION]
+
+                                                            <p><b>Vote ID:</b> <br />%VOTE_ID%</p>',
                     'schedule_reset_poll_stats'                 => $current_options['schedule_reset_poll_stats'],
                     'schedule_reset_poll_date'                  => current_time( 'mysql' ),
                     'schedule_reset_poll_recurring_value'       => $current_options['schedule_reset_poll_recurring_value'],
@@ -330,10 +360,203 @@ class YOP_POLL_Maintenance {
 
             }
         }
-        if ( version_compare( $installed_version, '5.1', '<=' ) ){
+        $installed_version = get_option( "yop_poll_version" );
+
+        if ( version_compare( $installed_version, '5.2', '<=' ) ){
+            ini_set('max_execution_time', 700);
+            ini_set("memory_limit","512M");
+            $default_poll_options = get_option( 'yop_poll_options' );
+            $default_poll_options['email_notifications_body']                  = '<p>A new vote was registered on %VOTE_DATE% for %POLL_NAME%</p>
+
+                                                            <p>Vote Details:</p>
+
+                                                            [QUESTION]
+
+                                                            <p><b>Question:</b> %QUESTION_TEXT%</p>
+
+                                                            <p><b>Answers:</b> <br />
+
+                                                            [ANSWERS]
+
+                                                            %ANSWER_VALUE%
+
+                                                            [/ANSWERS]
+
+                                                            </p>
+
+                                                            <p><b>Custom Fields:</b> <br />
+
+                                                            [CUSTOM_FIELDS]
+
+                                                            %CUSTOM_FIELD_NAME% - %CUSTOM_FIELD_VALUE%
+
+                                                            [/CUSTOM_FIELDS]
+
+                                                            </p>
+
+                                                            [/QUESTION]
+
+                                                            <p><b>Vote ID:</b> <br />%VOTE_ID%</p>';
+            update_option( 'yop_poll_options', $default_poll_options );
+            $templates     =      self::yop_poll_get_templates_new_version_from_db();
+            foreach($templates as $template){
+                $template['js']=  <<<NOWDOC
+function stripBorder_%POLL-ID%(object) {
+	object.each(function() {
+		if( parseInt(jQuery(this).width() ) > 0) {
+			jQuery(this).width(
+				parseInt(
+					jQuery(this).width() ) -
+					parseInt(jQuery(this).css("border-left-width")) -
+					parseInt(jQuery(this).css("border-right-width"))
+			);
+			}
+		else {
+		jQuery(this).css("border-left-width", "0px");
+		jQuery(this).css("border-right-width", "0px");
+		}
+	});
+}
+function stripPadding_%POLL-ID%(object) {
+	object.each(function() {
+		jQuery(this).width(
+		parseInt( jQuery(this).width() ) -
+		parseInt(jQuery(this).css("padding-left")) -
+		parseInt(jQuery(this).css("padding-left"))
+		);
+	});
+}
+
+function strip_results_%POLL-ID%() {
+	stripPadding_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%") );
+	stripBorder_%POLL-ID%(  jQuery("#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%") );
+}
+
+jQuery(document).ready(function(e) {
+	if(typeof window.strip_results_%POLL-ID% == "function")
+		strip_results_%POLL-ID%();
+	if(typeof window.tabulate_answers_%POLL-ID% == "function")
+		tabulate_answers_%POLL-ID%();
+	if(typeof window.tabulate_results_%POLL-ID% == "function")
+		tabulate_results_%POLL-ID%();
+});
+
+function equalWidth_%POLL-ID%(obj, cols, findWidest ) {
+	findWidest  = typeof findWidest  !== "undefined" ? findWidest  : false;
+	if ( findWidest ) {
+		obj.each(function() {
+			var thisWidth = jQuery(this).width();
+			width = parseInt(thisWidth / cols);
+			jQuery(this).width(width);
+			jQuery(this).css("float", "left");
+		});
+	}
+	else {
+		var widest = 0;
+		obj.each(function() {
+			var thisWidth = jQuery(this).width();
+			if(thisWidth > widest) {
+				widest = thisWidth;
+			}
+		});
+		width = parseInt( %POLL-WIDTH% / cols[0]);
+		obj.width(width-20);
+		obj.css("float", "left");
+	}
+}
+
+function equalWidth2_%POLL-ID%(obj, cols, findWidest ) {
+	findWidest  = typeof findWidest  !== "undefined" ? findWidest  : false;
+	if ( findWidest ) {
+		obj.each(function() {
+			var thisWidth = jQuery(this).width();
+			width = parseInt(thisWidth / cols);
+			jQuery(this).width(width);
+			jQuery(this).css("float", "left");
+		});
+	}
+	else {
+		var widest = 0;
+		obj.each(function() {
+			var thisWidth = jQuery(this).width();
+			if(thisWidth > widest) {
+				widest = thisWidth;
+			}
+		});
+		width = parseInt( %POLL-WIDTH% / cols[1]);
+		obj.width(width-20);
+		obj.css("float", "left");
+	}
+}
+function tabulate_answers_%POLL-ID%() {
+
+	equalWidth_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%"), %ANSWERS-TABULATED-COLS% );
+	//equalWidth_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div "), %ANSWERS-TABULATED-COLS%, true );
+}
+
+function tabulate_results_%POLL-ID%() {
+	equalWidth2_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%"), %RESULTS-TABULATED-COLS% );
+	//equalWidth_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div "), %RESULTS-TABULATED-COLS%, true );
+	}
+
+jQuery(document).ready(function(){
+	runOnPollStateChange_%POLL-ID%();
+});
+
+function runOnPollStateChange_%POLL-ID%() {
+
+};
+NOWDOC;
+                self::update_poll_template_in_database(($template));
+            }
+            $polls=self::yop_poll_get_polls_for_body_mail_update();
+            foreach($polls as $poll){
+               $current=new YOP_POLL_Poll_Model($poll['ID']);
+                $current->email_notifications_body='<p>A new vote was registered on %VOTE_DATE% for %POLL_NAME%</p>
+
+                                                            <p>Vote Details:</p>
+
+                [QUESTION]
+
+                                                            <p><b>Question:</b> %QUESTION_TEXT%</p>
+
+                                                            <p><b>Answers:</b> <br />
+
+                                                            [ANSWERS]
+
+                                                            %ANSWER_VALUE%
+
+                                                            [/ANSWERS]
+
+                                                            </p>
+
+                                                            <p><b>Custom Fields:</b> <br />
+
+                                                            [CUSTOM_FIELDS]
+
+                                                            %CUSTOM_FIELD_NAME% - %CUSTOM_FIELD_VALUE%
+
+                                                            [/CUSTOM_FIELDS]
+
+                                                            </p>
+
+                [/QUESTION]
+
+                                                            <p><b>Vote ID:</b> <br />%VOTE_ID%</p>';
+                $current->save();
+
+            }
             update_option( "yop_poll_version", YOP_POLL_VERSION );
         }
 
+    }
+    public function yop_poll_get_polls_for_body_mail_update(){
+        global $wpdb;
+        $result = $wpdb->get_results(( "
+                            SELECT ID
+                            FROM   " . $wpdb->yop_polls." ORDER BY ID ASC
+                            " ), ARRAY_A );
+        return $result;
     }
     private function install_default_options() {
         $default_poll_options = get_option( 'yop_poll_options' );
@@ -520,6 +743,29 @@ function equalWidth_%POLL-ID%(obj, cols, findWidest ) {
 	}
 }
 
+function equalWidth2_%POLL-ID%(obj, cols, findWidest ) {
+	findWidest  = typeof findWidest  !== "undefined" ? findWidest  : false;
+	if ( findWidest ) {
+		obj.each(function() {
+			var thisWidth = jQuery(this).width();
+			width = parseInt(thisWidth / cols);
+			jQuery(this).width(width);
+			jQuery(this).css("float", "left");
+		});
+	}
+	else {
+		var widest = 0;
+		obj.each(function() {
+			var thisWidth = jQuery(this).width();
+			if(thisWidth > widest) {
+				widest = thisWidth;
+			}
+		});
+		width = parseInt( %POLL-WIDTH% / cols[1]);
+		obj.width(width-20);
+		obj.css("float", "left");
+	}
+}
 function tabulate_answers_%POLL-ID%() {
 
 	equalWidth_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%"), %ANSWERS-TABULATED-COLS% );
@@ -527,7 +773,7 @@ function tabulate_answers_%POLL-ID%() {
 }
 
 function tabulate_results_%POLL-ID%() {
-	equalWidth_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%"), %RESULTS-TABULATED-COLS% );
+	equalWidth2_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%"), %RESULTS-TABULATED-COLS% );
 	//equalWidth_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div "), %RESULTS-TABULATED-COLS%, true );
 	}
 
@@ -538,6 +784,7 @@ jQuery(document).ready(function(){
 function runOnPollStateChange_%POLL-ID%() {
 
 };
+
 NOWDOC;
             $template['js'] = addslashes(  $template['js'] );
             $templates_ids[$template['id']]=self::insert_template_in_databease(($template));
@@ -612,6 +859,37 @@ NOWDOC;
             $current_poll->poll_status   = $poll['status'];
             $current_poll->poll_type     = "poll";
             $current_poll->poll_status   = $poll['status'];
+            $current_poll->email_notifications_body='<p>A new vote was registered on %VOTE_DATE% for %POLL_NAME%</p>
+
+                                                            <p>Vote Details:</p>
+
+                [QUESTION]
+
+                                                            <p><b>Question:</b> %QUESTION_TEXT%</p>
+
+                                                            <p><b>Answers:</b> <br />
+
+                                                            [ANSWERS]
+
+                                                            %ANSWER_VALUE%
+
+                                                            [/ANSWERS]
+
+                                                            </p>
+
+                                                            <p><b>Custom Fields:</b> <br />
+
+                                                            [CUSTOM_FIELDS]
+
+                                                            %CUSTOM_FIELD_NAME% - %CUSTOM_FIELD_VALUE%
+
+                                                            [/CUSTOM_FIELDS]
+
+                                                            </p>
+
+                [/QUESTION]
+
+                                                            <p><b>Vote ID:</b> <br />%VOTE_ID%</p>';
             if( $poll['end_date'] <= "2038-01-18 23:59:59" ) {
 
                 $current_poll->poll_end_date =convert_date ($poll['end_date'],'d-m-Y H:i:s',1 );
@@ -898,6 +1176,23 @@ NOWDOC;
 					", $template['template_author'], $template['name'], $template['before_vote_template'], $template['after_vote_template'], $template['before_start_date_template'], $template['after_end_date_template'], $template['css'], $template['js'], current_time( 'mysql' ), current_time( 'mysql' ), $template['status'] ) );
         return $GLOBALS['wpdb']->insert_id;
     }
+    private static function update_poll_template_in_database( $template ) {
+        global $wpdb;
+        $sql = $wpdb->query( $wpdb->prepare( "
+					UPDATE " . $wpdb->yop_poll_templates . "
+					SET name = %s,
+					before_vote_template = %s,
+					after_vote_template = %s,
+					before_start_date_template = %s,
+					after_end_date_template = %s,
+					css = %s,
+					js = %s,
+					last_modified = %s
+					WHERE
+					id = %d
+					", $template['name'], $template['before_vote_template'], $template['after_vote_template'], $template['before_start_date_template'], $template['after_end_date_template'], $template['css'], $template['js'], current_time( 'mysql' ), $template['id'] ) );
+        return $sql;
+    }
     public function yop_poll_get_polls_from_db() {
         global $wpdb;
         $result = $wpdb->get_results(( "
@@ -935,6 +1230,14 @@ NOWDOC;
                             SELECT *
                             FROM  " . $wpdb->prefix . "yop_poll_templates
                             " ), ARRAY_A );
+        return $result;
+    }
+    public function yop_poll_get_templates_new_version_from_db() {
+        global $wpdb;
+        $result = $wpdb->get_results( ( "
+                            SELECT *
+                            FROM  " . $wpdb->yop_poll_templates
+                            ), ARRAY_A );
         return $result;
     }
 
