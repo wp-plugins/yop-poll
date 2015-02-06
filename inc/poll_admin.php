@@ -586,6 +586,19 @@ class YOP_POLL_Poll_Admin extends YOP_POLL_Abstract_Admin {
         }
         $data['current_poll'] = $current;
         if( 'edit' == $action_type ) {
+            if(empty($current->vote_button_label)){
+
+                $current->vote_button_label=$options['vote_button_label'];
+
+
+            }
+            if(empty(   $current->vote_permisions_wordpress_label)){
+                $current->vote_permisions_wordpress_label=$options['vote_permisions_wordpress_label'];
+            }
+            if(empty(  $current->vote_permisions_anonymous_label)){
+                $current->vote_permisions_anonymous_label=$options['vote_permisions_anonymous_label'];
+            }
+
             $data['title'] = __yop_poll( 'Edit Poll' );
         }
 

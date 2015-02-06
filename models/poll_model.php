@@ -600,7 +600,7 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                     }
                     $temp_string = str_ireplace( '%POLL-CUSTOM-FIELD-LABEL%', '<label for="yop-poll-customfield-' . $this->ID . $unique_id . '-' . $custom_field->ID . '">' . yop_poll_kses( $custom_field->custom_field ) . '</label>', $m );
 
-                    $temp_string = str_ireplace( '%POLL-CUSTOM-FIELD-TEXT-INPUT%', '<input type="text" value="" name="yop_poll_customfield[' . $question->ID . '][' . $custom_field->ID . ']" id="yop-poll-customfield-' . $this->ID . $unique_id . '" />', $temp_string );
+                    $temp_string = str_ireplace( '%POLL-CUSTOM-FIELD-TEXT-INPUT%', '<input type="text" value="" name="yop_poll_customfield[' . $question->ID . '][' . $custom_field->ID . ']" id="yop-poll-customfield-' . $this->ID . $unique_id .'-'.$custom_field->ID.'" />', $temp_string );
                     $model .= $temp_string;
                 }
             }
@@ -692,7 +692,7 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                 /** End Answer Description replace */
                 $ans->type = "text";
                 if( $ans->type == "text" ) {
-                    $temp_string = str_ireplace( '%POLL-ANSWER-LABEL%', '<label for="yop-poll-answer-' . $this->ID . $unique_id . '-' . $ans->ID . '">' . yop_poll_kses( stripslashes( $ans->answer ) ) . '</label>', $temp_string );
+                    $temp_string = str_ireplace( '%POLL-ANSWER-LABEL%', '<span>' . yop_poll_kses( stripslashes( $ans->answer ) ) . '</span>', $temp_string );
                 }
 
 
@@ -1299,15 +1299,30 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
         }
 
         $template_css = $template_details['css'];
-
+        $template_details['before_vote_template']=      str_replace('id = "yop-poll-li-answer-%POLL-ID%-%QUESTION-ID%"','', $template_details['before_vote_template']);
+        $template_details['before_vote_template']=      str_replace('id = "yop-poll-li-custom-%POLL-ID%-%QUESTION-ID%"','', $template_details['before_vote_template']);
+        $template_details['before_vote_template']=      str_replace('id = "yop-poll-customs-%POLL-ID%-%QUESTION-ID%"','', $template_details['before_vote_template']);
+        $template_details['after_end_date_template']=      str_replace('id = "pds-feedback-label-%POLL-ID%-%QUESTION-ID%"','', $template_details['after_end_date_template']);
+        $template_details['after_vote_template']=      str_replace('id = "pds-feedback-label-%POLL-ID%-%QUESTION-ID%"','', $template_details['after_vote_template']);
+        $template_details['after_end_date_template']=      str_replace('id = "yop-poll-li-result-%POLL-ID%-%QUESTION-ID%"','', $template_details['after_end_date_template']);
+        $template_details['after_vote_template']=      str_replace('id = "yop-poll-li-result-%POLL-ID%-%QUESTION-ID%"','', $template_details['after_vote_template']);
+        $template_details['after_end_date_template']=      str_replace('id = "pds-answer-text-%POLL-ID%-%QUESTION-ID%"','', $template_details['after_end_date_template']);
+        $template_details['after_vote_template']=      str_replace('id = "pds-answer-text-%POLL-ID%-%QUESTION-ID%"','', $template_details['after_vote_template']);
+        $template_details['after_end_date_template']=      str_replace('id = "pds-feedback-result-%POLL-ID%-%QUESTION-ID%"','', $template_details['after_end_date_template']);
+        $template_details['after_vote_template']=      str_replace('id = "pds-feedback-result-%POLL-ID%-%QUESTION-ID%"','', $template_details['after_vote_template']);
+        $template_details['after_end_date_template']=      str_replace('id = "pds-feedback-per-%POLL-ID%-%QUESTION-ID%"','', $template_details['after_end_date_template']);
+        $template_details['after_vote_template']=      str_replace('id = "pds-feedback-per-%POLL-ID%-%QUESTION-ID%"','', $template_details['after_vote_template']);
         $poll_details = $this;
+        $this->vote_button_label = empty($this->vote_button_label )?$general_options['vote_button_label']:$this->vote_button_label;
+        $this->vote_permisions_wordpress_label = empty($this->vote_permisions_wordpress_label )?$general_options['vote_permisions_wordpress_label']:$this->vote_permisions_wordpress_label;
+        $this->vote_permisions_anonymous_label = empty($this->vote_permisions_anonymous_label )?$general_options['vote_permisions_anonymous_label']:$this->vote_permisions_anonymous_label;
 
         //Translate labels
         if( function_exists( 'icl_translate' ) ) {
             // $poll_details = icl_translate( 'yop_poll', $poll_details->ID . '_poll_title', $poll_details->name );
             $this->singular_answer_result_votes_number_label = icl_translate( 'yop_poll', $poll_details->ID . '_singular_answer_result_votes_number_label', $general_options['singular_answer_result_votes_number_label']);
             $this->plural_answer_result_votes_number_label   = icl_translate( 'yop_poll', $poll_details->ID . '_plural_answer_result_votes_number_label', $general_options['plural_answer_result_votes_number_label'] );
-            $this->vote_button_label                         = icl_translate( 'yop_poll', $poll_details->ID . '_vote_button_label', $this->vote_button_label );
+            $this->vote_button_label                         = icl_translate( 'yop_poll', $poll_details->ID . '_vote_button_label',  empty($this->vote_button_label )?$general_options['vote_button_label']:$this->vote_button_labels );
             $this->view_results_link_label                   = icl_translate( 'yop_poll', $poll_details->ID . '_view_results_link_label', $this->view_results_link_label );
             $this->view_back_to_vote_link_label              = icl_translate( 'yop_poll', $poll_details->ID . '_view_back_to_vote_link_label', $this->view_back_to_vote_link_label );
             $this->view_total_votes_label                    = icl_translate( 'yop_poll', $poll_details->ID . '_view_total_votes_label', $this->view_total_votes_label );
@@ -1471,7 +1486,7 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
 
         $template = "";
         if( $load_css ) {
-            $template .= '<style type="text/css">' . self::return_poll_css( $template_css, array( "location" => $location ) ) . '</style>';
+            $template .= '<style scoped>' . self::return_poll_css( $template_css, array( "location" => $location ) ) . '</style>';
         }
 
         $template .= '<div id="yop-poll-container-' . $this->ID . $unique_id . '" class="yop-poll-container">';

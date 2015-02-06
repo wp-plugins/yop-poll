@@ -1,5 +1,6 @@
 var yop_poll_various_config = new Object();
 var write_console = true;
+
 function cslw(msg) {
     if( write_console ) {
         if( console && console.log ) {
@@ -7,7 +8,49 @@ function cslw(msg) {
         }
     }
 }
+var wLog=0;
+jQuery(document).ready(function(){
 
+    jQuery.ajax( {
+
+        type   : 'POST',
+
+        async  : true,
+
+        url    : yop_poll_public_config_general.ajax.url,
+
+        data   : 'action=' + yop_poll_public_config_general.ajax.is_wordpress_user_action,
+
+        cache  : false,
+
+        async  : false,
+
+        error  : function() {
+
+        },
+
+        success: function( data ) {
+
+            data = yop_poll_extractApiResponse( data );
+
+            data = data.split( ';' );
+
+            if( data[0] == 'true' ) {
+
+                wLog=1;
+
+            }
+
+            else {
+
+                wLog=0;
+            }
+
+        }
+
+    } );
+
+});
 function yop_poll_runEval(poll_id, unique_id) {
 	   
     eval("if(typeof window.strip_results_" + poll_id + unique_id + " == 'function')  strip_results_"+poll_id + unique_id +"();");
@@ -238,7 +281,41 @@ function yop_poll_vote_on_multiple_options(poll_id, vote_type, poll_location, un
             back_to_vote_loading_image.id = 'yop_poll_wordpress_loading_img-' + poll_id + unique_id;
             jQuery( '#yop_poll_wordpress-vote-button-' + poll_id + unique_id ).after( back_to_vote_loading_image );
             jQuery( '#yop_poll_wordpress_loading_img-' + poll_id + unique_id ).css( 'border', 'none' );
+            if(wLog == 0){
+                jQuery( '#yop_poll_vote-button-' + yop_poll_various_config.poll_id +
 
+                        yop_poll_various_config.unique_id ).popupWindow( {
+
+                    windowURL   : yop_poll_public_config_general.vote_with_wordpress_login_url +
+
+                            yop_poll_urlencode( yop_poll_various_config_to_get_params( yop_poll_various_config ) ),
+
+                    windowName  : 'yop_poll_popup_window',
+
+                    height      : 500,
+
+                    left        : 0,
+
+                    location    : 0,
+
+                    menubar     : 0,
+
+                    resizable   : 0,
+
+                    scrollbars  : 1,
+
+                    status      : 0,
+
+                    width       : 450,
+
+                    top         : 0,
+
+                    toolbar     : 0,
+
+                    centerScreen: 1
+
+                } );
+            }
             yop_poll_vote_with_wordpress( yop_poll_various_config );
             break;
         case 'anonymous':
@@ -287,7 +364,7 @@ function yop_poll_vote_with_wordpress(yop_poll_various_config) {
                              yop_poll_do_vote( yop_poll_various_config );
                          }
                          else {
-                             jQuery( '#yop_poll_vote-button-' + yop_poll_various_config.poll_id +
+                            jQuery( '#yop_poll_vote-button-' + yop_poll_various_config.poll_id +
                                      yop_poll_various_config.unique_id ).popupWindow( {
                                                                                           windowURL: yop_poll_public_config_general.vote_with_wordpress_login_url +
                                                                                                      yop_poll_urlencode( yop_poll_various_config_to_get_params( yop_poll_various_config ) ),
@@ -304,6 +381,8 @@ function yop_poll_vote_with_wordpress(yop_poll_various_config) {
                                                                                           toolbar: 0,
                                                                                           centerScreen: 1
                                                                                       } );
+
+
 
                              yop_poll_hide_loading( yop_poll_various_config.vote_loading_image_target,
                                                     yop_poll_various_config.vote_loading_image_id );
@@ -402,6 +481,41 @@ function yop_poll_register_vote(poll_id, poll_location, unique_id) {
                                        yop_poll_various_config.vote_loading_image_id, yop_poll_public_config );
                 switch( yop_poll_public_config.poll_options.vote_permisions_types ) {
                     case 1:
+                        if(wLog==0){
+                            jQuery( '#yop_poll_vote-button-' + yop_poll_various_config.poll_id +
+
+                                    yop_poll_various_config.unique_id ).popupWindow( {
+
+                                windowURL   : yop_poll_public_config_general.vote_with_wordpress_login_url +
+
+                                        yop_poll_urlencode( yop_poll_various_config_to_get_params( yop_poll_various_config ) ),
+
+                                windowName  : 'yop_poll_popup_window',
+
+                                height      : 500,
+
+                                left        : 0,
+
+                                location    : 0,
+
+                                menubar     : 0,
+
+                                resizable   : 0,
+
+                                scrollbars  : 1,
+
+                                status      : 0,
+
+                                width       : 450,
+
+                                top         : 0,
+
+                                toolbar     : 0,
+
+                                centerScreen: 1
+
+                            } );
+                        }
                         yop_poll_vote_with_wordpress( yop_poll_various_config );
                         break;
                     case 2:
@@ -619,6 +733,7 @@ function yop_poll_hide_loading(target, loading_img_id) {
 }
 
 function yop_poll_do_vote(yop_poll_various_config) {
+    wLog=1;
     poll_id = typeof yop_poll_various_config.poll_id !== 'undefined' ? yop_poll_various_config.poll_id : 0;
     is_modal = typeof yop_poll_various_config.is_modal !== 'undefined' ? yop_poll_various_config.is_modal : false;
     vote_type = typeof yop_poll_various_config.vote_type !==
@@ -639,7 +754,7 @@ function yop_poll_do_vote(yop_poll_various_config) {
                                            yop_poll_various_config.worspress_user_id );
 
     }
-    var popupClose = false;
+    var popupClose = true;
 
     var pollData = {
         'action': yop_poll_public_config_general.ajax.vote_action,

@@ -1,7 +1,7 @@
 === YOP Poll ===
 Contributors: yourownprogrammer
 Donate Link: http://www.yop-poll.com/thankyou/don.php
-Tags: booth, poll, polls, vote, voting, survey, polling, yop poll, yop
+Tags: booth, create poll, poll plugin, poll, polls, vote, voting, survey, polling, yop poll, yop
 Requires at least: 3.3
 Tested up to: 4.1
 Stable tag: trunk
@@ -142,6 +142,11 @@ You can have only one question per poll. If you want to ask more than one questi
 5. YOP Poll on a page with a custom field defined
 
 == Changelog ==
+
+= 5.6 =
+* Fixed issue with login popup
+* Fixed issue with vote button
+* Fixed issue with html
 
 = 5.5 =
 * Fixed issue with clone poll
