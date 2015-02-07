@@ -1,16 +1,16 @@
 === YOP Poll ===
 Contributors: yourownprogrammer
 Donate Link: http://www.yop-poll.com/thankyou/don.php
-Tags: booth, create poll, poll plugin, poll, polls, vote, voting, survey, polling, yop poll, yop
+Tags: booth, create poll, poll plugin, poll, polls, wordpress poll, vote, voting, survey, polling, yop poll, yop
 Requires at least: 3.3
 Tested up to: 4.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.htm
 
-Use a full option polling functionality to get the answers you need.       
+Use a full option polling solution to get the answers you need.       
 
-YOP Poll is the perfect, easy to use poll plugin for your WP site.
+YOP Poll is the perfect, easy to use poll plugin for your wordpress site.
 
 == Description ==
 
@@ -18,7 +18,7 @@ YOP Poll plugin allows you to easily integrate a survey in your blog post/page a
 
 To name just a few improvements, you can create polls to include both single or multiple answers, work with a wide variety of options and settings to decide how you wish to sort your poll information, how to manage the results, what details to display and what to keep private, whether you want to view the total votes or the total voters, to set vote permissions or block voters etc.
 
-Scheduling your polls is no longer a problem. YOP Poll can simultaneously run multiple surveys (no limit included) or you can schedule your polls to start one after another. Also, keeping track of your polls is easy, you have various sorting functions and you can access older versions at any time.
+Scheduling your polls is no longer a problem. YOP Poll can simultaneously run multiple polls (no limit included) or you can schedule your polls to start one after another. Also, keeping track of your polls is easy, you have various sorting functions and you can access older versions at any time.
 
 Designed to intuitive and easy to use, this plugin allows shortcodes and includes a widget functionality that fits perfectly with your WordPress website. For more details on the included features, please refer to the description below.
 
@@ -26,7 +26,7 @@ Current poll features:
 
    *  Create/ Edit / Clone/Delete poll - allows you to create or intervene in your poll at any time, if you consider it necessary.
    
-   *  Poll scheduling:  programs each poll to start/end on a certain date. You can simultaneously run multiple polls. This option can be used to schedule your po;;s one after another.
+   *  Poll scheduling:  programs each poll to start/end on a certain date. You can simultaneously run multiple polls. This option can be used to schedule your polls one after another.
    
    *  Display polls: you can choose to display one or more polls on your website by simply adding the corresponding poll ID. You can also decide for a random display of your active polls.
    
@@ -36,7 +36,7 @@ Current poll features:
 
    *  Poll results - offers a great flexibility when displaying the results: before/after vote, after poll's end date, on a custom date or never. The results can also be displayed by vote numbers, percentages or both. You can choose to include a view results link, view number of votes or number of voters.
 
-   *  Add new custom fields - is a complex option that you can use to ask for additional information from your voters, information that you can then download and use for.
+   *  Add new custom fields - is a complex option that you can use to ask for additional information from your voters, information that you can then export and use for.
 
    *  Reset stats - proves useful when you wish to restart a poll.
 
@@ -68,10 +68,8 @@ To view your new poll access "All Polls" from your main menu and choose the corr
 
 = How can I link a poll to my webpage? =
 
-Find out the ID assigned to poll by accessing "All Polls".
-Locate your poll and notice the ID on the left, before the name section.
-Copy the following shortcode and paste it in your page: [yop_poll id="ID"]
-For instance, if the poll you want to display has the ID=15 the code will be: [yop_poll id="15"].
+Under "All Polls", each poll has an option called "Get Code".
+Clicking on that will display a popup that generates the code you need to place in your page or post.
 This is it. Check your page or post now.
 
 = Do you have some predefined shortcodes that I can use? =
@@ -87,7 +85,8 @@ Yes, you can run multiple polls at the same time or you can schedule them to beg
 
 = Can I ask for additional information from my voters? =
 
-Yes, you can customize your poll to request additional information. Eg. name, email, age, profession. To include this, when you create your poll using the "Add New" form, go to "Custom Text Fields" -> "Add new custom field" and include as many requests as you need.
+Yes, you can customize your poll to request additional information. Eg. name, email, age, profession. 
+To include this, when you create your poll using the "Add New" form, expand "Custom Fields" section and include as many requests as you need.
 
 = How can I create/modify a template? =
 
@@ -99,7 +98,7 @@ If you want to modify an existing template, select it from the Templates list an
 
 Locate the poll you want to evaluate by accessing "All Polls".
 Below the name of the poll you have several options.
-Use the "Results" link to track the results of the poll,
+Use the "View Votes" link to track the results of the poll,
 or access the "Logs" for a more detailed evaluation.
 
 = What is the difference between Options and Poll Options for each poll? =
@@ -303,7 +302,3 @@ You can have only one question per poll. If you want to ask more than one questi
 
 = 1.1 =
 * Fixed call_user_func_array() bug
-
-== Donations ==
-
-We've given a lot of thought to make this application one of the best ones available and we continue to invest our time and effort perfecting it. If you want to support our work, please consider making a donation.
