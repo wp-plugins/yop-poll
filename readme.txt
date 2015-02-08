@@ -1,6 +1,6 @@
 === YOP Poll ===
 Contributors: yourownprogrammer
-Donate Link: http://www.yop-poll.com/thankyou/don.php
+Donate Link: http://www.yop-poll.com
 Tags: booth, create poll, poll plugin, poll, polls, wordpress poll, vote, voting, survey, polling, yop poll, yop
 Requires at least: 3.3
 Tested up to: 4.1
