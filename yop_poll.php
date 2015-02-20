@@ -4,7 +4,7 @@
     * URI: http://www.yop-poll.com/thankyou/
     * Description: Use a full option polling functionality to get the answers you need. YOP Poll is the perfect, easy to use plugin for your WordPress website.
     * Author: yourownprogrammer
-    * Author URL: http://www.yop-poll.com/thankyou/
+    * Author URL: http://www.yop-poll.com
     * Version: 5.6
     * Network: false
     */
