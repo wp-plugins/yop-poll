@@ -11,6 +11,7 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
     }
 
     public static function return_template_preview_html( $template_id = '', $loc = 1 ) {
+
         if( '' == $template_id ) {
             return "";
         }
@@ -165,6 +166,8 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
         $location = isset( $attr['location'] ) ? $attr['location'] : 'page';
         if( $preview ) {
             $template = $css;
+            $template.="li.yop-poll-li-answer-%POLL-ID% {width:100%}";
+            $template.="div.yop-poll-answers-%POLL-ID% ul{width:100%}";
             $template = str_ireplace( "%POLL-ID%", 'preview-' . $attr['template_id'] . '', $template );
             $template = str_ireplace( "%POLL-WIDTH%", '200px', $template );
             return stripslashes( $template );
@@ -279,7 +282,7 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                 $results_tabulated_cols = $question->display_results_tabulated_cols;
             }
 
-            $tabulate= array( $answers_tabulated_cols, $results_tabulated_cols );
+            array_push($tabulate, array( $answers_tabulated_cols, $results_tabulated_cols,$ans_per_question,$question->ID) );
         }
 
         $template = $template_details['js'];
@@ -300,9 +303,12 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
         $return_string = "";
         $that=$this;
         foreach( $this->questions as $question ) {
+
             $qunique_id = $question->ID;
             $temp       = str_ireplace( '%QUESTION-ID%', $qunique_id, $m[5] );
             $temp       = str_ireplace( '%POLL-QUESTION%', $question->question, $temp );
+
+            $temp = str_ireplace('class = '.'"'. 'yop-poll-li-answer-' . $this->ID . $this->unique_id ,'class='.'"'. 'yop-poll-li-answer-' . $this->ID . $this->unique_id . ' yop-poll-li-answer-' . $this->ID . $this->unique_id."-".$question->ID, $temp);
 
             if( ! $is_voted ) {
                 /** Start Anwer replace */
@@ -316,6 +322,8 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
 
                 /** Start Other Answer replace */
                 $pattern = '\[(\[?)(OTHER_ANSWER_CONTAINER)\b([^\]\/]*(?:\/(?!\])[^\]\/]*)*?)(?:(\/)\]|\](?:([^\[]*+(?:\[(?!\/\2\])[^\[]*+)*+)\[\/\2\])?)(\]?)';
+                $temp = str_ireplace('class = '.'"'. 'yop-poll-li-answer-' . $this->ID . $this->unique_id ,'class='.'"'. 'yop-poll-li-answer-' . $this->ID . $this->unique_id . ' yop-poll-li-answer-' . $this->ID . $this->unique_id."-".$question->ID, $temp);
+
                 $temp    = preg_replace_callback( "/$pattern/s", function ( $m ) use ( $that, $question ) {
                     return $that->other_answer_replace_callback( $m[5], $question );
                 }, $temp );
@@ -360,10 +368,14 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
         $model = "";
 
         /** Get question total votes( default + other ) */
-        $total_votes = $this->get_question_votes( $question );
+        $total_votes=1;
+
+       if($this->view_total_votes!="no")
+            $total_votes = $this->get_question_votes( $question );
 
         /**Is allowed to display other answers?*/
         $display_other_answers = false;
+
         if( isset( $question->allow_other_answers ) && 'yes' == $question->allow_other_answers ) {
             if( isset( $question->display_other_answers_values ) && 'yes' == $question->display_other_answers_values ) {
                 $display_other_answers = true;
@@ -376,18 +388,22 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
         }
 
         $id           = $this->ID;
+
         $view_results = $this->is_view_poll_results();
+        //yop_poll_dump($view_results);
         $that=$this;
         foreach( $question->answers as $answer ) {
             /**Check if is allowed to display current answers*/
             if( ( $answer->type == "other" ) && ! $display_other_answers ) {
                 continue;
             }
+            if($view_results){
             if( $answer->votes > 0 ) {
                 $percentages = floatval( $answer->votes * 100 / $total_votes );
             }
             else {
                 $percentages = 0;
+            }
             }
             if( function_exists( 'icl_translate' ) ) {
                 $answer->answer = icl_translate( 'yop_poll', $answer->ID . '_answer', $answer->answer );
@@ -415,14 +431,14 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                 return $that->answer_description_replace_callback( $m[5], $answer, $id, $unique_id );
             }, $temp_answer_model );
             /** End Answer Description replace */
-
+            if($view_results){
             /** Start Answer Result replace */
             $pattern           = '\[(\[?)(ANSWER_RESULT_CONTAINER)\b([^\]\/]*(?:\/(?!\])[^\]\/]*)*?)(?:(\/)\]|\](?:([^\[]*+(?:\[(?!\/\2\])[^\[]*+)*+)\[\/\2\])?)(\]?)';
             $temp_answer_model = preg_replace_callback( "/$pattern/s", function ( $m ) use ( $that,$answer, $view_results, $id, $unique_id, $percentages, $percentages_decimals ) {
                 return $that->answer_result_bar_callback( $m[5], $answer, $view_results, $id, $unique_id, $percentages, $percentages_decimals );
             }, $temp_answer_model );
             /** End Answer Result replace */
-
+            }
             if( $answer->type == "text" ) {
                 $temp_answer_model = str_ireplace( '%POLL-ANSWER-LABEL%', '<label for="yop-poll-answer-' . $this->ID . $unique_id . '-' . $answer->ID . '">' . yop_poll_kses( stripslashes( $answer->answer ) ) . '</label>', $temp_answer_model );
             }
@@ -463,6 +479,7 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
         if( $view_results ) {
             $tmp = str_ireplace( '%POLL-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $answer->ID, $percentages, $this->options, $id . $unique_id ), $m );
             $tmp = str_ireplace( '%POLL-ANSWER-RESULT-VOTES%', self::display_poll_result_votes( $answer->votes, $this->options ), $tmp );
+            $tmp = str_ireplace( '- (  )', self::display_poll_result_votes( $answer->votes, $this->options ), $tmp );
             $tmp = str_ireplace( '%POLL-ANSWER-RESULT-PERCENTAGES%', self::display_poll_result_percentages( round( $percentages, $percentages_decimals ), $this->options ), $tmp );
             return $tmp;
         }
@@ -569,6 +586,8 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                     if( $this->is_view_poll_results() ) {
                         $temp_answer_model = str_ireplace( '%POLL-OTHER-ANSWER-RESULT-BAR%', self::display_poll_result_bar( 'other', $percentages, $this->options, $this->ID . $unique_id ), $temp_answer_model );
                         $temp_answer_model = str_ireplace( '%POLL-ANSWER-RESULT-VOTES%', self::display_poll_result_votes( $other_votes, $this->options ), $temp_answer_model );
+                        $temp_answer_model = str_ireplace( '- (  )', self::display_poll_result_votes( $other_votes, $this->options ), $temp_answer_model );
+
                         $temp_answer_model = str_ireplace( '%POLL-ANSWER-RESULT-PERCENTAGES%', self::display_poll_result_percentages( round( $percentages, $percentages_decimals ), $this->options ), $temp_answer_model );
                     }
                 }
@@ -694,9 +713,11 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                 if( $ans->type == "text" ) {
                     $temp_string = str_ireplace( '%POLL-ANSWER-LABEL%', '<span>' . yop_poll_kses( stripslashes( $ans->answer ) ) . '</span>', $temp_string );
                 }
+                $temp_string = str_ireplace('class = '.'"'. 'yop-poll-li-result-' . $this->ID . $this->unique_id ,'class='.'"'. 'yop-poll-li-result-' . $this->ID . $this->unique_id . ' yop-poll-li-result-' . $this->ID . $this->unique_id."-".$question->ID, $temp_string);
 
 
                 $temp_string = str_ireplace( '%POLL-ANSWER-RESULT-VOTES%', self::display_poll_result_votes( $ans->votes, $this->options ), $temp_string );
+                $temp_string = str_ireplace( '- (  )', self::display_poll_result_votes( $ans->votes, $this->options ), $temp_string );
                 $temp_string = str_ireplace( '%POLL-ANSWER-RESULT-PERCENTAGES%', self::display_poll_result_percentages( round( $percentages, $percentages_decimals ), $this->options ), $temp_string );
                 $temp_string = str_ireplace( '%POLL-ANSWER-RESULT-BAR%', self::display_poll_result_bar( $ans->ID, $percentages, $this->options, $this->ID . $unique_id ), $temp_string );
                 $return_string .= $temp_string;
@@ -707,6 +728,7 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
     }
 
     public function register_vote( $request ) {
+
         global $current_user;
         $poll_id      = $this->id;
         $unique_id             = strip_tags(xss_clean($this->unique_id));
@@ -835,8 +857,8 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                                                                 $new_answer['user_id'] = $current_user->ID;
 
                                                                 $new_answer['user_type'] = 'default';
-                                                                if( in_array( $vote_type, $this->vote_types ) ) {
-                                                                    $answer['user_type'] = $vote_type;
+                                                                if( $vote_type=='anonymous' || $vote_type=='wordpress'  ) {
+                                                                    $new_answer['user_type'] = $vote_type;
                                                                 }
 
                                                                 $new_answer['http_referer']       = $_SERVER['HTTP_REFERER'];
@@ -941,12 +963,14 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                                                                             $new_custom_field['user_id']         = $current_user->ID;
 
                                                                             $new_custom_field['user_type'] = 'default';
-                                                                            if( in_array( $vote_type, $this->vote_types ) ) {
+
+                                                                            if( $vote_type=='wordpress' || $vote_type=='anonymous' ) {
                                                                                 $new_custom_field['user_type'] = $vote_type;
                                                                             }
 
                                                                             $new_custom_field['custom_field_value'] = strip_tags( trim( $request['yop_poll_customfield'][$question->ID][$custom_field->ID] ) );
                                                                             $custom_fields[]                        = $new_custom_field;
+
                                                                         }
                                                                     }
                                                                 }
@@ -1252,7 +1276,8 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
             'tr_id'    => '',
             'location' => 'page',
             'load_css' => false,
-            'load_js'  => false
+            'load_js'  => false,
+            'show_results'=>''
         )
     ) {
         $time_format="H:i:s";
@@ -1263,6 +1288,7 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
         }
         $date_format=$date_format.' '.$time_format;
         $tr_id     = isset( $attr['tr_id'] ) ? $attr['tr_id'] : '';
+        $show_results     = isset( $attr['show_results'] ) ? $attr['show_results'] : '';
         $location  = isset( $attr['location'] ) ? $attr['location'] : 'page';
         $load_css  = isset( $attr['load_css'] ) ? $attr['load_css'] : false;
         $unique_id = $this->unique_id;
@@ -1344,6 +1370,11 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                 if( ! $is_voted ) {
                     //user hasn't voted yet
                     $template = $template_details['before_vote_template'];
+                    if(isset($show_results)&&$show_results==1){
+
+                        $template = $template_details['after_vote_template'];
+                        $this->view_results=array('before');
+                    }
                     if( in_array( 'before', $this->view_results ) ) {
                         if( $this->is_view_poll_results() ) {
                             $template = str_ireplace( '%POLL-ANSWER-RESULT-LABEL%', $this->answer_result_label, $template );
@@ -1466,6 +1497,7 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
         }
 
         $that=$this;
+
         /** Start Question replace*/
         $pattern  = '\[(\[?)(QUESTION_CONTAINER)\b([^\]\/]*(?:\/(?!\])[^\]\/]*)*?)(?:(\/)\]|\](?:([^\[]*+(?:\[(?!\/\2\])[^\[]*+)*+)\[\/\2\])?)(\]?)';
         $template = preg_replace_callback( "/$pattern/s", function($m) use ($that){
@@ -1486,8 +1518,10 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
 
         $template = "";
         if( $load_css ) {
-            $template .= '<style scoped>' . self::return_poll_css( $template_css, array( "location" => $location ) ) . '</style>';
+            $template .= '<style scoped>' . self::return_poll_css( $template_css, array( "location" => $location ) ) .' .yop-poll-forms-display{ opacity:0;}' . '</style>';
+
         }
+
 
         $template .= '<div id="yop-poll-container-' . $this->ID . $unique_id . '" class="yop-poll-container">';
         if( ! $msgDivS ) {
@@ -1497,7 +1531,8 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
             $template .= '<div id="yop-poll-container-error-' . $this->ID . $unique_id . '" class="yop-poll-container-error"></div>';
         }
 
-        $template .= '<form id="yop-poll-form-' . $this->ID . $unique_id . '" class="yop-poll-forms">' . $temp . '<input type="hidden" id="yop-poll-tr-id-' . $this->ID . $unique_id . '" name="yop_poll_tr_id" value="' . $tr_id . '"/>' . wp_nonce_field( 'yop_poll-' . $this->ID . $unique_id . '-user-actions', 'yop-poll-nonce-' . $this->ID . $unique_id, false, false ) . '</form></div>';
+        $template .= '<form id="yop-poll-form-' . $this->ID . $unique_id . '" class="yop-poll-forms yop-poll-forms-display">' . $temp . '<input type="hidden" id="yop-poll-tr-id-' . $this->ID . $unique_id . '" name="yop_poll_tr_id" value="' . $tr_id . '"/>' . wp_nonce_field( 'yop_poll-' . $this->ID . $unique_id . '-user-actions', 'yop-poll-nonce-' . $this->ID . $unique_id, false, false ) . '</form></div>';
+
 
 
         return $template;

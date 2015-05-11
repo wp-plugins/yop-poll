@@ -57,13 +57,13 @@ function yop_poll_runEval(poll_id, unique_id) {
     if(tabulate.results || tabulate.orizontal_results!=0)
         eval( "if(typeof window.tabulate_results_" + poll_id + unique_id + " == 'function') tabulate_results_" + poll_id + unique_id + "(); " )
 
-    if(tabulate.answers || tabulate.orizontal_answers!=0)
+    //if(tabulate.answers || tabulate.orizontal_answers!=0)
         eval( "if(typeof window.tabulate_answers_" + poll_id + unique_id + " == 'function') tabulate_answers_" + poll_id + unique_id + "(); " );
 
 
     eval( "if(typeof runOnPollStateChange_" + poll_id + unique_id + " == 'function') runOnPollStateChange_" + poll_id +
         unique_id + "(); " );
-
+    jQuery('.yop-poll-forms').removeClass("yop-poll-forms-display");
 
 }
 
@@ -99,14 +99,7 @@ function yop_poll_show_message(message, poll_id, unique_id, type, scrollTo) {
         var container = jQuery('html body'),
             scrollTo = jQuery('#yop-poll-container-error-' + poll_id + unique_id );
 
-        container.scrollTop(
-            scrollTo.offset().top - container.offset().top + container.scrollTop()
-        );
 
-// Or you can animate the scrolling:
-        container.animate({
-            scrollTop: scrollTo.offset().top - container.offset().top + container.scrollTop()
-        })
     }
     else {
         jQuery( '#yop-poll-container-error-' + poll_id + unique_id ).html( "" );
@@ -114,7 +107,7 @@ function yop_poll_show_message(message, poll_id, unique_id, type, scrollTo) {
     }
     if( scrollTo ) {
         var top = jQuery( "#yop-poll-container-" + type + "-" + poll_id + unique_id ).position().top;
-        jQuery( 'html, body' ).animate( {scrollTop: top + "px"}, 800 );
+        jQuery( 'html, body' ).scrollTop( top);
     }
 }
 

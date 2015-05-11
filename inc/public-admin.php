@@ -188,7 +188,7 @@
 
 
 
-            public function return_yop_poll( $id, $results, $tr_id = '', $offset = 0 ) {
+        public function return_yop_poll( $id, $results, $tr_id = '',$show_results="", $offset = 0 ) {
             //$pro_options = get_option( 'yop_poll_pro_options' );
             $options = get_option( 'yop_poll_options' );
             require_once( YOP_POLL_MODELS . "poll_model.php" );
@@ -260,10 +260,14 @@
             if( $results ) {
                 $yop_poll_model->vote = true;
             }
-            $template               = $yop_poll_model->return_poll_html( array( 'tr_id'    => $tr_id,
-                                                                                'location' => 'page',
-                                                                                'load_css' => true, 'load_js' => true
-                                                                         ) );
+
+            $template               =  $yop_poll_model->return_poll_html( array( 'tr_id'    => $tr_id,
+
+                'location' => 'page',
+                'load_css' => true,
+                'load_js' => true ,
+                'show_results'=>$show_results
+            ) );
             $yop_poll_public_config = array(
                 'poll_options'      => array(
                     'vote_permisions'                 => $yop_poll_model->vote_permisions,
@@ -365,13 +369,15 @@
         }
 
         public function yop_poll_shortcode_function( $atts, $content = null ) {
+
             extract( shortcode_atts( array(
-                                         'id'      => - 1,
-                                         'results' => 0,
-                                         'tr_id'   => '',
-                                         'offset'  => 0,
-                                     ), $atts ) );
-            return $this->return_yop_poll( $id, $results, $tr_id, $offset );
+                'id'      => - 1,
+                'results' => 0,
+                'tr_id'   => '',
+                'offset'  => 0,
+                'show_results'=>''
+            ), $atts ) );
+            return $this->return_yop_poll( $id, $results, $tr_id,$show_results, $offset );
 
         }
 

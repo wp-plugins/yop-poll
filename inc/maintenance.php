@@ -556,7 +556,199 @@ NOWDOC;
         if ( version_compare( $installed_version, '5.5', '<=' ) ){
             update_option( "yop_poll_version", YOP_POLL_VERSION );
         }
+        $installed_version = get_option( "yop_poll_version" );
 
+        if ( version_compare( $installed_version, '5.6', '<=' ) ){
+            global $wpdb;
+            update_option( "yop_poll_version", YOP_POLL_VERSION );
+            $default_poll_options = get_option( 'yop_poll_options' );
+            $default_poll_options['show_results_in']="bar";
+            update_option( 'yop_poll_options', $default_poll_options );
+
+            $wpdb->query( 'ALTER TABLE `' . $wpdb->yop_poll_templates . '` ADD `after_vote_template_chart` text' );
+            $templates     =      self::yop_poll_get_templates_new_version_from_db();
+            foreach($templates as $template){
+                $template['js']=  <<<NOWDOC
+	function stripBorder_%POLL-ID%(object) {
+	object.each(function() {
+		if( parseInt(jQuery(this).width() ) > 0) {
+			jQuery(this).width(
+				parseInt(
+					jQuery(this).width() ) -
+					parseInt(jQuery(this).css("border-left-width")) -
+					parseInt(jQuery(this).css("border-right-width"))
+			);
+			}
+		else {
+		jQuery(this).css("border-left-width", "0px");
+		jQuery(this).css("border-right-width", "0px");
+		}
+	});
+}
+function stripPadding_%POLL-ID%(object) {
+	object.each(function() {
+		jQuery(this).width(
+		parseInt( jQuery(this).width() ) -
+		parseInt(jQuery(this).css("padding-left")) -
+		parseInt(jQuery(this).css("padding-left"))
+		);
+	});
+}
+
+function strip_results_%POLL-ID%() {
+	stripPadding_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop_poll_li_result-%POLL-ID%") );
+	stripBorder_%POLL-ID%(  jQuery("#yop-poll-container-%POLL-ID% .yop-poll-result-bar-%POLL-ID%") );
+}
+
+jQuery(document).ready(function(e) {
+   jQuery('.yop-poll-forms').removeClass('yop-poll-forms-display');
+	if(typeof window.strip_results_%POLL-ID% == "function")
+		strip_results_%POLL-ID%();
+	if(typeof window.tabulate_answers_%POLL-ID% == "function")
+		tabulate_answers_%POLL-ID%();
+	if(typeof window.tabulate_results_%POLL-ID% == "function")
+		tabulate_results_%POLL-ID%();
+
+
+
+});
+
+function equalWidth_%POLL-ID%(obj, cols, findWidest ) {
+
+    findWidest  = typeof findWidest  !== "undefined" ? findWidest  : false;
+    var quest=0;
+    if ( findWidest ) {
+        obj.each(function() {
+            var thisWidth = jQuery(this).width();
+            width = parseInt(thisWidth / cols);
+            jQuery(this).width(width);
+            jQuery(this).css("float", "left");
+        });
+    }
+    else {
+        var widest = 0;
+        var count  = 0;
+        var poz_each_question=0;
+
+        obj.each(function() {
+
+            count++;
+            cols[quest][2]=(jQuery('#yop-poll-answers-%POLL-ID%-'+ cols[quest][3] +' li').length);
+            var thisWidth = jQuery(this).width();
+            if(thisWidth > widest) {
+                widest = thisWidth;
+            }
+            if(count<cols[quest][2])
+            { width = parseInt( %POLL-WIDTH% / cols[quest][0]);
+             if(cols[quest][0]==1)
+                        jQuery(".yop-poll-li-answer-%POLL-ID%-"+cols[quest][3]).css("width","100%");
+             else
+                         jQuery(".yop-poll-li-answer-%POLL-ID%-"+cols[quest][3]).width(width-20);
+             jQuery(".yop-poll-li-answer-%POLL-ID%-"+cols[quest][3]).css("float", "left");
+            }
+            else
+            {
+                count=0;
+
+
+                width = parseInt( %POLL-WIDTH% / cols[quest][0]);
+                jQuery(".yop-poll-li-answer-%POLL-ID%-"+cols[quest][3]).width(width-20);
+                jQuery(".yop-poll-li-answer-%POLL-ID%-"+cols[quest][3]).css("float", "left");
+                quest++;
+            }
+
+        });
+}
+}
+
+function equalWidth2_%POLL-ID%(obj, cols, findWidest ) {
+    findWidest  = typeof findWidest  !== "undefined" ? findWidest  : false;
+    var quest=0;
+
+    if ( findWidest ) {
+        obj.each(function() {
+            var thisWidth = jQuery(this).width();
+            width = parseInt(thisWidth / cols);
+            jQuery(this).width(width);
+            jQuery(this).css("float", "left");
+        });
+    }
+    else {
+        var widest = 0;
+        var count  = 0;
+        var poz_each_question=0;
+
+        obj.each(function() {
+            count++;
+            cols[quest][2]=(jQuery('#yop-poll-answers-%POLL-ID%-'+ cols[quest][3] +' li').length);
+            var thisWidth = jQuery(this).width();
+            if(thisWidth > widest) {
+                widest = thisWidth;
+            }
+            if(count<cols[quest][2])
+            { width = parseInt( %POLL-WIDTH% / cols[quest][1]);
+             jQuery(".yop-poll-li-result-%POLL-ID%-"+cols[quest][3]).width(width-20);
+             jQuery(".yop-poll-li-result-%POLL-ID%-"+cols[quest][3]).css("float", "left");
+            }
+            else
+            {
+                count=0;
+
+
+                width = parseInt( %POLL-WIDTH% / cols[quest][1]);
+                jQuery(".yop-poll-li-result-%POLL-ID%-"+cols[quest][3]).width(width-20);
+                jQuery(".yop-poll-li-result-%POLL-ID%-"+cols[quest][3]).css("float", "left");
+                quest++;
+            }
+
+        });
+}
+}
+function tabulate_answers_%POLL-ID%() {
+
+	equalWidth_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID%"), %ANSWERS-TABULATED-COLS% );
+	//equalWidth_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop-poll-li-answer-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div "), %ANSWERS-TABULATED-COLS%, true );
+}
+
+function tabulate_results_%POLL-ID%() {
+	equalWidth2_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID%"), %RESULTS-TABULATED-COLS% );
+	//equalWidth_%POLL-ID%( jQuery("#yop-poll-container-%POLL-ID% .yop-poll-li-result-%POLL-ID% .yop-poll-results-bar-%POLL-ID% div "), %RESULTS-TABULATED-COLS%, true );
+	}
+
+jQuery(document).ready(function(){
+	runOnPollStateChange_%POLL-ID%();
+});
+
+function runOnPollStateChange_%POLL-ID%() {
+
+};
+NOWDOC;
+                $template['after_vote_template_chart']=  <<<NOWDOC
+	[QUESTION_CONTAINER]
+	<div id = "yop-poll-question-container-%POLL-ID%-%QUESTION-ID%" class = "yop-poll-question-container-%POLL-ID%">
+		<div id = "yop-poll-question-%POLL-ID%-%QUESTION-ID%"
+             class = "yop-poll-question-%POLL-ID%">%POLL-QUESTION%</div>
+		<div id = "yop-poll-answers-%POLL-ID%-%QUESTION-ID%" class = "yop-poll-answers-%POLL-ID%">
+                       <div id = "yop-poll-answers-chart-canvas-%POLL-ID%-%QUESTION-ID%" style="text-align:center;"  class="yop-poll-answers-container-chart-%POLL-ID% yop-poll-center-chart">
+			<canvas id="yop-poll-answers-chart-%POLL-ID%-%QUESTION-ID%" class="yop-poll-answers-chart"></canvas>
+                       </div>
+		</div>
+	</div>
+	<div class = "yop-poll-clear-%POLL-ID%"></div>
+	[/QUESTION_CONTAINER]
+<div id = "yop-poll-vote-%POLL-ID%" class = "yop-poll-footer">
+	<div>%POLL-TOTAL-ANSWERS-LABEL%</div>
+	<div>%POLL-TOTAL-VOTES-LABEL%</div>
+	<div id = "yop-poll-back-%POLL-ID%">%POLL-BACK-TO-VOTE-LINK%</div>
+	<div id = "yop-poll-archive-%POLL-ID%">%POLL-VIEW-ARCHIVE-LINK%</div>
+	%SHARE-BUTTON%
+</div>
+NOWDOC;
+                self::update_poll_template_in_database2(($template));
+            }
+            update_option( "yop_poll_version", '5.7' );
+
+        }
     }
     public function yop_poll_get_polls_for_body_mail_update(){
         global $wpdb;
@@ -630,7 +822,7 @@ NOWDOC;
         $old_blog = $GLOBALS['wpdb']->blogid;
         switch_to_blog( $blog_id );
         yop_poll_create_table_names( $GLOBALS['wpdb']->prefix );
-        $this->deactivate( null );
+        $this->deactivatedelete( null );
         require_once( YOP_POLL_INC . 'db_schema.php' );
         // Yop_Poll_DbSchema::delete_database_tables();
         $capObj = YOP_POLL_Capabilities::get_instance();
@@ -719,60 +911,108 @@ function strip_results_%POLL-ID%() {
 }
 
 jQuery(document).ready(function(e) {
+   jQuery('.yop-poll-forms').removeClass('yop-poll-forms-display');
 	if(typeof window.strip_results_%POLL-ID% == "function")
 		strip_results_%POLL-ID%();
 	if(typeof window.tabulate_answers_%POLL-ID% == "function")
 		tabulate_answers_%POLL-ID%();
 	if(typeof window.tabulate_results_%POLL-ID% == "function")
 		tabulate_results_%POLL-ID%();
+
+
+
 });
 
 function equalWidth_%POLL-ID%(obj, cols, findWidest ) {
-	findWidest  = typeof findWidest  !== "undefined" ? findWidest  : false;
-	if ( findWidest ) {
-		obj.each(function() {
-			var thisWidth = jQuery(this).width();
-			width = parseInt(thisWidth / cols);
-			jQuery(this).width(width);
-			jQuery(this).css("float", "left");
-		});
-	}
-	else {
-		var widest = 0;
-		obj.each(function() {
-			var thisWidth = jQuery(this).width();
-			if(thisWidth > widest) {
-				widest = thisWidth;
-			}
-		});
-		width = parseInt( %POLL-WIDTH% / cols[0]);
-		obj.width(width-20);
-		obj.css("float", "left");
-	}
+
+    findWidest  = typeof findWidest  !== "undefined" ? findWidest  : false;
+    var quest=0;
+    if ( findWidest ) {
+        obj.each(function() {
+            var thisWidth = jQuery(this).width();
+            width = parseInt(thisWidth / cols);
+            jQuery(this).width(width);
+            jQuery(this).css("float", "left");
+        });
+    }
+    else {
+        var widest = 0;
+        var count  = 0;
+        var poz_each_question=0;
+
+        obj.each(function() {
+
+            count++;
+            cols[quest][2]=(jQuery('#yop-poll-answers-%POLL-ID%-'+ cols[quest][3] +' li').length);
+            var thisWidth = jQuery(this).width();
+            if(thisWidth > widest) {
+                widest = thisWidth;
+            }
+            if(count<cols[quest][2])
+            { width = parseInt( %POLL-WIDTH% / cols[quest][0]);
+             if(cols[quest][0]==1)
+                        jQuery(".yop-poll-li-answer-%POLL-ID%-"+cols[quest][3]).css("width","100%");
+             else
+                         jQuery(".yop-poll-li-answer-%POLL-ID%-"+cols[quest][3]).width(width-20);
+             jQuery(".yop-poll-li-answer-%POLL-ID%-"+cols[quest][3]).css("float", "left");
+            }
+            else
+            {
+                count=0;
+
+
+                width = parseInt( %POLL-WIDTH% / cols[quest][0]);
+                jQuery(".yop-poll-li-answer-%POLL-ID%-"+cols[quest][3]).width(width-20);
+                jQuery(".yop-poll-li-answer-%POLL-ID%-"+cols[quest][3]).css("float", "left");
+                quest++;
+            }
+
+        });
+}
 }
 
 function equalWidth2_%POLL-ID%(obj, cols, findWidest ) {
-	findWidest  = typeof findWidest  !== "undefined" ? findWidest  : false;
-	if ( findWidest ) {
-		obj.each(function() {
-			var thisWidth = jQuery(this).width();
-			width = parseInt(thisWidth / cols);
-			jQuery(this).width(width);
-			jQuery(this).css("float", "left");
-		});
-	}
-	else {
-		var widest = 0;
-		obj.each(function() {
-			var thisWidth = jQuery(this).width();
-			if(thisWidth > widest) {
-				widest = thisWidth;
-			}
-		});
-		width = parseInt( %POLL-WIDTH% / cols[1]);
-		obj.width(width-20);
-		obj.css("float", "left");
-	}
+    findWidest  = typeof findWidest  !== "undefined" ? findWidest  : false;
+    var quest=0;
+
+    if ( findWidest ) {
+        obj.each(function() {
+            var thisWidth = jQuery(this).width();
+            width = parseInt(thisWidth / cols);
+            jQuery(this).width(width);
+            jQuery(this).css("float", "left");
+        });
+    }
+    else {
+        var widest = 0;
+        var count  = 0;
+        var poz_each_question=0;
+
+        obj.each(function() {
+            count++;
+            cols[quest][2]=(jQuery('#yop-poll-answers-%POLL-ID%-'+ cols[quest][3] +' li').length);
+            var thisWidth = jQuery(this).width();
+            if(thisWidth > widest) {
+                widest = thisWidth;
+            }
+            if(count<cols[quest][2])
+            { width = parseInt( %POLL-WIDTH% / cols[quest][1]);
+             jQuery(".yop-poll-li-result-%POLL-ID%-"+cols[quest][3]).width(width-20);
+             jQuery(".yop-poll-li-result-%POLL-ID%-"+cols[quest][3]).css("float", "left");
+            }
+            else
+            {
+                count=0;
+
+
+                width = parseInt( %POLL-WIDTH% / cols[quest][1]);
+                jQuery(".yop-poll-li-result-%POLL-ID%-"+cols[quest][3]).width(width-20);
+                jQuery(".yop-poll-li-result-%POLL-ID%-"+cols[quest][3]).css("float", "left");
+                quest++;
+            }
+
+        });
+}
 }
 function tabulate_answers_%POLL-ID%() {
 
