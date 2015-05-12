@@ -566,6 +566,13 @@ NOWDOC;
             update_option( 'yop_poll_options', $default_poll_options );
 
             $wpdb->query( 'ALTER TABLE `' . $wpdb->yop_poll_templates . '` ADD `after_vote_template_chart` text' );
+            update_option( "yop_poll_version", '5.7' );
+
+        }
+        if ( version_compare( $installed_version, '5.7', '<=' ) ){
+            global $wpdb;
+            update_option( "yop_poll_version", YOP_POLL_VERSION );
+
             $templates     =      self::yop_poll_get_templates_new_version_from_db();
             foreach($templates as $template){
                 $template['js']=  <<<NOWDOC
@@ -746,9 +753,27 @@ NOWDOC;
 NOWDOC;
                 self::update_poll_template_in_database2(($template));
             }
-            update_option( "yop_poll_version", '5.7' );
+            update_option( "yop_poll_version", '5.7.1' );
 
         }
+    }
+    private static function update_poll_template_in_database2( $template ) {
+        global $wpdb;
+        $sql = $wpdb->query( $wpdb->prepare( "
+					UPDATE " . $wpdb->yop_poll_templates . "
+					SET name = %s,
+					before_vote_template = %s,
+					after_vote_template = %s,
+					after_vote_template_chart = %s,
+					before_start_date_template = %s,
+					after_end_date_template = %s,
+					css = %s,
+					js = %s,
+					last_modified = %s
+					WHERE
+					id = %d
+					", $template['name'], $template['before_vote_template'], $template['after_vote_template'],$template['after_vote_template_chart'], $template['before_start_date_template'], $template['after_end_date_template'], $template['css'], $template['js'], current_time( 'mysql' ), $template['id'] ) );
+        return $sql;
     }
     public function yop_poll_get_polls_for_body_mail_update(){
         global $wpdb;

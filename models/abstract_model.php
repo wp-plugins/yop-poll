@@ -1861,8 +1861,6 @@ abstract class YOP_POLL_Abstract_Model {
    					LIMIT 1", $this->ID, $user_id, $value );
         $result = $wpdb->get_results($sql,ARRAY_A );
 
-        yop_poll_dump($sql);
-
         if(isset($result[0]['vote_date']))
             return true;
         else
