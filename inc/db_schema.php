@@ -537,6 +537,7 @@
 					%POLL-OTHER-ANSWER-LABEL%
 					<span id = "yop-poll-results-text-%POLL-ID%-%QUESTION-ID%"
                           class = "yop-poll-results-text-%POLL-ID%">%POLL-ANSWER-RESULT-LABEL%</span>
+
 					%POLL-OTHER-ANSWER-TEXT-INPUT%
 					%POLL-ANSWER-RESULT-BAR%
 				</li>
@@ -862,7 +863,14 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
-
+#yop-poll-other-answer-%POLL-ID%-other {
+    border:1px solid #000000;
+    color:#000000;
+}
+.yop-poll-customfield-%POLL-ID% {
+border:1px solid #000000;
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#fff;
   box-sizing: border-box;
@@ -1116,7 +1124,15 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    border:1px solid #000000;
+    color:#000000;
 
+}
+.yop-poll-customfield-%POLL-ID% {
+border:1px solid #000000;
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#eee;
   box-sizing: border-box;
@@ -1378,7 +1394,13 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    color:#000000;
 
+}
+.yop-poll-customfield-%POLL-ID% {
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#555;
   box-sizing: border-box;
@@ -1640,7 +1662,13 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    color:#000000;
 
+}
+.yop-poll-customfield-%POLL-ID% {
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#327BD6;
   box-sizing: border-box;
@@ -1894,7 +1922,13 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    color:#000000;
 
+}
+.yop-poll-customfield-%POLL-ID% {
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#fff;
   box-sizing: border-box;
@@ -2150,6 +2184,15 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    border:1px solid #000000;
+    color:#000000;
+
+}
+.yop-poll-customfield-%POLL-ID% {
+border:1px solid #000000;
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#fff;
   box-sizing: border-box;
@@ -2404,7 +2447,13 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    color:#000000;
 
+}
+.yop-poll-customfield-%POLL-ID% {
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#B70004;
   box-sizing: border-box;
@@ -2658,7 +2707,15 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    border:1px solid #000000;
+    color:#000000;
 
+}
+.yop-poll-customfield-%POLL-ID% {
+border:1px solid #000000;
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#fff;
   box-sizing: border-box;
@@ -2914,7 +2971,15 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    border:1px solid #000000;
+    color:#000000;
 
+}
+.yop-poll-customfield-%POLL-ID% {
+border:1px solid #000000;
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#fff;
   box-sizing: border-box;
@@ -3169,7 +3234,13 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    color:#000000;
 
+}
+.yop-poll-customfield-%POLL-ID% {
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#3F8B43;
   box-sizing: border-box;
@@ -3423,7 +3494,15 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    border:1px solid #000000;
+    color:#000000;
 
+}
+.yop-poll-customfield-%POLL-ID% {
+border:1px solid #000000;
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#fff;
   box-sizing: border-box;
@@ -3680,7 +3759,15 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    border:1px solid #000000;
+    color:#000000;
 
+}
+.yop-poll-customfield-%POLL-ID% {
+border:1px solid #000000;
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#fff;
   box-sizing: border-box;
@@ -3935,6 +4022,13 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    color:#000000;
+
+}
+.yop-poll-customfield-%POLL-ID% {
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#FB6911;
   box-sizing: border-box;
@@ -4189,6 +4283,15 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    border:1px solid #000000;
+    color:#000000;
+
+}
+.yop-poll-customfield-%POLL-ID% {
+border:1px solid #000000;
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#fff;
   box-sizing: border-box;
@@ -4444,7 +4547,15 @@ NOWDOC;
   Main Container
   ---------------------------------------------------------------------------
 */
+#yop-poll-other-answer-%POLL-ID%-other {
+    border:1px solid #000000;
+    color:#000000;
 
+}
+.yop-poll-customfield-%POLL-ID% {
+border:1px solid #000000;
+    color:#000000;
+}
 div#yop-poll-container-%POLL-ID% {
   background:#fff;
   box-sizing: border-box;

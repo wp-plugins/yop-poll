@@ -260,7 +260,6 @@
             if( $results ) {
                 $yop_poll_model->vote = true;
             }
-
             $template               =  $yop_poll_model->return_poll_html( array( 'tr_id'    => $tr_id,
 
                 'location' => 'page',
@@ -337,9 +336,10 @@
                     if( 'tabulated' == $question->display_results )
                         $tabulate['results']=true;
                 }
-            wp_localize_script( 'yop-poll-public-js', 'tabulate', $tabulate );
+
 
             wp_enqueue_script( 'yop-poll-public-js', YOP_POLL_URL . "js/yop-poll-public.js", array( 'jquery' ), YOP_POLL_VERSION, true );
+            wp_localize_script( 'yop-poll-public-js', 'tabulate', $tabulate );
             wp_enqueue_script( 'yop-poll-supercookie-js', YOP_POLL_URL . "js/yop-poll-supercookie.js", array( 'jquery' ), YOP_POLL_VERSION, true );
             wp_enqueue_script( 'superCookie-min-js', YOP_POLL_URL . "js/super-cookie/superCookie-min.js", array( 'jquery' ), YOP_POLL_VERSION, true );
             wp_enqueue_script( 'swfobject-js', YOP_POLL_URL . "js/super-cookie/swfobject/swfobject.js", array( 'jquery' ), YOP_POLL_VERSION, true );

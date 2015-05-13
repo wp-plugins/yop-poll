@@ -751,10 +751,14 @@ NOWDOC;
 	%SHARE-BUTTON%
 </div>
 NOWDOC;
-                self::update_poll_template_in_database2(($template));
+                self::update_poll_template_in_database2($template);
             }
             update_option( "yop_poll_version", '5.7.1' );
 
+        }
+        if ( version_compare( $installed_version, '5.7.1', '<=' ) ){
+            global $wpdb;
+            update_option( "yop_poll_version", '5.7.2' );
         }
     }
     private static function update_poll_template_in_database2( $template ) {

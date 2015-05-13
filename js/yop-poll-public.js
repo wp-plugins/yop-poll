@@ -52,10 +52,12 @@ jQuery(document).ready(function(){
 
 });
 function yop_poll_runEval(poll_id, unique_id) {
-	   
+
     eval("if(typeof window.strip_results_" + poll_id + unique_id + " == 'function')  strip_results_"+poll_id + unique_id +"();");
-    if(tabulate.results || tabulate.orizontal_results!=0)
-        eval( "if(typeof window.tabulate_results_" + poll_id + unique_id + " == 'function') tabulate_results_" + poll_id + unique_id + "(); " )
+
+    if (typeof tabulate !== 'undefined')
+     if(tabulate.results || tabulate.orizontal_results!=0)
+          eval( "if(typeof window.tabulate_results_" + poll_id + unique_id + " == 'function') tabulate_results_" + poll_id + unique_id + "(); " )
 
     //if(tabulate.answers || tabulate.orizontal_answers!=0)
         eval( "if(typeof window.tabulate_answers_" + poll_id + unique_id + " == 'function') tabulate_answers_" + poll_id + unique_id + "(); " );
@@ -268,7 +270,7 @@ function yop_poll_vote_on_multiple_options(poll_id, vote_type, poll_location, un
             jQuery( '#yop_poll_wordpress-vote-button-' + poll_id + unique_id ).hide();
             jQuery( '#yop_poll_anonimous-vote-button-' + poll_id + unique_id).hide();
             var back_to_vote_loading_image = document.createElement( 'img' );
-            jQuery( back_to_vote_loading_image).css('margin-left','40%')
+            jQuery( back_to_vote_loading_image).css('margin-left','45%')
             back_to_vote_loading_image.src = yop_poll_public_config.loading_image_src;
             back_to_vote_loading_image.alt = yop_poll_public_config.loading_image_alt;
             back_to_vote_loading_image.id = 'yop_poll_wordpress_loading_img-' + poll_id + unique_id;
@@ -317,7 +319,7 @@ function yop_poll_vote_on_multiple_options(poll_id, vote_type, poll_location, un
             jQuery( '#yop_poll_wordpress-vote-button-' + poll_id + unique_id ).hide();
             jQuery( '#yop_poll_anonimous-vote-button-' + poll_id + unique_id).hide();
             var back_to_vote_loading_image = document.createElement( 'img' );
-            jQuery( back_to_vote_loading_image).css('margin-left','40%')
+            jQuery( back_to_vote_loading_image).css('margin-left','45%')
             back_to_vote_loading_image.src = yop_poll_public_config.loading_image_src;
             back_to_vote_loading_image.alt = yop_poll_public_config.loading_image_alt;
             back_to_vote_loading_image.id = 'yop_poll_wordpress_loading_img-' + poll_id + unique_id;
@@ -574,7 +576,7 @@ function yop_poll_view_results( poll_id, poll_location, unique_id ) {
     result_link_loading_image.id = 'yop_poll_result_link_loading_img-' + poll_id + unique_id;
 
     jQuery( '#yop_poll_result_link' + poll_id + unique_id ).after( result_link_loading_image );
-    jQuery( result_link_loading_image).css('padding-right','80%')
+    jQuery( result_link_loading_image).css('padding-right','50%')
 
     //jQuery( '#yop_poll_result_link_loading_img-' + poll_id + unique_id ).css( 'border', 'none' );
    /* jQuery( result_link_loading_image).css(
@@ -602,10 +604,11 @@ function yop_poll_view_results( poll_id, poll_location, unique_id ) {
          jQuery( '#yop_poll_result_link_loading_img-' + poll_id + unique_id ).remove();
 
             jQuery( '#yop_poll_result_link' + poll_id + unique_id ).show();
-
+            jQuery('.yop-poll-forms').removeClass('yop-poll-forms-display');
         },
 
         success: function( data ) {
+
             data = yop_poll_extractResponse( data );
 
 
@@ -617,7 +620,7 @@ function yop_poll_view_results( poll_id, poll_location, unique_id ) {
 
                 //jQuery( '#yop_poll_vote_button_loading_img-' + poll_id + unique_id ).remove();
 
-
+                jQuery('.yop-poll-forms').removeClass('yop-poll-forms-display');
                 jQuery( '#yop-poll-container-error-' + poll_id + unique_id ).html( response.error );
 
                 jQuery( '#yop-poll-container-success-' + poll_id + unique_id ).html( '' );
@@ -633,7 +636,7 @@ function yop_poll_view_results( poll_id, poll_location, unique_id ) {
                     jQuery( '#yop-poll-container-error-' + poll_id + unique_id ).html( '' );
 
                     jQuery( '#yop-poll-container-success-' + poll_id + unique_id ).html( response.success );
-
+                    jQuery('.yop-poll-forms').removeClass('yop-poll-forms-display');
                     yop_poll_runEval( poll_id, unique_id );
 
                 }
@@ -652,9 +655,12 @@ function yop_poll_view_results( poll_id, poll_location, unique_id ) {
 
            jQuery( '#yop_poll_result_link' + poll_id + unique_id ).show();
 
+
         }
 
     } );
+    jQuery('.yop-poll-forms').removeClass('yop-poll-forms-display');
+
 }
 
 function yop_poll_back_to_vote(poll_id, poll_location, unique_id) {
@@ -663,7 +669,7 @@ function yop_poll_back_to_vote(poll_id, poll_location, unique_id) {
     var yop_poll_public_config = window['yop_poll_public_config_' + poll_id + unique_id ];
     jQuery( '#yop_poll_back_to_vote_link' + poll_id + unique_id ).hide();
     var back_to_vote_loading_image = document.createElement( 'img' );
-    jQuery( back_to_vote_loading_image).css('margin-left','40%')
+    jQuery( back_to_vote_loading_image).css('margin-left','45%')
     back_to_vote_loading_image.src = yop_poll_public_config.loading_image_src;
     back_to_vote_loading_image.alt = yop_poll_public_config.loading_image_alt;
     back_to_vote_loading_image.id = 'yop_poll_back_to_vote_loading_img-' + poll_id + unique_id;
@@ -680,13 +686,18 @@ function yop_poll_back_to_vote(poll_id, poll_location, unique_id) {
                          alert( 'An error has occured!' );
                          jQuery( '#yop_poll_back_to_vote_loading_img-' + poll_id + unique_id ).remove();
                          jQuery( '#yop_poll_result_link' + poll_id + unique_id ).show();
+                         jQuery('.yop-poll-forms').removeClass('yop-poll-forms-display');
+
                      },
                      success: function(data) {
                          data = yop_poll_extractResponse( data );
                          response = JSON.parse( data );
+                         jQuery('.yop-poll-forms').removeClass('yop-poll-forms-display');
                          if( '' != response.error ) {
                              jQuery( '#yop-poll-container-error-' + poll_id + unique_id ).html( response.error );
                              jQuery( '#yop-poll-container-success-' + poll_id + unique_id ).html( '' );
+                             jQuery('.yop-poll-forms').removeClass('yop-poll-forms-display');
+
                          }
                          else {
                              if( '' != response.message ) {
@@ -694,24 +705,30 @@ function yop_poll_back_to_vote(poll_id, poll_location, unique_id) {
                                  jQuery( '#yop-poll-container-error-' + poll_id + unique_id ).html( '' );
                                  jQuery( '#yop-poll-container-success-' + poll_id +
                                          unique_id ).html( response.success );
+                                 jQuery('.yop-poll-forms').removeClass('yop-poll-forms-display');
                                  yop_poll_runEval( poll_id, unique_id );
+
                              }
                              else {
                                  jQuery( '#yop-poll-container-error-' + poll_id +
                                          unique_id ).html( 'An Error Has Occured!' );
                                  jQuery( '#yop-poll-container-success-' + poll_id + unique_id ).html( '' );
+                                 jQuery('.yop-poll-forms').removeClass('yop-poll-forms-display');
                              }
                          }
                          jQuery( '#yop_poll_back_to_vote_loading_img-' + poll_id + unique_id ).remove();
                          jQuery( '#yop_poll_result_link' + poll_id + unique_id ).show();
+                         jQuery('.yop-poll-forms').removeClass('yop-poll-forms-display');
+
                      }
                  } );
+    jQuery('.yop-poll-forms').removeClass('yop-poll-forms-display');
 }
 
 function yop_poll_show_loading(target, loading_img_id, yop_poll_public_config) {
     jQuery( '#' + target ).hide();
     var target_loading_image = document.createElement( 'img' );
-    jQuery(target_loading_image).css('margin-left','40%')
+    jQuery(target_loading_image).css('margin-left','45%')
     target_loading_image.src = yop_poll_public_config.loading_image_src;
     target_loading_image.alt = yop_poll_public_config.loading_image_alt;
     target_loading_image.id = loading_img_id;

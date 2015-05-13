@@ -142,6 +142,9 @@ You can have only one question per poll. If you want to ask more than one questi
 
 == Changelog ==
 
+= 5.7.2 =
+* Display poll improvements
+
 = 5.7.1 =
 * Fixed issue with polls not being displayed
 

@@ -293,7 +293,6 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
         $template = str_ireplace( '%POLL-ID%', $poll_id . $unique_id, $template );
         $template = str_ireplace( '%ANSWERS-TABULATED-COLS%', json_encode( $tabulate ), $template );
         $template = str_ireplace( '%POLL-WIDTH%',str_replace( "px","",$this->template_width), $template );
-        //yop_poll_dump($this->template_width);
         $template = str_ireplace( '%RESULTS-TABULATED-COLS%', json_encode( $tabulate ), $template );
         return stripslashes( $template );
     }
@@ -559,8 +558,8 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
             else {
                 $temp_answer_model = str_ireplace( '%POLL-OTHER-ANSWER-CHECK-INPUT%', '<input type="radio" value="other" name="yop_poll_answer[' . $question->ID . ']" id="yop-poll-answer-' . $this->ID . $unique_id . '-' . $question->ID . '-other" />', $m );
             }
-            $temp_answer_model = str_ireplace( '%POLL-OTHER-ANSWER-LABEL%', '<label for="yop-poll-answer-' . $this->ID . $unique_id . '-' . $question->ID . '-other">' . $other_answer_label . '</label>', $temp_answer_model );
-            $temp_answer_model = str_ireplace( '%POLL-OTHER-ANSWER-TEXT-INPUT%', '<label><input onclick="document.getElementById(\'yop-poll-answer-' . $this->ID . $unique_id . '-' . $question->ID . '-other' . '\').checked=true;" type="text" value="" name="yop_poll_other_answer[' . $question->ID . ']" id="yop-poll-other-answer-' . $this->ID . $unique_id . '-other" /></label>', $temp_answer_model );
+            $temp_answer_model = str_ireplace( '%POLL-OTHER-ANSWER-LABEL%', '<label  for="yop-poll-answer-' . $this->ID . $unique_id . '-' . $question->ID . '-other">' . $other_answer_label . '</label>', $temp_answer_model );
+            $temp_answer_model = str_ireplace( '%POLL-OTHER-ANSWER-TEXT-INPUT%', '<label style="width:100%;"><input onclick="document.getElementById(\'yop-poll-answer-' . $this->ID . $unique_id . '-' . $question->ID . '-other' . '\').checked=true;" type="text" value="" name="yop_poll_other_answer[' . $question->ID . ']" id="yop-poll-other-answer-' . $this->ID . $unique_id . '-other" /></label>', $temp_answer_model );
 
             if( $this->is_view_poll_results() ) {
                 /**Display only if other answers were not displayed */
@@ -619,7 +618,7 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                     }
                     $temp_string = str_ireplace( '%POLL-CUSTOM-FIELD-LABEL%', '<label for="yop-poll-customfield-' . $this->ID . $unique_id . '-' . $custom_field->ID . '">' . yop_poll_kses( $custom_field->custom_field ) . '</label>', $m );
 
-                    $temp_string = str_ireplace( '%POLL-CUSTOM-FIELD-TEXT-INPUT%', '<input type="text" value="" name="yop_poll_customfield[' . $question->ID . '][' . $custom_field->ID . ']" id="yop-poll-customfield-' . $this->ID . $unique_id .'-'.$custom_field->ID.'" />', $temp_string );
+                    $temp_string = str_ireplace( '%POLL-CUSTOM-FIELD-TEXT-INPUT%', '<input type="text" value="" name="yop_poll_customfield[' . $question->ID . '][' . $custom_field->ID . ']" id="yop-poll-customfield-' . $this->ID . $unique_id .'-'.$custom_field->ID.'" class='.'"yop-poll-customfield-' . $this->ID . $unique_id .'"/>', $temp_string );
                     $model .= $temp_string;
                 }
             }
