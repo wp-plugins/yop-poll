@@ -1517,7 +1517,7 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
 
         $template = "";
         if( $load_css ) {
-            $template .= '<style scoped>' . self::return_poll_css( $template_css, array( "location" => $location ) ) .' .yop-poll-forms-display{ opacity:0;}' . '</style>';
+            $template .= '<style scoped>' . self::return_poll_css( $template_css, array( "location" => $location ) ) .' .yop-poll-forms-display{} ' . '</style>';
 
         }
 

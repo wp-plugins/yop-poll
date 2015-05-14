@@ -1044,7 +1044,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -1307,7 +1307,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -1574,7 +1574,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -1842,7 +1842,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -2104,7 +2104,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -2367,7 +2367,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -2627,7 +2627,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -2891,7 +2891,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -3154,7 +3154,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -3414,7 +3414,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -3678,7 +3678,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -3942,7 +3942,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -4202,7 +4202,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -4467,7 +4467,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
@@ -4729,7 +4729,7 @@ li.yop-poll-results-%POLL-ID% {
 li.yop-poll-li-answer-%POLL-ID% {
   float: left;
   display: inline-block;
-  width: 46%;
+  width: 100%;
   padding: 1%;
   margin: 1%;
 }
