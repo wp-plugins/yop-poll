@@ -367,10 +367,6 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
         $model = "";
 
         /** Get question total votes( default + other ) */
-        $total_votes=1;
-
-       if($this->view_total_votes!="no")
-            $total_votes = $this->get_question_votes( $question );
 
         /**Is allowed to display other answers?*/
         $display_other_answers = false;
@@ -869,15 +865,15 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                                                             }
                                                         }
                                                         else {
-                                                            $this->error            = __yop_poll( 'Too few answers selected for question ' ) . $i . __yop_poll( '! Only more than ' ) . $question->allow_multiple_answers_min_number . __yop_poll( ' answers allowed!' );
-                                                            $log_to_add ['message'] = __yop_poll( 'Too few answers selected for question ' ) . $i;
+                                                            $this->error            = __yop_poll( "Too few answers selected for question " ) . $i . __yop_poll( "! Only more than " ) . $question->allow_multiple_answers_min_number . __yop_poll( " answers allowed!" );
+                                                            $log_to_add ['message'] = __yop_poll( "Too few answers selected for question ") . $i;
                                                             insert_log_in_db( $log_to_add );
                                                             return false;
                                                         }
                                                     }
                                                     else {
-                                                        $this->error            = __yop_poll( 'Too many answers selected for question ' ) . $i . __yop_poll( '! Only ' ) . $question->allow_multiple_answers_number . __yop_poll( ' answers allowed!' );
-                                                        $log_to_add ['message'] = __yop_poll( 'Too many answers selected for question ' ) . $i;
+                                                        $this->error            = __yop_poll( "Too many answers selected for question " ) . $i . __yop_poll( "! Only " ) . $question->allow_multiple_answers_number . __yop_poll( " answers allowed!" );
+                                                        $log_to_add ['message'] = __yop_poll( "Too many answers selected for question " ) . $i;
                                                         insert_log_in_db( $log_to_add );
                                                         return false;
                                                     }
@@ -900,15 +896,15 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                                                             $a->save();
 
                                                             if( ! $a->id ) {
-                                                                $this->error            = __yop_poll( 'Other answer for question ' ) . $i . __yop_poll( ' could not be inserted!' );
-                                                                $log_to_add ['message'] = __yop_poll( 'Other answer for question ' ) . $i . __yop_poll( ' could not be inserted' );
+                                                                $this->error            = __yop_poll( "Other answer for question " ) . $i . __yop_poll( " could not be inserted!" );
+                                                                $log_to_add ['message'] = __yop_poll( "Other answer for question " ) . $i . __yop_poll( " could not be inserted");
                                                                 insert_log_in_db( $log_to_add );
                                                                 return false;
                                                             }
                                                         }
                                                         else {
-                                                            $this->error            = __yop_poll( 'Other answer from question ' ) . $i . ' ' . __yop_poll( 'is empty' );
-                                                            $log_to_add ['message'] = __yop_poll( 'Other answer from question ' ) . $i . ' ' . __yop_poll( 'empty' );
+                                                            $this->error            = __yop_poll( "Other answer from question " ) . $i . ' ' . __yop_poll( 'is empty' );
+                                                            $log_to_add ['message'] = __yop_poll( "Other answer from question " ) . $i . ' ' . __yop_poll( 'empty' );
                                                             insert_log_in_db( $log_to_add );
                                                             return false;
                                                         }
@@ -947,8 +943,8 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                                                                 if( isset( $request['yop_poll_customfield'][$question->ID][$custom_field->ID] ) ) {
 
                                                                     if( '' == trim( strip_tags( $request['yop_poll_customfield'][$question->ID][$custom_field->ID] ) ) && 'yes' == $custom_field->required ) {
-                                                                        $this->error            = __yop_poll( 'Custom field ' ) . $custom_field->custom_field . __yop_poll( ' from question ' ) . $i . ' ' . __yop_poll( 'is required' ) . '!';
-                                                                        $log_to_add ['message'] = __yop_poll( 'Custom field ' ) . $custom_field->custom_field . __yop_poll( ' from question ' ) . $i . ' ' . __yop_poll( 'required' );
+                                                                        $this->error            = __yop_poll( "Custom field " ) . $custom_field->custom_field . __yop_poll( " from question " ) . $i . ' ' . __yop_poll( "is required" ) . "!";
+                                                                        $log_to_add ['message'] = __yop_poll( "Custom field " ) . $custom_field->custom_field . __yop_poll( " from question " ) . $i . ' ' . __yop_poll( "required");
                                                                         insert_log_in_db( $log_to_add );
                                                                         return false;
                                                                     }
@@ -974,16 +970,17 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                                                                     }
                                                                 }
                                                                 else {
-                                                                    $this->error            = __yop_poll( 'Custom field ' ) . '"' . $custom_field->custom_field . '"' . __yop_poll( ' from question ' ) . $i . ' ' . __yop_poll( 'is missing' ) . '!';
-                                                                    $log_to_add ['message'] = __yop_poll( 'Custom field ' ) . '"' . $custom_field->custom_field . '"' . __yop_poll( ' from question ' ) . $i . ' ' . __yop_poll( 'missing' );
+                                                                    $this->error            = __yop_poll( "Custom field " ) . '"' . $custom_field->custom_field . '"' . __yop_poll( " from question " ) . $i . ' ' . __yop_poll( "is missing ") . '!';
+
+                                                                    $log_to_add ['message'] = __yop_poll( "Custom field " ) . '"' . $custom_field->custom_field . '"' . __yop_poll( " from question " ) . $i . ' ' . __yop_poll( "missing" );
                                                                     insert_log_in_db( $log_to_add );
                                                                     return false;
                                                                 }
                                                             }
                                                         }
                                                         else {
-                                                            $this->error            = __yop_poll( 'Custom fields from question ' ) . $i . ' ' . __yop_poll( 'are missing' ) . '!';
-                                                            $log_to_add ['message'] = __yop_poll( 'Custom fields from question ' ) . $i . ' ' . __yop_poll( 'missing' ) . '!';
+                                                            $this->error            = __yop_poll( "Custom fields from question " ) . $i . ' ' . __yop_poll( "are missing" ) . '!';
+                                                            $log_to_add ['message'] = __yop_poll( "Custom fields from question " ) . $i . ' ' . __yop_poll( "missing" ) . '!';
                                                             insert_log_in_db( $log_to_add );
                                                             return false;
                                                         }
@@ -1026,8 +1023,8 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                                                             }
                                                         }
                                                         else {
-                                                            $this->error            = __yop_poll( 'Incorrect security code entered!' );
-                                                            $log_to_add ['message'] = __yop_poll( 'Incorrect security code entered' );
+                                                            $this->error            = __yop_poll( "Incorrect security code entered!" );
+                                                            $log_to_add ['message'] = __yop_poll( "Incorrect security code entered" );
                                                             insert_log_in_db( $log_to_add );
                                                             return false;
                                                         }
@@ -1074,15 +1071,15 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                                                     }
                                                 }
                                                 else {
-                                                    $this->error            = __yop_poll( 'No vote registered!' );
-                                                    $log_to_add ['message'] = __yop_poll( 'No vote registered' );
+                                                    $this->error            = __yop_poll( "No vote registered!" );
+                                                    $log_to_add ['message'] = __yop_poll( "No vote registered" );
                                                     insert_log_in_db( $log_to_add );
                                                     return false;
                                                 }
                                             }
                                             else {
-                                                $this->error            = __yop_poll( 'No answer selected for question ' ) . $i;
-                                                $log_to_add ['message'] = __yop_poll( 'No answer selected for question ' ) . $i;
+                                                $this->error            = __yop_poll( "No answer selected for question " ) . $i;
+                                                $log_to_add ['message'] = __yop_poll( "No answer selected for question " ) . $i;
                                                 insert_log_in_db( $log_to_add );
                                                 return false;
                                             }
@@ -1090,50 +1087,50 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
                                         }
                                     }
                                     else {
-                                        $this->error            = __yop_poll( 'You have run out of votes!' );
-                                        $log_to_add ['message'] = __yop_poll( 'Run out of votes' );
+                                        $this->error            = __yop_poll( "You have run out of votes!");
+                                        $log_to_add ['message'] = __yop_poll( "Run out of votes" );
                                         insert_log_in_db( $log_to_add );
                                         return false;
                                     }
                                 }
                                 else {
-                                    $this->error            = __yop_poll( 'You Already voted!' );
-                                    $log_to_add ['message'] = __yop_poll( 'Already Voted' );
+                                    $this->error            = __yop_poll( "You Already voted!" );
+                                    $log_to_add ['message'] = __yop_poll( "Already Voted" );
                                     insert_log_in_db( $log_to_add );
                                     return false;
                                 }
                             }
                         }
                         else {
-                            $this->error            = __yop_poll( 'This poll is closed!' );
-                            $log_to_add ['message'] = __yop_poll( 'Poll Closed' );
+                            $this->error            = __yop_poll( "This poll is closed!" );
+                            $log_to_add ['message'] = __yop_poll( "Poll Closed" );
                             insert_log_in_db( $log_to_add );
                             return false;
                         }
                     }
                     else {
-                        $this->error            = __yop_poll( 'You can vote once the poll starts!' );
-                        $log_to_add ['message'] = __yop_poll( 'Poll not started' );
+                        $this->error            = __yop_poll( "You can vote once the poll starts!" );
+                        $log_to_add ['message'] = __yop_poll( "Poll not started" );
                         insert_log_in_db( $log_to_add );
                         return false;
                     }
                 }
                 else {
-                    $this->error            = __yop_poll( 'You are not allowed to vote!' );
-                    $log_to_add ['message'] = __yop_poll( 'Not allowed to vote' );
+                    $this->error            = __yop_poll( "You are not allowed to vote!" );
+                    $log_to_add ['message'] = __yop_poll( "Not allowed to vote" );
                     insert_log_in_db( $log_to_add );
                     return false;
                 }
             }
             else {
-                $this->error = __yop_poll( 'You are not allowed to vote!' );
+                $this->error = __yop_poll( "You are not allowed to vote!" );
                 return false;
             }
 
         }
         else {
-            $this->error            = __yop_poll( 'Bad Request!' );
-            $log_to_add ['message'] = __yop_poll( 'Bad request' );
+            $this->error            = __yop_poll( "Bad Request!" );
+            $log_to_add ['message'] = __yop_poll( "Bad request" );
             insert_log_in_db( $log_to_add );
             return false;
         }

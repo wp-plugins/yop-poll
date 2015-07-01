@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: YOP\n"
-"POT-Creation-Date: 2015-04-07 13:41+0200\n"
-"PO-Revision-Date: 2015-04-07 13:42+0200\n"
+"POT-Creation-Date: 2015-06-29 20:58+0200\n"
+"PO-Revision-Date: 2015-06-29 20:58+0200\n"
 "Last-Translator: Marius <marius_0156@yahoo.com>\n"
 "Language-Team: YOP <YOP>\n"
 "Language: fr\n"
@@ -62,6 +62,142 @@ msgstr "Fini"
 #: inc/admin.php:881
 msgid "Please log in to cast your vote"
 msgstr "S'il vous plaît vous connecter pour voter"
+
+#: inc/admin.php:1047
+msgid "Insert Poll"
+msgstr "Insérer un sondage"
+
+#: inc/admin.php:1083
+msgid "Poll to Display"
+msgstr "Sondage à afficher"
+
+#: inc/admin.php:1086
+msgid "Display Random Poll"
+msgstr "Affichage aléatoire des sondage"
+
+#: inc/admin.php:1087
+msgid "Display Latest Poll"
+msgstr "Afficher le plus récent sondage"
+
+#: inc/admin.php:1088
+msgid "Display Current Active Poll"
+msgstr "Afficher le sondage présentement actif"
+
+#: inc/admin.php:1102 templates/logs_logs.html:208
+#: templates/polls_results_print.html:164
+#: templates/polls_results_votes.html:418
+#: templates/polls_results_votes.html:588
+#: templates/polls_results_votes.html:668
+msgid "Tracking ID"
+msgstr "Numéro de suivi"
+
+#: inc/admin.php:1108
+msgid "Display results only"
+msgstr "Afficher les résultats seulement"
+
+#: inc/admin.php:1114 templates/options_general.html:82
+#: templates/options_general.html:99 templates/options_general.html:106
+#: templates/options_general.html:116 templates/options_general.html:123
+#: templates/options_general.html:424 templates/options_general.html:443
+#: templates/options_poll_options.html:90
+#: templates/options_poll_options.html:103
+#: templates/options_poll_options.html:116
+#: templates/options_poll_options.html:130
+#: templates/options_poll_options.html:159
+#: templates/options_poll_options.html:173
+#: templates/options_poll_options.html:180
+#: templates/options_poll_options.html:196
+#: templates/options_poll_options.html:210
+#: templates/options_poll_options.html:220
+#: templates/options_poll_options.html:237
+#: templates/options_poll_options.html:274
+#: templates/options_poll_options.html:293
+#: templates/options_poll_options.html:313
+#: templates/options_poll_options.html:327
+#: templates/options_poll_options.html:334
+#: templates/options_poll_options.html:341
+#: templates/options_poll_options.html:348
+#: templates/options_poll_options.html:356 templates/polls_add_edit.html:202
+#: templates/polls_add_edit.html:215 templates/polls_add_edit.html:228
+#: templates/polls_add_edit.html:242 templates/polls_add_edit.html:285
+#: templates/polls_add_edit.html:300 templates/polls_add_edit.html:334
+#: templates/polls_add_edit.html:353 templates/polls_add_edit.html:366
+#: templates/polls_add_edit.html:379 templates/polls_add_edit.html:386
+#: templates/polls_add_edit.html:393 templates/polls_add_edit.html:400
+#: templates/polls_add_edit.html:407 templates/polls_add_edit_options.html:84
+#: templates/polls_add_edit_options.html:91
+#: templates/polls_add_edit_options.html:98
+#: templates/polls_add_edit_options.html:105
+#: templates/polls_add_edit_options.html:119
+#: templates/polls_add_edit_options.html:127
+#: templates/polls_add_edit_options.html:135
+#: templates/polls_add_edit_options.html:151
+#: templates/polls_add_edit_options.html:188
+#: templates/polls_add_edit_options.html:203
+#: templates/polls_add_edit_options.html:217
+#: templates/polls_add_edit_options.html:243
+#: templates/polls_add_edit_options.html:251
+#: templates/polls_add_edit_options.html:266
+#: templates/polls_add_edit_options.html:273
+#: templates/polls_add_edit_options.html:295
+#: templates/polls_question_template.html:106
+#: templates/polls_question_template.html:123
+#: templates/polls_question_template.html:130
+#: templates/polls_question_template.html:137
+msgid "No"
+msgstr "Non"
+
+#: inc/admin.php:1115 templates/options_general.html:81
+#: templates/options_general.html:98 templates/options_general.html:105
+#: templates/options_general.html:115 templates/options_general.html:122
+#: templates/options_general.html:423 templates/options_general.html:442
+#: templates/options_poll_options.html:89
+#: templates/options_poll_options.html:102
+#: templates/options_poll_options.html:115
+#: templates/options_poll_options.html:129
+#: templates/options_poll_options.html:158
+#: templates/options_poll_options.html:172
+#: templates/options_poll_options.html:179
+#: templates/options_poll_options.html:195
+#: templates/options_poll_options.html:209
+#: templates/options_poll_options.html:219
+#: templates/options_poll_options.html:236
+#: templates/options_poll_options.html:273
+#: templates/options_poll_options.html:292
+#: templates/options_poll_options.html:312
+#: templates/options_poll_options.html:326
+#: templates/options_poll_options.html:333
+#: templates/options_poll_options.html:340
+#: templates/options_poll_options.html:347
+#: templates/options_poll_options.html:355 templates/polls_add_edit.html:201
+#: templates/polls_add_edit.html:214 templates/polls_add_edit.html:227
+#: templates/polls_add_edit.html:241 templates/polls_add_edit.html:284
+#: templates/polls_add_edit.html:299 templates/polls_add_edit.html:333
+#: templates/polls_add_edit.html:352 templates/polls_add_edit.html:365
+#: templates/polls_add_edit.html:378 templates/polls_add_edit.html:385
+#: templates/polls_add_edit.html:392 templates/polls_add_edit.html:399
+#: templates/polls_add_edit.html:406 templates/polls_add_edit_options.html:83
+#: templates/polls_add_edit_options.html:90
+#: templates/polls_add_edit_options.html:97
+#: templates/polls_add_edit_options.html:104
+#: templates/polls_add_edit_options.html:118
+#: templates/polls_add_edit_options.html:126
+#: templates/polls_add_edit_options.html:134
+#: templates/polls_add_edit_options.html:150
+#: templates/polls_add_edit_options.html:187
+#: templates/polls_add_edit_options.html:202
+#: templates/polls_add_edit_options.html:216
+#: templates/polls_add_edit_options.html:242
+#: templates/polls_add_edit_options.html:250
+#: templates/polls_add_edit_options.html:265
+#: templates/polls_add_edit_options.html:272
+#: templates/polls_add_edit_options.html:294
+#: templates/polls_question_template.html:105
+#: templates/polls_question_template.html:122
+#: templates/polls_question_template.html:129
+#: templates/polls_question_template.html:136
+msgid "Yes"
+msgstr "Oui"
 
 #: inc/bans_admin.php:68
 msgid "Poll Bans"
@@ -167,6 +303,144 @@ msgstr "Modèles"
 msgid "Add New Poll Template"
 msgstr "Ajouter un nouveau modèle de sondage"
 
+#: models/poll_model.php:868 models/poll_model.php:869
+msgid "Too few answers selected for question "
+msgstr "Trop peu de réponses sélectionnés pour la question"
+
+#: models/poll_model.php:868
+msgid "! Only more than "
+msgstr "! Seulement plus"
+
+#: models/poll_model.php:868 models/poll_model.php:875
+msgid " answers allowed!"
+msgstr "réponses permises!"
+
+#: models/poll_model.php:875 models/poll_model.php:876
+msgid "Too many answers selected for question "
+msgstr "Trop de réponses sélectionnés pour la question"
+
+#: models/poll_model.php:875
+msgid "! Only "
+msgstr "! Seulement"
+
+#: models/poll_model.php:899 models/poll_model.php:900
+msgid "Other answer for question "
+msgstr "Autre réponse à la question"
+
+#: models/poll_model.php:899
+msgid " could not be inserted!"
+msgstr " ne pouvait pas être inséré!"
+
+#: models/poll_model.php:900
+msgid " could not be inserted"
+msgstr " ne pouvait pas être inséré"
+
+#: models/poll_model.php:906 models/poll_model.php:907
+msgid "Other answer from question "
+msgstr "Autre réponse de la question"
+
+#: models/poll_model.php:946 models/poll_model.php:947
+#: models/poll_model.php:973 models/poll_model.php:975
+msgid "Custom field "
+msgstr "Champ  personnalisé"
+
+#: models/poll_model.php:946 models/poll_model.php:947
+#: models/poll_model.php:973 models/poll_model.php:975
+msgid " from question "
+msgstr " de la question"
+
+#: models/poll_model.php:946
+msgid "is required"
+msgstr "est requis"
+
+#: models/poll_model.php:947
+msgid "required"
+msgstr "requis"
+
+#: models/poll_model.php:973
+msgid "is missing "
+msgstr "est manquant"
+
+#: models/poll_model.php:975 models/poll_model.php:983
+msgid "missing"
+msgstr "manquant"
+
+#: models/poll_model.php:982 models/poll_model.php:983
+msgid "Custom fields from question "
+msgstr "Les champs personnalisés de question"
+
+#: models/poll_model.php:982
+msgid "are missing"
+msgstr "sont manquantes"
+
+#: models/poll_model.php:1026
+msgid "Incorrect security code entered!"
+msgstr "Code de sécurité incorrect !"
+
+#: models/poll_model.php:1027
+msgid "Incorrect security code entered"
+msgstr "Code de sécurité incorrect !"
+
+#: models/poll_model.php:1074
+msgid "No vote registered!"
+msgstr "Aucun vote enregistré!"
+
+#: models/poll_model.php:1075
+msgid "No vote registered"
+msgstr "Aucun vote enregistré!"
+
+#: models/poll_model.php:1081 models/poll_model.php:1082
+msgid "No answer selected for question "
+msgstr "Aucune réponse sélectionnée pour la question"
+
+#: models/poll_model.php:1090
+msgid "You have run out of votes!"
+msgstr "Vous n'avez plus de votes!"
+
+#: models/poll_model.php:1091
+msgid "Run out of votes"
+msgstr "À court de vote"
+
+#: models/poll_model.php:1097
+msgid "You Already voted!"
+msgstr "Vous avez déjà voté!"
+
+#: models/poll_model.php:1098
+msgid "Already Voted"
+msgstr "Déjà voté"
+
+#: models/poll_model.php:1105
+msgid "This poll is closed!"
+msgstr "Ce sondage est fermé."
+
+#: models/poll_model.php:1106
+msgid "Poll Closed"
+msgstr "Sondage fermé."
+
+#: models/poll_model.php:1112
+msgid "You can vote once the poll starts!"
+msgstr "Vous pouvez voter après le commencement du sondage!"
+
+#: models/poll_model.php:1113
+msgid "Poll not started"
+msgstr "Sondage pas démarré"
+
+#: models/poll_model.php:1119 models/poll_model.php:1126
+msgid "You are not allowed to vote!"
+msgstr "Vous n'êtes pas autorisé à voter!"
+
+#: models/poll_model.php:1120
+msgid "Not allowed to vote"
+msgstr "Non autorisé à voter"
+
+#: models/poll_model.php:1132
+msgid "Bad Request!"
+msgstr "Mauvaise requête"
+
+#: models/poll_model.php:1133
+msgid "Bad request"
+msgstr "Mauvaise requête"
+
 #: yop_poll.php:167
 msgid ""
 "Php version isn't high enough! Yop Poll will be automatically downgraded!"
@@ -207,8 +481,8 @@ msgstr "Choisir le type d'interdiction"
 #: templates/bans_bans.html:93 templates/logs_logs.html:145
 #: templates/logs_logs.html:213 templates/polls_pop_up_ban.html:34
 #: templates/polls_results_votes.html:213
-#: templates/polls_results_votes.html:825
-#: templates/polls_results_votes.html:921
+#: templates/polls_results_votes.html:826
+#: templates/polls_results_votes.html:922
 msgid "Ip"
 msgstr "Ip"
 
@@ -268,7 +542,7 @@ msgid "Search Poll Bans"
 msgstr "Recherche de sondage interdit"
 
 #: templates/bans_bans.html:209 templates/imports_imports.html:39
-#: templates/logs_logs.html:31 templates/polls_results_votes.html:693
+#: templates/logs_logs.html:31 templates/polls_results_votes.html:694
 #: templates/polls_view.html:113
 msgid "Bulk Actions"
 msgstr "Actions globales"
@@ -276,9 +550,9 @@ msgstr "Actions globales"
 #: templates/bans_bans.html:211 templates/bans_bans.html:452
 #: templates/logs_logs.html:33 templates/logs_logs.html:35
 #: templates/logs_logs.html:256 templates/polls_answer_template.html:21
-#: templates/polls_results_votes.html:695
-#: templates/polls_results_votes.html:1000 templates/polls_view.html:115
-#: templates/polls_view.html:294 templates/templates_templates.html:210
+#: templates/polls_results_votes.html:696
+#: templates/polls_results_votes.html:1001 templates/polls_view.html:115
+#: templates/polls_view.html:294 templates/templates_templates.html:105
 msgid "Delete"
 msgstr "Effacer"
 
@@ -291,7 +565,7 @@ msgid "All Ban Types"
 msgstr "Tous les types d'interdictions"
 
 #: templates/bans_bans.html:257 templates/polls_results_votes.html:425
-#: templates/polls_results_votes.html:669
+#: templates/polls_results_votes.html:670
 msgid "IP"
 msgstr "IP"
 
@@ -302,9 +576,9 @@ msgid "Filter"
 msgstr "Filtre"
 
 #: templates/bans_bans.html:275 templates/imports_imports.html:49
-#: templates/polls_results_print.html:124
-#: templates/polls_results_votes.html:548
-#: templates/polls_results_votes.html:743 templates/polls_view.html:151
+#: templates/polls_results_print.html:125
+#: templates/polls_results_votes.html:549
+#: templates/polls_results_votes.html:744 templates/polls_view.html:151
 msgid "Items Per Page"
 msgstr "Items par page"
 
@@ -337,7 +611,7 @@ msgid "Unit"
 msgstr "Unité"
 
 #: templates/bans_bans.html:472 templates/polls_view.html:277
-#: templates/templates_templates.html:203
+#: templates/templates_templates.html:98
 msgid "Edit"
 msgstr "Éditer"
 
@@ -389,14 +663,14 @@ msgid "All Logs"
 msgstr "Tous les registres"
 
 #: templates/logs_logs.html:67 templates/logs_logs.html:72
-#: templates/polls_results_print.html:141
-#: templates/polls_results_votes.html:565
-#: templates/polls_results_votes.html:713
+#: templates/polls_results_print.html:142
+#: templates/polls_results_votes.html:566
+#: templates/polls_results_votes.html:714
 msgid "This Page"
 msgstr "Cette page"
 
-#: templates/logs_logs.html:68 templates/polls_results_print.html:142
-#: templates/polls_results_votes.html:566
+#: templates/logs_logs.html:68 templates/polls_results_print.html:143
+#: templates/polls_results_votes.html:567
 msgid "All Pages"
 msgstr "Toutes les pages"
 
@@ -405,10 +679,10 @@ msgid "logs"
 msgstr "logs"
 
 #: templates/logs_logs.html:106 templates/logs_logs.html:176
-#: templates/polls_results_print.html:161
-#: templates/polls_results_votes.html:585
-#: templates/polls_results_votes.html:663
-#: templates/polls_results_votes.html:785
+#: templates/polls_results_print.html:162
+#: templates/polls_results_votes.html:586
+#: templates/polls_results_votes.html:664
+#: templates/polls_results_votes.html:786
 msgid "Vote ID"
 msgstr "Identifiant du vote"
 
@@ -417,19 +691,19 @@ msgid "Poll Title"
 msgstr "Titre du sondage"
 
 #: templates/logs_logs.html:124 templates/logs_logs.html:192
-#: templates/polls_results_votes.html:665
-#: templates/polls_results_votes.html:801
-#: templates/polls_results_votes.html:897
+#: templates/polls_results_votes.html:666
+#: templates/polls_results_votes.html:802
+#: templates/polls_results_votes.html:898
 msgid "User Type"
 msgstr "Type d'utilisateur"
 
 #: templates/logs_logs.html:155 templates/logs_logs.html:219
-#: templates/polls_results_print.html:165
+#: templates/polls_results_print.html:166
 #: templates/polls_results_votes.html:432
-#: templates/polls_results_votes.html:589
-#: templates/polls_results_votes.html:671
-#: templates/polls_results_votes.html:845
-#: templates/polls_results_votes.html:943
+#: templates/polls_results_votes.html:590
+#: templates/polls_results_votes.html:672
+#: templates/polls_results_votes.html:846
+#: templates/polls_results_votes.html:944
 msgid "Vote Date"
 msgstr "Date du vote"
 
@@ -449,13 +723,6 @@ msgstr "Utilisateur"
 msgid "User Email"
 msgstr "Courriel d'utilisateur"
 
-#: templates/logs_logs.html:208 templates/polls_results_print.html:163
-#: templates/polls_results_votes.html:418
-#: templates/polls_results_votes.html:587
-#: templates/polls_results_votes.html:667
-msgid "Tracking ID"
-msgstr "Numéro de suivi"
-
 #: templates/options_general.html:19 templates/polls_add_edit-bk.html:45
 #: templates/polls_add_edit.html:32 templates/polls_add_edit_advanced.html:45
 #: templates/templates_templates_add_edit.html:122
@@ -468,10 +735,10 @@ msgstr "Enregistrer les modifications"
 
 #: templates/options_general.html:40 templates/polls_add_edit.html:52
 #: templates/polls_add_edit_advanced.html:65
-#: templates/polls_results_print.html:466
-#: templates/polls_results_print.html:483
+#: templates/polls_results_print.html:467
+#: templates/polls_results_print.html:484
 #: templates/polls_results_votes.html:376
-#: templates/polls_results_votes.html:1064
+#: templates/polls_results_votes.html:1065
 msgid "Questions"
 msgstr "Les Questions"
 
@@ -495,108 +762,6 @@ msgstr "Options de questions"
 #: templates/polls_question_template.html:103
 msgid "Allow other answers"
 msgstr "Toutes les autres réponses"
-
-#: templates/options_general.html:81 templates/options_general.html:98
-#: templates/options_general.html:105 templates/options_general.html:115
-#: templates/options_general.html:122 templates/options_general.html:423
-#: templates/options_general.html:442 templates/options_poll_options.html:89
-#: templates/options_poll_options.html:102
-#: templates/options_poll_options.html:115
-#: templates/options_poll_options.html:129
-#: templates/options_poll_options.html:158
-#: templates/options_poll_options.html:172
-#: templates/options_poll_options.html:179
-#: templates/options_poll_options.html:195
-#: templates/options_poll_options.html:209
-#: templates/options_poll_options.html:219
-#: templates/options_poll_options.html:236
-#: templates/options_poll_options.html:273
-#: templates/options_poll_options.html:292
-#: templates/options_poll_options.html:312
-#: templates/options_poll_options.html:326
-#: templates/options_poll_options.html:333
-#: templates/options_poll_options.html:340
-#: templates/options_poll_options.html:347
-#: templates/options_poll_options.html:355 templates/polls_add_edit.html:201
-#: templates/polls_add_edit.html:214 templates/polls_add_edit.html:227
-#: templates/polls_add_edit.html:241 templates/polls_add_edit.html:284
-#: templates/polls_add_edit.html:299 templates/polls_add_edit.html:333
-#: templates/polls_add_edit.html:352 templates/polls_add_edit.html:365
-#: templates/polls_add_edit.html:378 templates/polls_add_edit.html:385
-#: templates/polls_add_edit.html:392 templates/polls_add_edit.html:399
-#: templates/polls_add_edit.html:406 templates/polls_add_edit_options.html:83
-#: templates/polls_add_edit_options.html:90
-#: templates/polls_add_edit_options.html:97
-#: templates/polls_add_edit_options.html:104
-#: templates/polls_add_edit_options.html:118
-#: templates/polls_add_edit_options.html:126
-#: templates/polls_add_edit_options.html:134
-#: templates/polls_add_edit_options.html:150
-#: templates/polls_add_edit_options.html:187
-#: templates/polls_add_edit_options.html:202
-#: templates/polls_add_edit_options.html:216
-#: templates/polls_add_edit_options.html:242
-#: templates/polls_add_edit_options.html:250
-#: templates/polls_add_edit_options.html:265
-#: templates/polls_add_edit_options.html:272
-#: templates/polls_add_edit_options.html:294
-#: templates/polls_question_template.html:105
-#: templates/polls_question_template.html:122
-#: templates/polls_question_template.html:129
-#: templates/polls_question_template.html:136
-msgid "Yes"
-msgstr "Oui"
-
-#: templates/options_general.html:82 templates/options_general.html:99
-#: templates/options_general.html:106 templates/options_general.html:116
-#: templates/options_general.html:123 templates/options_general.html:424
-#: templates/options_general.html:443 templates/options_poll_options.html:90
-#: templates/options_poll_options.html:103
-#: templates/options_poll_options.html:116
-#: templates/options_poll_options.html:130
-#: templates/options_poll_options.html:159
-#: templates/options_poll_options.html:173
-#: templates/options_poll_options.html:180
-#: templates/options_poll_options.html:196
-#: templates/options_poll_options.html:210
-#: templates/options_poll_options.html:220
-#: templates/options_poll_options.html:237
-#: templates/options_poll_options.html:274
-#: templates/options_poll_options.html:293
-#: templates/options_poll_options.html:313
-#: templates/options_poll_options.html:327
-#: templates/options_poll_options.html:334
-#: templates/options_poll_options.html:341
-#: templates/options_poll_options.html:348
-#: templates/options_poll_options.html:356 templates/polls_add_edit.html:202
-#: templates/polls_add_edit.html:215 templates/polls_add_edit.html:228
-#: templates/polls_add_edit.html:242 templates/polls_add_edit.html:285
-#: templates/polls_add_edit.html:300 templates/polls_add_edit.html:334
-#: templates/polls_add_edit.html:353 templates/polls_add_edit.html:366
-#: templates/polls_add_edit.html:379 templates/polls_add_edit.html:386
-#: templates/polls_add_edit.html:393 templates/polls_add_edit.html:400
-#: templates/polls_add_edit.html:407 templates/polls_add_edit_options.html:84
-#: templates/polls_add_edit_options.html:91
-#: templates/polls_add_edit_options.html:98
-#: templates/polls_add_edit_options.html:105
-#: templates/polls_add_edit_options.html:119
-#: templates/polls_add_edit_options.html:127
-#: templates/polls_add_edit_options.html:135
-#: templates/polls_add_edit_options.html:151
-#: templates/polls_add_edit_options.html:188
-#: templates/polls_add_edit_options.html:203
-#: templates/polls_add_edit_options.html:217
-#: templates/polls_add_edit_options.html:243
-#: templates/polls_add_edit_options.html:251
-#: templates/polls_add_edit_options.html:266
-#: templates/polls_add_edit_options.html:273
-#: templates/polls_add_edit_options.html:295
-#: templates/polls_question_template.html:106
-#: templates/polls_question_template.html:123
-#: templates/polls_question_template.html:130
-#: templates/polls_question_template.html:137
-msgid "No"
-msgstr "Non"
 
 #: templates/options_general.html:86
 #: templates/polls_question_template.html:110
@@ -1278,7 +1443,7 @@ msgid "Page Template"
 msgstr "Modèle de page"
 
 #: templates/polls_add_edit.html:100
-#: templates/polls_add_edit_template.html:203
+#: templates/polls_add_edit_template.html:204
 msgid "Widget Template"
 msgstr "Modèle de Widget"
 
@@ -1366,11 +1531,11 @@ msgstr "Style de la barre de résultat"
 msgid "Template Width"
 msgstr "Largeur du modèle"
 
-#: templates/polls_add_edit_template.html:198
+#: templates/polls_add_edit_template.html:199
 msgid "Use the same template for widgets"
 msgstr "Utiliser le même modèle pour le widget"
 
-#: templates/polls_add_edit_template.html:207
+#: templates/polls_add_edit_template.html:208
 msgid "Widget Template Width"
 msgstr "Largeur du modèle de widget"
 
@@ -1408,27 +1573,24 @@ msgid "Please buy pro version to use this feature!"
 msgstr ""
 "Se il vous plaît acheter la version pro pour utiliser cette fonctionnalité!"
 
-#: templates/polls_base.html:54 templates/polls_results_votes.html:147
-#: templates/pro_pre_upgrade.html:41
+#: templates/polls_base.html:58 templates/polls_results_votes.html:147
+#: templates/pro_pre_upgrade.html:42
 msgid "Upgrade to Pro for only $17"
 msgstr "Upgrade to Pro pour seulement $ 17"
 
-#: templates/polls_base.html:57 templates/pro_pre_upgrade.html:44
+#: templates/polls_base.html:61 templates/pro_pre_upgrade.html:45
 msgid "60 days money back guarantee"
 msgstr "60 jours garantie de remboursement"
 
-#: templates/polls_base.html:61 templates/pro_help.html:16
-#: templates/pro_pre_upgrade.html:50
+#: templates/polls_base.html:65 templates/pro_pre_upgrade.html:51
 msgid "Top class software and support"
 msgstr "Logiciel de classe supérieure et de soutien"
 
-#: templates/polls_base.html:62 templates/pro_help.html:18
-#: templates/pro_pre_upgrade.html:52
+#: templates/polls_base.html:66 templates/pro_pre_upgrade.html:53
 msgid "I love this software and the support service."
 msgstr "Je adore ce logiciel et le service de support."
 
-#: templates/polls_base.html:64 templates/pro_help.html:20
-#: templates/pro_pre_upgrade.html:54
+#: templates/polls_base.html:68 templates/pro_pre_upgrade.html:55
 msgid ""
 "This is definitely the #1 poll plugin for WP. I give this software and its "
 "support service a A++++."
@@ -1436,15 +1598,14 @@ msgstr ""
 "Ce est certainement le # 1 vote plugin pour WP. Je donne ce logiciel et son "
 "service de soutien a A ++++."
 
-#: templates/polls_base.html:66 templates/pro_help.html:22
-#: templates/pro_pre_upgrade.html:56
+#: templates/polls_base.html:70 templates/pro_pre_upgrade.html:57
 msgid ""
 "I'm so glad to be a Pro version user. The US$17 upgrade worth every cent..."
 msgstr ""
 "Je suis si heureux d'être une version utilisateur Pro. La mise à niveau de "
 "17 $ US vaut chaque centime ..."
 
-#: templates/polls_base.html:68
+#: templates/polls_base.html:72
 msgid ""
 "I originally had some difficulties with the tool, and I reported them. (This "
 "is normal for all software.) "
@@ -1452,7 +1613,7 @@ msgstr ""
 "Je ai eu quelques difficultés à l'origine avec l'outil, et je leur ai "
 "signalé. (Ce est normal pour tous les logiciels.)"
 
-#: templates/polls_base.html:69
+#: templates/polls_base.html:73
 msgid ""
 "After I reported my issues, the support got in touch with me very quickly "
 "and have the problem resolved. "
@@ -1460,7 +1621,7 @@ msgstr ""
 "Après je ai rapporté mes questions, le soutien a pris contact avec moi très "
 "rapidement et ont le problème résolu."
 
-#: templates/polls_base.html:70
+#: templates/polls_base.html:74
 msgid ""
 "Also, they listened to my suggestions and worked with me to have things "
 "implemented and resolved. "
@@ -1468,13 +1629,11 @@ msgstr ""
 "En outre, ils ont écouté mes suggestions et a travaillé avec moi pour avoir "
 "des choses mises en œuvre et résolus."
 
-#: templates/polls_base.html:71 templates/pro_help.html:27
-#: templates/pro_pre_upgrade.html:61
+#: templates/polls_base.html:75 templates/pro_pre_upgrade.html:62
 msgid "This is definitely a TOP CLASS service."
 msgstr "Ce est vraiment un service de première classe."
 
-#: templates/polls_base.html:73 templates/pro_help.html:30
-#: templates/pro_pre_upgrade.html:64
+#: templates/polls_base.html:77 templates/pro_pre_upgrade.html:65
 msgid "edwintam, wordpress user"
 msgstr "edwintam, les utilisateurs de WordPress"
 
@@ -1516,11 +1675,11 @@ msgstr ""
 "automatiquement ajoutée comme une 'réponse' disponibles"
 
 #: templates/polls_question_template.html:193
-#: templates/polls_results_print.html:118
-#: templates/polls_results_print.html:468
-#: templates/polls_results_print.html:485
-#: templates/polls_results_votes.html:542
-#: templates/polls_results_votes.html:1066
+#: templates/polls_results_print.html:119
+#: templates/polls_results_print.html:469
+#: templates/polls_results_print.html:486
+#: templates/polls_results_votes.html:543
+#: templates/polls_results_votes.html:1067
 msgid "Custom Fields"
 msgstr "Champs personnalisés"
 
@@ -1599,13 +1758,13 @@ msgstr "Autre réponse"
 msgid "Poll Other Answers"
 msgstr "Autres réponses de sondage"
 
-#: templates/polls_results_print.html:132
-#: templates/polls_results_votes.html:556 templates/polls_view.html:157
+#: templates/polls_results_print.html:133
+#: templates/polls_results_votes.html:557 templates/polls_view.html:157
 msgid "items"
 msgstr "items"
 
-#: templates/polls_results_print.html:188
-#: templates/polls_results_votes.html:612
+#: templates/polls_results_print.html:189
+#: templates/polls_results_votes.html:613
 msgid "No Custom Field Defined"
 msgstr "Aucun champ personnalisé défini"
 
@@ -1723,28 +1882,28 @@ msgstr "Votes ID"
 msgid "User  Type"
 msgstr "Type d'utilisateur"
 
-#: templates/polls_results_votes.html:651
+#: templates/polls_results_votes.html:652
 msgid "Search IP"
 msgstr "Recherche IP"
 
-#: templates/polls_results_votes.html:661
+#: templates/polls_results_votes.html:662
 msgid "All Columns"
 msgstr "Toutes les colonnes"
 
-#: templates/polls_results_votes.html:751
-#: templates/polls_results_votes.html:1087
+#: templates/polls_results_votes.html:752
+#: templates/polls_results_votes.html:1088
 msgid "results"
 msgstr "Résultats"
 
-#: templates/polls_results_votes.html:881
+#: templates/polls_results_votes.html:882
 msgid "Poll ID"
 msgstr "Identifiant du sondage"
 
-#: templates/polls_results_votes.html:1005
+#: templates/polls_results_votes.html:1006
 msgid "Ban"
 msgstr "Interdiction"
 
-#: templates/polls_results_votes.html:1110
+#: templates/polls_results_votes.html:1111
 msgid "Your poll doesn`t exist!"
 msgstr "Votre sondage n'existe pas"
 
@@ -1777,7 +1936,7 @@ msgid "Search Polls"
 msgstr "Rechercher un sondage"
 
 #: templates/polls_view.html:117 templates/polls_view.html:285
-#: templates/templates_templates.html:216
+#: templates/templates_templates.html:111
 msgid "Clone"
 msgstr "Dupliquer"
 
@@ -1833,7 +1992,19 @@ msgstr ""
 "Félicitations! Vous avez terminé le paiement. Cliquez ici pour procéder à la "
 "mise à niveau plug-in!"
 
-#: templates/pro_help.html:24 templates/pro_pre_upgrade.html:58
+#: templates/pro_help.html:8
+msgid "For any questions/issues, you can contact us at "
+msgstr "Pour toutes questions / questions, vous pouvez nous contacter au"
+
+#: templates/pro_pre_upgrade.html:5
+msgid ""
+"If you already have a license, please enter it below to activate YOP Poll "
+"Pro:"
+msgstr ""
+"Si vous avez déjà une licence, se il vous plaît saisir ci-dessous pour "
+"activer YOP Sondage Pro:"
+
+#: templates/pro_pre_upgrade.html:59
 msgid ""
 "I originally had some difficulties with the tool, and I reported them. (This "
 "is normal for all software.)"
@@ -1841,7 +2012,7 @@ msgstr ""
 "Je ai eu quelques difficultés à l'origine avec l'outil, et je leur ai "
 "signalé. (Ce est normal pour tous les logiciels.)"
 
-#: templates/pro_help.html:25 templates/pro_pre_upgrade.html:59
+#: templates/pro_pre_upgrade.html:60
 msgid ""
 "After I reported my issues, the support got in touch with me very quickly "
 "and have the problem resolved."
@@ -1849,7 +2020,7 @@ msgstr ""
 "Après je ai rapporté mes questions, le soutien a pris contact avec moi très "
 "rapidement et ont le problème résolu."
 
-#: templates/pro_help.html:26 templates/pro_pre_upgrade.html:60
+#: templates/pro_pre_upgrade.html:61
 msgid ""
 "Also, they listened to my suggestions and worked with me to have things "
 "implemented and resolved."
@@ -1857,11 +2028,11 @@ msgstr ""
 "En outre, ils ont écouté mes suggestions et a travaillé avec moi pour avoir "
 "des choses mises en œuvre et résolus."
 
-#: templates/pro_help.html:35 templates/pro_pre_upgrade.html:69
+#: templates/pro_pre_upgrade.html:70
 msgid "Great support for a very useful product"
 msgstr "Grand soutien pour un produit très utile"
 
-#: templates/pro_help.html:38 templates/pro_pre_upgrade.html:72
+#: templates/pro_pre_upgrade.html:73
 msgid ""
 "I used yop poll standard and tried upgrading. I ran into an issue and send "
 "support an email. I got the best suppor timaginable. They immediately "
@@ -1874,21 +2045,13 @@ msgstr ""
 "travailler sur la question, résolus et résolu un tas d'autres choses dans la "
 "course."
 
-#: templates/pro_help.html:40 templates/pro_pre_upgrade.html:74
+#: templates/pro_pre_upgrade.html:75
 msgid "Superb Support, absolutely worth paying for!"
 msgstr "Superbe soutien, absolument la peine de payer pour!"
 
-#: templates/pro_help.html:43 templates/pro_pre_upgrade.html:77
+#: templates/pro_pre_upgrade.html:78
 msgid "fredverhoeven, wordpress user"
 msgstr "fredverhoeven, les utilisateurs de WordPress"
-
-#: templates/pro_pre_upgrade.html:5
-msgid ""
-"If you already have a license, please enter it below to activate YOP Poll "
-"Pro:"
-msgstr ""
-"Si vous avez déjà une licence, se il vous plaît saisir ci-dessous pour "
-"activer YOP Sondage Pro:"
 
 #: templates/templates_templates_add_edit.html:23
 msgid "Template Name"
@@ -2053,9 +2216,6 @@ msgstr "Réinitialiser le gabarit de sondage"
 
 #~ msgid "Error: Wordpress Version Problem"
 #~ msgstr "Erreur : Problème de version de Wordpress."
-
-#~ msgid "Bad Request!"
-#~ msgstr "Mauvaise requête"
 
 #~ msgid "Changes Saved!"
 #~ msgstr "Modifications enregistrées!"
@@ -2260,20 +2420,11 @@ msgstr "Réinitialiser le gabarit de sondage"
 #~ msgid "Google user not found"
 #~ msgstr "Utilisateur Google introuvable"
 
-#~ msgid "This poll is closed!"
-#~ msgstr "Ce sondage est fermé."
-
-#~ msgid "Poll Closed"
-#~ msgstr "Sondage fermé."
-
 #~ msgid "Other answer for question"
 #~ msgstr "Autre réponse à la question"
 
 #~ msgid "could not be inserted!"
 #~ msgstr "ne pouvait pas être inséré!"
-
-#~ msgid " could not be inserted"
-#~ msgstr " ne pouvait pas être inséré"
 
 #~ msgid "Other answer from question"
 #~ msgstr "Autre réponse de la question"
@@ -2299,74 +2450,20 @@ msgstr "Réinitialiser le gabarit de sondage"
 #~ msgid "could not be inserted"
 #~ msgstr "ne pouvait pas être inséré"
 
-#~ msgid "Other answer from question "
-#~ msgstr "Autre réponse de la question"
-
 #~ msgid "empty"
 #~ msgstr "vide"
 
 #~ msgid "from question"
 #~ msgstr "de la question"
 
-#~ msgid "is required"
-#~ msgstr "est requis"
-
-#~ msgid "required"
-#~ msgstr "requis"
-
 #~ msgid "is missing"
 #~ msgstr "est manquant"
-
-#~ msgid "missing"
-#~ msgstr "manquant"
 
 #~ msgid "Custom fields from question"
 #~ msgstr "Champ personnalisé de la question"
 
-#~ msgid "are missing"
-#~ msgstr "sont manquantes"
-
-#~ msgid "Incorrect security code entered!"
-#~ msgstr "Code de sécurité incorrect !"
-
-#~ msgid "Incorrect security code entered"
-#~ msgstr "Code de sécurité incorrect !"
-
-#~ msgid "No vote registered!"
-#~ msgstr "Aucun vote enregistré!"
-
-#~ msgid "No vote registered"
-#~ msgstr "Aucun vote enregistré!"
-
 #~ msgid "No answer selected for question"
 #~ msgstr "Aucune réponse sélectionnée pour la question"
-
-#~ msgid "You have run out of votes!"
-#~ msgstr "Vous n'avez plus de votes!"
-
-#~ msgid "Run out of votes"
-#~ msgstr "À court de vote"
-
-#~ msgid "You Already voted!"
-#~ msgstr "Vous avez déjà voté!"
-
-#~ msgid "Already Voted"
-#~ msgstr "Déjà voté"
-
-#~ msgid "You can vote once the poll starts!"
-#~ msgstr "Vous pouvez voter après le commencement du sondage!"
-
-#~ msgid "Poll not started"
-#~ msgstr "Sondage pas démarré"
-
-#~ msgid "You are not allowed to vote!"
-#~ msgstr "Vous n'êtes pas autorisé à voter!"
-
-#~ msgid "Not allowed to vote"
-#~ msgstr "Non autorisé à voter"
-
-#~ msgid "Bad request"
-#~ msgstr "Mauvaise requête"
 
 #~ msgid "Success"
 #~ msgstr "Succès"
@@ -2532,28 +2629,10 @@ msgstr "Réinitialiser le gabarit de sondage"
 #~ msgid "Options"
 #~ msgstr "Options"
 
-#~ msgid "Insert Poll"
-#~ msgstr "Insérer un sondage"
-
 #~ msgid "Error: Invalid Yop Poll!\\n\\nPlease choose the poll again:\\n\\n"
 #~ msgstr ""
 #~ "Erreur : Sondage Yop invalide!\\n\\n S'il vous plaît choisir à nouveau le "
 #~ "sondage."
-
-#~ msgid "Poll to Display"
-#~ msgstr "Sondage à afficher"
-
-#~ msgid "Display Random Poll"
-#~ msgstr "Affichage aléatoire des sondage"
-
-#~ msgid "Display Latest Poll"
-#~ msgstr "Afficher le plus récent sondage"
-
-#~ msgid "Display Current Active Poll"
-#~ msgstr "Afficher le sondage présentement actif"
-
-#~ msgid "Display results only"
-#~ msgstr "Afficher les résultats seulement"
 
 #~ msgid "Close"
 #~ msgstr "Fermer"
@@ -2894,38 +2973,5 @@ msgstr "Réinitialiser le gabarit de sondage"
 #~ msgid "Reload"
 #~ msgstr "Recharger"
 
-#~ msgid "Other answer for question "
-#~ msgstr "Autre réponse à la question"
-
-#~ msgid " could not be inserted!"
-#~ msgstr " ne pouvait pas être inséré!"
-
 #~ msgid " is empty"
 #~ msgstr "est vide"
-
-#~ msgid "Too few answers selected for question "
-#~ msgstr "Trop peu de réponses sélectionnés pour la question"
-
-#~ msgid "! Only more than "
-#~ msgstr "! Seulement plus"
-
-#~ msgid " answers allowed!"
-#~ msgstr "réponses permises!"
-
-#~ msgid "Too many answers selected for question "
-#~ msgstr "Trop de réponses sélectionnés pour la question"
-
-#~ msgid "! Only "
-#~ msgstr "! Seulement"
-
-#~ msgid "Custom field "
-#~ msgstr "Champ  personnalisé"
-
-#~ msgid " from question "
-#~ msgstr " de la question"
-
-#~ msgid "Custom fields from question "
-#~ msgstr "Les champs personnalisés de question"
-
-#~ msgid "No answer selected for question "
-#~ msgstr "Aucune réponse sélectionnée pour la question"

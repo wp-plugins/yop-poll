@@ -815,8 +815,8 @@ class Yop_Poll_Admin extends Yop_Poll_Plugin {
     }
 
     public function ajax_set_google_vote() {
-        $poll_id   = yop_poll_base64_decode( $_GET['poll_id'] );
-        $unique_id = yop_poll_base64_decode( $_GET['unique_id'] );
+        $poll_id   = xss_clean(yop_poll_base64_decode( $_GET['poll_id'] ));
+        $unique_id = xss_clean(yop_poll_base64_decode( $_GET['unique_id'] ));
         require_once( YOP_POLL_MODELS . 'poll_model.php' );
         $yop_poll_model = new YOP_POLL_Poll_Model( $poll_id );
 
@@ -948,8 +948,8 @@ class Yop_Poll_Admin extends Yop_Poll_Plugin {
     }
 
     public function ajax_set_wordpress_vote() {
-        $poll_id   = yop_poll_base64_decode( $_GET['poll_id'] );
-        $unique_id = yop_poll_base64_decode( $_GET['unique_id'] );
+        $poll_id   = yop_poll_base64_decode( xss_clean($_GET['poll_id']) );
+        $unique_id = yop_poll_base64_decode( xss_clean($_GET['unique_id'] ));
         require_once( YOP_POLL_MODELS . 'poll_model.php' );
         $yop_poll_model = new YOP_POLL_Poll_Model( $poll_id );
 
@@ -974,13 +974,13 @@ class Yop_Poll_Admin extends Yop_Poll_Plugin {
             <script type="text/javascript">
                 function close_window() {
                     var yop_poll_various_config = new Object();
-                    yop_poll_various_config.poll_id = '<?php echo yop_poll_base64_decode( $_GET['poll_id'] ) 									?>';
-                    yop_poll_various_config.unique_id = '<?php echo yop_poll_base64_decode( $_GET['unique_id'] ) 									?>';
-                    yop_poll_various_config.poll_location = '<?php echo yop_poll_base64_decode( $_GET['poll_location'] ) 								?>';
-                    yop_poll_various_config.is_modal =  <?php echo ( yop_poll_base64_decode( $_GET['is_modal'] ) == 'true' ) ? 'true' : 'false'  ?>;
-                    yop_poll_various_config.vote_loading_image_target = '<?php echo yop_poll_base64_decode( $_GET['vote_loading_image_target'] ) 					?>';
-                    yop_poll_various_config.vote_loading_image_id = '<?php echo yop_poll_base64_decode( $_GET['vote_loading_image_id'] ) 						?>';
-                    yop_poll_various_config.vote_type = '<?php echo yop_poll_base64_decode( $_GET['vote_type'] ) 									?>';
+                    yop_poll_various_config.poll_id = '<?php echo xss_clean(yop_poll_base64_decode( $_GET['poll_id'] )) 									?>';
+                    yop_poll_various_config.unique_id = '<?php echo xss_clean(yop_poll_base64_decode( $_GET['unique_id'] )) 									?>';
+                    yop_poll_various_config.poll_location = '<?php echo xss_clean(yop_poll_base64_decode( $_GET['poll_location'] )) 								?>';
+                    yop_poll_various_config.is_modal =  <?php echo ( xss_clean(yop_poll_base64_decode( $_GET['is_modal'] ) == 'true' )) ? 'true' : 'false'  ?>;
+                    yop_poll_various_config.vote_loading_image_target = '<?php echo xss_clean(yop_poll_base64_decode( $_GET['vote_loading_image_target'] )) 					?>';
+                    yop_poll_various_config.vote_loading_image_id = '<?php echo xss_clean(yop_poll_base64_decode( $_GET['vote_loading_image_id'] )) 						?>';
+                    yop_poll_various_config.vote_type = '<?php echo xss_clean(yop_poll_base64_decode ( $_GET['vote_type'] ) )									?>';
                     yop_poll_various_config.facebook_user_details = '<?php echo $facebook_user_details; 														?>';
                     yop_poll_various_config.facebook_error = '<?php echo isset( $_GET['facebook_error'] ) ? $_GET['facebook_error'] : '' 				?>';
                     yop_poll_various_config.public_config =  <?php echo json_encode( $public_config ); 												?>;

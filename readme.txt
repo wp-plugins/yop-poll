@@ -142,6 +142,9 @@ You can have only one question per poll. If you want to ask more than one questi
 
 == Changelog ==
 
+= 5.7.4 =
+* Fixed security issue. A big thank you to [g0blin Research](https://twitter.com/g0blinResearch) for his help in getting this issue fixed
+
 = 5.7.3 =
 * Fixed display poll issue
 
