@@ -610,7 +610,7 @@ Class YOP_POLL_Poll_Model extends YOP_POLL_Abstract_Model {
             if( count( $question->custom_fields ) > 0 ) {
                 foreach( $question->custom_fields as $custom_field ) {
                     if( function_exists( 'icl_translate' ) ) {
-                        $custom_field['custom_field'] = icl_translate( 'yop_poll', $custom_field->ID . '_custom_field', $custom_field->custom_field );
+                        $custom_field->custom_field = icl_translate( 'yop_poll', $custom_field->ID . '_custom_field', $custom_field->custom_field );
                     }
                     $temp_string = str_ireplace( '%POLL-CUSTOM-FIELD-LABEL%', '<label for="yop-poll-customfield-' . $this->ID . $unique_id . '-' . $custom_field->ID . '">' . yop_poll_kses( $custom_field->custom_field ) . '</label>', $m );
 
