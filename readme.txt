@@ -142,6 +142,10 @@ You can have only one question per poll. If you want to ask more than one questi
 
 == Changelog ==
 
+= 5.7.5 =
+* Fixed issue with vote button not showing up
+* Other minor fixes
+
 = 5.7.4 =
 * Fixed security issue. A big thank you to [g0blin Research](https://twitter.com/g0blinResearch) for his help in getting this issue fixed
 
