@@ -142,6 +142,15 @@ You can have only one question per poll. If you want to ask more than one questi
 
 == Changelog ==
 
+= 5.7.6 =
+* Fixed issues with cloning poll
+* Fixed conflicts with different plugins
+* Fixed issue with pagination on archive page
+* Fixed issue with logs page
+* Fixed issue with facebook voting
+* Added new shortcuts for email notifications
+* Added new column for username in view votes page
+
 = 5.7.5 =
 * Fixed issue with vote button not showing up
 * Other minor fixes
